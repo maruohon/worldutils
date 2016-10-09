@@ -1,10 +1,11 @@
-Item Scroller
+World Tools
 ==============
-Item Scroller is a tiny mod for Minecraft 1.8.9+, which adds the functionality of moving items in inventory GUIs
-by scrolling the mouse wheel over slots with items in them.
-This is basically what NEI does/did (and Mouse Tweaks also seems to do), but separated into this tiny mod,
-and probably implemented in a different manner.
-For more information and the downloads (compiled builds), see http://minecraft.curseforge.com/projects/item-scroller
+World Tools includes some useful tools for manipulating Minecraft worlds while in-game.
+
+Implemented things thus far:
+* Chunk Wand - Allows changing entire chunks in the world, or just importing biomes from a different world. The alternate worlds that are used as the source are stored inside the worldname/alternate_worlds/ directory. The mod also keeps track of all the changes to chunks and stores that "database" in the same directory.
+
+For more information and the downloads (compiled builds), see http://minecraft.curseforge.com/projects/world-tools
 
 Compiling
 =========
