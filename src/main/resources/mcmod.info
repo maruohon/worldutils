@@ -1,0 +1,16 @@
+[
+{
+  "modid": "worldtools",
+  "name": "World Tools",
+  "description": "Some tools to edit chunks or blocks in world",
+  "version": "${mod_version}",
+  "mcversion": "${minecraft_version}",
+  "url": "http://minecraft.curseforge.com/projects/world-tools",
+  "updateUrl": "",
+  "authorList": ["masa"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

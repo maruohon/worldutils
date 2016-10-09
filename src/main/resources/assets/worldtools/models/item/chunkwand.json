@@ -1,0 +1,6 @@
+{
+    "parent": "worldtools:item/standard_tool",
+    "textures": {
+        "layer0": "worldtools:items/chunkwand_0"
+    }
+}
