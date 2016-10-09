@@ -11,6 +11,7 @@ public class PacketHandler
 
     public static void init()
     {
-        INSTANCE.registerMessage(MessageKeyPressed.Handler.class, MessageKeyPressed.class, 0, Side.SERVER);
+        INSTANCE.registerMessage(MessageKeyPressed.Handler.class,   MessageKeyPressed.class,    0, Side.SERVER);
+        INSTANCE.registerMessage(MessageChunkChanges.Handler.class, MessageChunkChanges.class,  1, Side.CLIENT);
     }
 }

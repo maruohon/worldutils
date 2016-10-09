@@ -32,3 +32,4 @@ worldtools.tooltip.item.chunkwand.target=Target world
 
 worldtools.tooltip.item.holdshift=Hold §e§oShift§7 for more
 worldtools.tooltip.item.holdshiftfordescription=Hold §e§oShift§7 for description
+worldtools.tooltip.item.mode=Mode

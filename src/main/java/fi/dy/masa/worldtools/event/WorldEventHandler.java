@@ -7,13 +7,13 @@ import fi.dy.masa.worldtools.util.ChunkChanger;
 public class WorldEventHandler
 {
     @SubscribeEvent
-    public static void onWorldSaveEvent(WorldEvent.Save event)
+    public void onWorldSaveEvent(WorldEvent.Save event)
     {
         ChunkChanger.instance().writeToDisk(event.getWorld());
     }
 
     @SubscribeEvent
-    public static void onWorldLoad(WorldEvent.Load event)
+    public void onWorldLoad(WorldEvent.Load event)
     {
         ChunkChanger.instance().readFromDisk(event.getWorld());
     }

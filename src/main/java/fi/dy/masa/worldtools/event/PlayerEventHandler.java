@@ -1,23 +1,29 @@
 package fi.dy.masa.worldtools.event;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldtools.item.ItemChunkWand;
+import fi.dy.masa.worldtools.network.MessageChunkChanges;
 import fi.dy.masa.worldtools.network.MessageKeyPressed;
 import fi.dy.masa.worldtools.network.PacketHandler;
 import fi.dy.masa.worldtools.reference.HotKeys;
 import fi.dy.masa.worldtools.setup.WorldToolsItems;
+import fi.dy.masa.worldtools.util.ChunkChanger;
 
 public class PlayerEventHandler
 {
     @SubscribeEvent
-    public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event)
+    public void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event)
     {
         EntityPlayer player = event.getEntityPlayer();
         // You can only left click with the main hand, so this is fine here
@@ -39,7 +45,7 @@ public class PlayerEventHandler
     }
 
     @SubscribeEvent
-    public static void onLeftClickAir(PlayerInteractEvent.LeftClickEmpty event)
+    public void onLeftClickAir(PlayerInteractEvent.LeftClickEmpty event)
     {
         if (event.getSide() == Side.CLIENT)
         {
@@ -49,6 +55,34 @@ public class PlayerEventHandler
             {
                 PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(HotKeys.KEYCODE_CUSTOM_1));
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedIn(PlayerLoggedInEvent event)
+    {
+        if (event.player instanceof EntityPlayerMP)
+        {
+            sendChunkChanges((EntityPlayerMP) event.player);
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerCHangedDimension(PlayerChangedDimensionEvent event)
+    {
+        if (event.player instanceof EntityPlayerMP)
+        {
+            sendChunkChanges((EntityPlayerMP) event.player);
+        }
+    }
+
+    private static void sendChunkChanges(EntityPlayerMP player)
+    {
+        NBTTagCompound nbt = ChunkChanger.instance().writeToNBT(new NBTTagCompound(), player.getName());
+
+        if (nbt.hasNoTags() == false)
+        {
+            PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(nbt), player);
         }
     }
 }

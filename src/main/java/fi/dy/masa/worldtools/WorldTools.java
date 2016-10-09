@@ -9,11 +9,13 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import fi.dy.masa.worldtools.network.PacketHandler;
 import fi.dy.masa.worldtools.proxy.IProxy;
 import fi.dy.masa.worldtools.reference.Reference;
+import fi.dy.masa.worldtools.setup.Configs;
 import fi.dy.masa.worldtools.setup.WorldToolsItems;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-updateJSON = "https://raw.githubusercontent.com/maruohon/worldtools/master/update.json",
-acceptedMinecraftVersions = "1.10.2")
+    guiFactory = "fi.dy.masa.worldtools.setup.WorldToolsGuiFactory",
+    updateJSON = "https://raw.githubusercontent.com/maruohon/worldtools/master/update.json",
+    acceptedMinecraftVersions = "1.10.2")
 public class WorldTools
 {
     @Instance(Reference.MOD_ID)
@@ -28,7 +30,7 @@ public class WorldTools
     {
         instance = this;
         logger = event.getModLog();
-        //ConfigReader.loadConfigsAll(event.getSuggestedConfigurationFile());
+        Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
 
         WorldToolsItems.init();
         PacketHandler.init(); // Initialize network stuff

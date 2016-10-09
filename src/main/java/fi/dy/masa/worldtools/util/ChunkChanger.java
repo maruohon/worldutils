@@ -50,23 +50,18 @@ public class ChunkChanger
 {
     private static final ChunkChanger INSTANCE = new ChunkChanger();
     private final Map<File, AnvilChunkLoader> chunkLoaders = new HashMap<File, AnvilChunkLoader>();
-    private final Map<String, Map<Long, Changes>> changedChunks = new HashMap<String, Map<Long, Changes>>();
+    private final Map<String, Map<Long, ChunkChanges>> changedChunks = new HashMap<String, Map<Long, ChunkChanges>>();
     private boolean dirty;
 
-    public class Changes
+    public static class ChunkChanges
     {
         public final ChangeType type;
         public final String worldName;
 
-        public Changes(ChangeType type, String worldName)
+        public ChunkChanges(ChangeType type, String worldName)
         {
             this.type = type;
             this.worldName = worldName;
-        }
-
-        private ChunkChanger getOuterType()
-        {
-            return ChunkChanger.this;
         }
 
         @Override
@@ -74,7 +69,6 @@ public class ChunkChanger
         {
             final int prime = 31;
             int result = 1;
-            result = prime * result + getOuterType().hashCode();
             result = prime * result + ((type == null) ? 0 : type.hashCode());
             result = prime * result + ((worldName == null) ? 0 : worldName.hashCode());
             return result;
@@ -89,9 +83,7 @@ public class ChunkChanger
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            Changes other = (Changes) obj;
-            if (!getOuterType().equals(other.getOuterType()))
-                return false;
+            ChunkChanges other = (ChunkChanges) obj;
             if (type != other.type)
                 return false;
             if (worldName == null)
@@ -419,15 +411,15 @@ public class ChunkChanger
 
     private void addChangedChunkLocation(String user, ChunkPos pos, ChangeType type, String worldName, boolean markDirty)
     {
-        Map<Long, Changes> map = this.changedChunks.get(user);
+        Map<Long, ChunkChanges> map = this.changedChunks.get(user);
 
         if (map == null)
         {
-            map = new HashMap<Long, Changes>();
+            map = new HashMap<Long, ChunkChanges>();
             this.changedChunks.put(user, map);
         }
 
-        map.put(ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos), new Changes(type, worldName));
+        map.put(ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos), new ChunkChanges(type, worldName));
 
         if (markDirty)
         {
@@ -523,7 +515,7 @@ public class ChunkChanger
             return;
         }
 
-        Map<Long, Changes> chunks = new HashMap<Long, Changes>();
+        Map<Long, ChunkChanges> chunks = new HashMap<Long, ChunkChanges>();
         NBTTagList list = nbt.getTagList("changes", Constants.NBT.TAG_COMPOUND);
 
         for (int i = 0; i < list.tagCount(); i++)
@@ -536,7 +528,7 @@ public class ChunkChanger
             for (int j = 0; j < arr.length - 1; j += 2)
             {
                 long loc = ((long) arr[j + 1]) << 32 | (long) arr[j];
-                chunks.put(loc, new Changes(type, world));
+                chunks.put(loc, new ChunkChanges(type, world));
             }
         }
 
@@ -546,17 +538,17 @@ public class ChunkChanger
         WorldTools.logger.info("ChunkChanger: Read {} stored chunk changes from file for user {}", chunks.size(), user);
     }
 
-    private NBTTagCompound writeToNBT(NBTTagCompound nbt, String user)
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt, String user)
     {
-        Map<Long, Changes> changedChunks = this.changedChunks.get(user);
+        Map<Long, ChunkChanges> changedChunks = this.changedChunks.get(user);
 
         if (changedChunks != null)
         {
-            Map<Changes, List<Long>> chunksPerChangeType = new HashMap<Changes, List<Long>>();
+            Map<ChunkChanges, List<Long>> chunksPerChangeType = new HashMap<ChunkChanges, List<Long>>();
 
-            for (Map.Entry<Long, Changes> entry : changedChunks.entrySet())
+            for (Map.Entry<Long, ChunkChanges> entry : changedChunks.entrySet())
             {
-                Changes changes = entry.getValue();
+                ChunkChanges changes = entry.getValue();
                 List<Long> locations = chunksPerChangeType.get(changes);
 
                 if (locations == null)
@@ -570,9 +562,9 @@ public class ChunkChanger
 
             NBTTagList list = new NBTTagList();
 
-            for (Map.Entry<Changes, List<Long>> entry : chunksPerChangeType.entrySet())
+            for (Map.Entry<ChunkChanges, List<Long>> entry : chunksPerChangeType.entrySet())
             {
-                Changes changes = entry.getKey();
+                ChunkChanges changes = entry.getKey();
                 NBTTagCompound tag = new NBTTagCompound();
                 tag.setString("world", changes.worldName);
                 tag.setByte("type", (byte) changes.type.ordinal());
@@ -599,7 +591,7 @@ public class ChunkChanger
         return nbt;
     }
 
-    public void loadBiomesFromAlternateWorld(World worldIn, ChunkPos pos, int worldId, String user)
+    public void loadBiomesFromAlternateWorld(World worldIn, ChunkPos pos, String worldName, String user)
     {
         if ((worldIn instanceof WorldServer) == false)
         {
@@ -607,7 +599,6 @@ public class ChunkChanger
         }
 
         WorldServer world = (WorldServer) worldIn;
-        String worldName = this.getWorldName(world, worldId);
 
         if (StringUtils.isBlank(worldName) == false)
         {
@@ -648,7 +639,7 @@ public class ChunkChanger
         }
     }
 
-    public void loadChunkFromAlternateWorld(World worldIn, ChunkPos pos, int worldId, String user)
+    public void loadChunkFromAlternateWorld(World worldIn, ChunkPos pos, String worldName, String user)
     {
         if ((worldIn instanceof WorldServer) == false)
         {
@@ -656,7 +647,6 @@ public class ChunkChanger
         }
 
         WorldServer world = (WorldServer) worldIn;
-        String worldName = this.getWorldName(world, worldId);
 
         if (StringUtils.isBlank(worldName) == false)
         {

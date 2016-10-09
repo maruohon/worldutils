@@ -14,8 +14,10 @@ import fi.dy.masa.worldtools.WorldTools;
 import fi.dy.masa.worldtools.event.InputEventHandler;
 import fi.dy.masa.worldtools.event.PlayerEventHandler;
 import fi.dy.masa.worldtools.event.RenderEventHandler;
+import fi.dy.masa.worldtools.event.WorldEventHandler;
 import fi.dy.masa.worldtools.reference.HotKeys;
 import fi.dy.masa.worldtools.reference.Keybindings;
+import fi.dy.masa.worldtools.setup.Configs;
 import fi.dy.masa.worldtools.setup.WorldToolsItems;
 
 public class ClientProxy implements IProxy
@@ -38,9 +40,11 @@ public class ClientProxy implements IProxy
     @Override
     public void registerEventHandlers()
     {
-        MinecraftForge.EVENT_BUS.register(InputEventHandler.class);
-        MinecraftForge.EVENT_BUS.register(PlayerEventHandler.class);
+        MinecraftForge.EVENT_BUS.register(new Configs());
+        MinecraftForge.EVENT_BUS.register(new InputEventHandler());
+        MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
         MinecraftForge.EVENT_BUS.register(new RenderEventHandler());
+        MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
     }
 
     @Override

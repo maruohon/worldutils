@@ -11,6 +11,7 @@ import java.util.UUID;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -29,10 +30,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldtools.item.base.IKeyBound;
 import fi.dy.masa.worldtools.item.base.ItemWorldTools;
+import fi.dy.masa.worldtools.network.MessageChunkChanges;
+import fi.dy.masa.worldtools.network.PacketHandler;
 import fi.dy.masa.worldtools.reference.HotKeys;
 import fi.dy.masa.worldtools.reference.HotKeys.EnumKey;
 import fi.dy.masa.worldtools.reference.ReferenceNames;
 import fi.dy.masa.worldtools.util.ChunkChanger;
+import fi.dy.masa.worldtools.util.ChunkChanger.ChangeType;
 import fi.dy.masa.worldtools.util.EntityUtils;
 import fi.dy.masa.worldtools.util.NBTUtils;
 import fi.dy.masa.worldtools.util.PositionUtils;
@@ -305,12 +309,14 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
     private EnumActionResult useWandLoadChunks(ItemStack stack, World world, EntityPlayer player)
     {
         Collection<ChunkPos> locations = this.getCurrentAndStoredSelections(stack);
-        int id = this.getTargetSelection(stack);
+        String worldName = this.getWorldName(stack);
 
         for (ChunkPos pos : locations)
         {
-            ChunkChanger.instance().loadChunkFromAlternateWorld(world, pos, id, player.getName());
+            ChunkChanger.instance().loadChunkFromAlternateWorld(world, pos, worldName, player.getName());
         }
+
+        PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(ChangeType.CHUNK_CHANGE, locations, worldName), (EntityPlayerMP) player);
 
         return EnumActionResult.SUCCESS;
     }
@@ -318,12 +324,14 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
     private EnumActionResult useWandLoadBiomes(ItemStack stack, World world, EntityPlayer player)
     {
         Collection<ChunkPos> locations = this.getCurrentAndStoredSelections(stack);
-        int id = this.getTargetSelection(stack);
+        String worldName = this.getWorldName(stack);
 
         for (ChunkPos pos : locations)
         {
-            ChunkChanger.instance().loadBiomesFromAlternateWorld(world, pos, id, player.getName());
+            ChunkChanger.instance().loadBiomesFromAlternateWorld(world, pos, worldName, player.getName());
         }
+
+        PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(ChangeType.BIOME_IMPORT, locations, worldName), (EntityPlayerMP) player);
 
         return EnumActionResult.SUCCESS;
     }
@@ -391,8 +399,8 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
     public static enum Mode
     {
-        LOAD        ("load",    "enderutilities.tooltip.item.chunkwand.load",       true),
-        BIOMES      ("biomes",  "enderutilities.tooltip.item.chunkwand.biomes",     true);
+        LOAD        ("load",    "worldtools.tooltip.item.chunkwand.load",       true),
+        BIOMES      ("biomes",  "worldtools.tooltip.item.chunkwand.biomes",     true);
 
         private final String name;
         private final String unlocName;

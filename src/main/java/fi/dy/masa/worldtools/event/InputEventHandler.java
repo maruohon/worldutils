@@ -40,7 +40,7 @@ public class InputEventHandler
     }
 
     @SubscribeEvent
-    public static void onKeyInputEvent(InputEvent.KeyInputEvent event)
+    public void onKeyInputEvent(InputEvent.KeyInputEvent event)
     {
         EntityPlayer player = FMLClientHandler.instance().getClientPlayerEntity();
         int eventKey = Keyboard.getEventKey();
@@ -85,7 +85,7 @@ public class InputEventHandler
     }
 
     @SubscribeEvent
-    public static void onMouseEvent(MouseEvent event)
+    public void onMouseEvent(MouseEvent event)
     {
         int dWheel = event.getDwheel();
         if (dWheel != 0)

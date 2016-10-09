@@ -173,12 +173,12 @@ public class ChunkWandRenderer
         int index = wand.getTargetSelection(stack);
         int max = wand.getNumTargets(stack);
 
-        String str = I18n.format("enderutilities.tooltip.item.chunkwand.target");
+        String str = I18n.format("worldtools.tooltip.item.chunkwand.target");
         String name = wand.getWorldName(stack);
         lines.add(String.format("%s [%s%d/%d%s]: %s%s%s", str, preGreen, (index + 1), max, rst, preIta, name, rst));
 
         String modeName = mode.getDisplayName();
-        str = I18n.format("enderutilities.tooltip.item.mode");
+        str = I18n.format("worldtools.tooltip.item.mode");
         String strMode = String.format("%s [%s%d/%d%s]: %s%s%s", str, preGreen,
                 (mode.ordinal() + 1), Mode.getModeCount(player), rst, preGreen, modeName, rst);
 

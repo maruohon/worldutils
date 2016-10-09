@@ -26,8 +26,8 @@ public class ServerProxy implements IProxy
     @Override
     public void registerEventHandlers()
     {
-        MinecraftForge.EVENT_BUS.register(PlayerEventHandler.class);
-        MinecraftForge.EVENT_BUS.register(WorldEventHandler.class);
+        MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
+        MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
     }
 
     @Override
