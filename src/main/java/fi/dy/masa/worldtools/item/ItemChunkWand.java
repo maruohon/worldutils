@@ -384,7 +384,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
         // Ctrl + Shift + Alt + Toggle key: Clear chunk change tracker
         else if (EnumKey.TOGGLE.matches(key, HotKeys.MOD_SHIFT_CTRL_ALT))
         {
-            ChunkChanger.instance().clearChangedChunksForUser(player.getName());
+            ChunkChanger.instance().clearChangedChunksForUser(player.worldObj, player.getName());
             player.addChatMessage(new TextComponentTranslation("enderutilities.chat.message.chunkwand.clearedchangedchunks"));
         }
         // Just Toggle key: Execute the chunk operation

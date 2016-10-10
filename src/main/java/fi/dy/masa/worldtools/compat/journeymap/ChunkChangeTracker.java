@@ -1,9 +1,7 @@
 package fi.dy.masa.worldtools.compat.journeymap;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.nbt.NBTTagCompound;
@@ -11,16 +9,14 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldtools.util.ChunkChanger.ChangeType;
-import fi.dy.masa.worldtools.util.ChunkChanger.ChunkChanges;
 
 public class ChunkChangeTracker
 {
     private static final ChunkChangeTracker INSTANCE = new ChunkChangeTracker();
-    private final Map<Long, ChunkChanges> changes = new HashMap<Long, ChunkChanges>();
-    private final Set<Long> changedChunks = new HashSet<Long>();
-    private final Set<Long> importedBiomes = new HashSet<Long>();
-    private String ignoreWorld;
-    private boolean dirty;
+    private final Set<ChunkPos> changedChunks = new HashSet<ChunkPos>();
+    private final Set<ChunkPos> importedBiomes = new HashSet<ChunkPos>();
+    private String ignoredWorld = "";
+    private boolean newChanges;
 
     private ChunkChangeTracker()
     {
@@ -33,7 +29,43 @@ public class ChunkChangeTracker
 
     public void setIgnoredWorld(String ignore)
     {
-        this.ignoreWorld = ignore;
+        this.ignoredWorld = ignore;
+    }
+
+    public boolean hasNewChanges()
+    {
+        return this.newChanges;
+    }
+
+    /**
+     * Returns a Set of chunks for the given ChangeType.
+     * Also clears the hasNewChanges() status.
+     */
+    public Set<ChunkPos> getChangedChunksForType(ChangeType type)
+    {
+        this.newChanges = false;
+
+        return type == ChangeType.CHUNK_CHANGE ? this.changedChunks : this.importedBiomes;
+    }
+
+    private void readChangesFromNBT(Set<ChunkPos> setIn, NBTTagCompound nbt, String tagName)
+    {
+        NBTTagList list = nbt.getTagList(tagName, Constants.NBT.TAG_COMPOUND);
+
+        for (int i = 0; i < list.tagCount(); i++)
+        {
+            NBTTagCompound tag = list.getCompoundTagAt(i);
+            boolean ignored = this.ignoredWorld.equals(tag.getString("world"));
+            int[] arr = tag.getIntArray("chunks");
+
+            for (int j = 0; j < arr.length - 1; j += 2)
+            {
+                if (ignored == false)
+                {
+                    setIn.add(new ChunkPos(arr[j], arr[j + 1]));
+                }
+            }
+        }
     }
 
     public void readAllChangesFromNBT(NBTTagCompound nbt)
@@ -43,74 +75,37 @@ public class ChunkChangeTracker
             return;
         }
 
-        this.changes.clear();
+        this.changedChunks.clear();
+        this.importedBiomes.clear();
 
-        NBTTagList list = nbt.getTagList("changes", Constants.NBT.TAG_COMPOUND);
+        this.readChangesFromNBT(this.changedChunks, nbt, "changes");
+        this.readChangesFromNBT(this.importedBiomes, nbt, "biomes");
 
-        for (int i = 0; i < list.tagCount(); i++)
-        {
-            NBTTagCompound tag = list.getCompoundTagAt(i);
-            String world = tag.getString("world");
-            ChangeType type = ChangeType.fromId(tag.getByte("type"));
-            int[] arr = tag.getIntArray("chunks");
-
-            for (int j = 0; j < arr.length - 1; j += 2)
-            {
-                long loc = ((long) arr[j + 1]) << 32 | (long) arr[j];
-                this.changes.put(loc, new ChunkChanges(type, world));
-            }
-        }
-
-        this.dirty = true;
+        this.newChanges = true;
     }
 
     public void addIncrementalChanges(ChangeType type, Collection<ChunkPos> chunks, String worldName)
     {
+        Set<ChunkPos> set = this.getChangedChunksForType(type);
+
         for (ChunkPos pos : chunks)
         {
-            this.changes.put(ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos), new ChunkChanges(type, worldName));
-        }
-
-        this.dirty = true;
-    }
-
-    private void parseData()
-    {
-        if (this.dirty)
-        {
-            this.changedChunks.clear();
-            this.importedBiomes.clear();
-
-            for (Map.Entry<Long, ChunkChanges> entry : this.changes.entrySet())
+            if (this.ignoredWorld.equals(worldName))
             {
-                ChunkChanges changes = entry.getValue();
-
-                if (changes.worldName.equals(this.ignoreWorld) == false)
-                {
-                    if (changes.type == ChangeType.CHUNK_CHANGE)
-                    {
-                        this.changedChunks.add(entry.getKey());
-                    }
-                    else
-                    {
-                        this.importedBiomes.add(entry.getKey());
-                    }
-                }
+                set.remove(pos);
+            }
+            else
+            {
+                set.add(pos);
             }
 
-            this.dirty = false;
-        }
-    }
-
-    public Set<Long> getChangedChunksForType(ChangeType type)
-    {
-        this.parseData();
-
-        if (type == ChangeType.CHUNK_CHANGE)
-        {
-            return this.changedChunks;
+            // A chunk change removes an existing biome import
+            if (type == ChangeType.CHUNK_CHANGE)
+            {
+                this.importedBiomes.remove(pos);
+            }
         }
 
-        return this.importedBiomes;
+        this.newChanges = true;
     }
 }

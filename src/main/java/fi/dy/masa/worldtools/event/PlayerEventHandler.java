@@ -8,6 +8,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
@@ -63,22 +64,27 @@ public class PlayerEventHandler
     {
         if (event.player instanceof EntityPlayerMP)
         {
-            sendChunkChanges((EntityPlayerMP) event.player);
+            sendChunkChanges(event.player.worldObj, (EntityPlayerMP) event.player);
         }
     }
 
     @SubscribeEvent
-    public void onPlayerCHangedDimension(PlayerChangedDimensionEvent event)
+    public void onPlayerChangedDimension(PlayerChangedDimensionEvent event)
     {
         if (event.player instanceof EntityPlayerMP)
         {
-            sendChunkChanges((EntityPlayerMP) event.player);
+            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(event.toDim);
+
+            if (world != null)
+            {
+                sendChunkChanges(world, (EntityPlayerMP) event.player);
+            }
         }
     }
 
-    private static void sendChunkChanges(EntityPlayerMP player)
+    private static void sendChunkChanges(World world, EntityPlayerMP player)
     {
-        NBTTagCompound nbt = ChunkChanger.instance().writeToNBT(new NBTTagCompound(), player.getName());
+        NBTTagCompound nbt = ChunkChanger.instance().writeToNBT(world, player.getName());
 
         if (nbt.hasNoTags() == false)
         {

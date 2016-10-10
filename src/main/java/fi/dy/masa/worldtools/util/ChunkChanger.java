@@ -45,12 +45,14 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldExc
 import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindFieldException;
 import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 import fi.dy.masa.worldtools.WorldTools;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class ChunkChanger
 {
     private static final ChunkChanger INSTANCE = new ChunkChanger();
     private final Map<File, AnvilChunkLoader> chunkLoaders = new HashMap<File, AnvilChunkLoader>();
-    private final Map<String, Map<Long, ChunkChanges>> changedChunks = new HashMap<String, Map<Long, ChunkChanges>>();
+    private final TIntObjectHashMap<Map<String, Map<Long, String>>> changedChunks  = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
+    private final TIntObjectHashMap<Map<String, Map<Long, String>>> importedBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private boolean dirty;
 
     public static class ChunkChanges
@@ -409,22 +411,56 @@ public class ChunkChanger
         }
     }
 
-    private void addChangedChunkLocation(String user, ChunkPos pos, ChangeType type, String worldName, boolean markDirty)
+    private Map<String, Map<Long, String>> getChangeMap(TIntObjectHashMap<Map<String, Map<Long, String>>> mainMap, World world)
     {
-        Map<Long, ChunkChanges> map = this.changedChunks.get(user);
+        int dim = world.provider.getDimension();
+        Map<String, Map<Long, String>> map = mainMap.get(dim);
 
         if (map == null)
         {
-            map = new HashMap<Long, ChunkChanges>();
-            this.changedChunks.put(user, map);
+            map = new HashMap<String, Map<Long, String>>();
+            mainMap.put(dim, map);
         }
 
-        map.put(ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos), new ChunkChanges(type, worldName));
+        return map;
+    }
 
-        if (markDirty)
+    private void addChangedChunkLocation(World world, ChunkPos pos, ChangeType type, String worldName, String user)
+    {
+        Map<String, Map<Long, String>> mainMap = null;
+
+        if (type == ChangeType.CHUNK_CHANGE)
         {
-            this.dirty = true;
+            mainMap = this.getChangeMap(this.changedChunks, world);
         }
+        else
+        {
+            mainMap = this.getChangeMap(this.importedBiomes, world);
+        }
+
+        Map<Long, String> map = mainMap.get(user);
+
+        if (map == null)
+        {
+            map = new HashMap<Long, String>();
+            mainMap.put(user, map);
+        }
+
+        Long posLong = ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos);
+        map.put(posLong, worldName);
+
+        // A chunk change also removes an earlier biome import for that chunk
+        if (type == ChangeType.CHUNK_CHANGE)
+        {
+            map = this.getChangeMap(this.importedBiomes, world).get(user);
+
+            if (map != null)
+            {
+                map.remove(posLong);
+            }
+        }
+
+        this.dirty = true;
     }
 
     public void readFromDisk(World world)
@@ -443,11 +479,13 @@ public class ChunkChanger
                 return;
             }
 
+            final int dim = world.provider.getDimension();
+
             String[] files = saveDir.list(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name)
                 {
-                    return name.endsWith("_changed_chunks.nbt");
+                    return name.startsWith("dim" + dim + "_") && name.endsWith("_changed_chunks.nbt");
                 }
                 
             });
@@ -458,7 +496,9 @@ public class ChunkChanger
 
                 if (file.exists() && file.isFile())
                 {
-                    this.readFromNBT(CompressedStreamTools.readCompressed(new FileInputStream(file)));
+                    NBTTagCompound nbt = CompressedStreamTools.readCompressed(new FileInputStream(file));
+                    this.readFromNBT(this.getChangeMap(this.changedChunks, world), nbt, "changes");
+                    this.readFromNBT(this.getChangeMap(this.importedBiomes, world), nbt, "biomes");
                 }
             }
         }
@@ -485,12 +525,14 @@ public class ChunkChanger
                 return;
             }
 
-            for (String user : this.changedChunks.keySet())
+            final int dim = world.provider.getDimension();
+
+            for (String user : this.getChangeMap(this.changedChunks, world).keySet())
             {
-                String fileName = user + "_changed_chunks.nbt";
+                String fileName = "dim" + dim + "_" + user + "_changed_chunks.nbt";
                 File fileTmp = new File(saveDir, fileName + ".tmp");
                 File fileReal = new File(saveDir, fileName);
-                CompressedStreamTools.writeCompressed(this.writeToNBT(new NBTTagCompound(), user), new FileOutputStream(fileTmp));
+                CompressedStreamTools.writeCompressed(this.writeToNBT(world, user), new FileOutputStream(fileTmp));
 
                 if (fileReal.exists())
                 {
@@ -508,85 +550,95 @@ public class ChunkChanger
         }
     }
 
-    private void readFromNBT(NBTTagCompound nbt)
+    private void readFromNBT(Map<String, Map<Long, String>> mapIn, NBTTagCompound nbt, String tagName)
     {
         if (nbt == null || StringUtils.isBlank(nbt.getString("user")))
         {
             return;
         }
 
-        Map<Long, ChunkChanges> chunks = new HashMap<Long, ChunkChanges>();
-        NBTTagList list = nbt.getTagList("changes", Constants.NBT.TAG_COMPOUND);
+        Map<Long, String> chunks = new HashMap<Long, String>();
+        NBTTagList list = nbt.getTagList(tagName, Constants.NBT.TAG_COMPOUND);
 
         for (int i = 0; i < list.tagCount(); i++)
         {
             NBTTagCompound tag = list.getCompoundTagAt(i);
-            String world = tag.getString("world");
-            ChangeType type = ChangeType.fromId(tag.getByte("type"));
+            String worldName = tag.getString("world");
             int[] arr = tag.getIntArray("chunks");
 
             for (int j = 0; j < arr.length - 1; j += 2)
             {
                 long loc = ((long) arr[j + 1]) << 32 | (long) arr[j];
-                chunks.put(loc, new ChunkChanges(type, world));
+                chunks.put(loc, worldName);
             }
         }
 
         String user = nbt.getString("user");
-        this.changedChunks.put(user, chunks);
+        mapIn.put(user, chunks);
 
-        WorldTools.logger.info("ChunkChanger: Read {} stored chunk changes from file for user {}", chunks.size(), user);
+        WorldTools.logger.info("ChunkChanger: Read {} stored chunk modifications of type '{}' from file for user {}", chunks.size(), tagName, user);
     }
 
-    public NBTTagCompound writeToNBT(NBTTagCompound nbt, String user)
+    public NBTTagCompound writeToNBT(World world, String user)
     {
-        Map<Long, ChunkChanges> changedChunks = this.changedChunks.get(user);
+        NBTTagCompound nbt = new NBTTagCompound();
+        final int dim = world.provider.getDimension();
+        this.writeToNBT(this.getChangeMap(this.changedChunks, world), dim, user, nbt, "changes");
+        this.writeToNBT(this.getChangeMap(this.importedBiomes, world), dim, user, nbt, "biomes");
 
-        if (changedChunks != null)
+        return nbt;
+    }
+
+    private NBTTagCompound writeToNBT(Map<String, Map<Long, String>> mapIn, int dimension, String user, NBTTagCompound nbt, String tagName)
+    {
+        Map<Long, String> modifiedChunks = mapIn.get(user);
+
+        if (modifiedChunks == null)
         {
-            Map<ChunkChanges, List<Long>> chunksPerChangeType = new HashMap<ChunkChanges, List<Long>>();
-
-            for (Map.Entry<Long, ChunkChanges> entry : changedChunks.entrySet())
-            {
-                ChunkChanges changes = entry.getValue();
-                List<Long> locations = chunksPerChangeType.get(changes);
-
-                if (locations == null)
-                {
-                    locations = new ArrayList<Long>();
-                    chunksPerChangeType.put(changes, locations);
-                }
-
-                locations.add(entry.getKey());
-            }
-
-            NBTTagList list = new NBTTagList();
-
-            for (Map.Entry<ChunkChanges, List<Long>> entry : chunksPerChangeType.entrySet())
-            {
-                ChunkChanges changes = entry.getKey();
-                NBTTagCompound tag = new NBTTagCompound();
-                tag.setString("world", changes.worldName);
-                tag.setByte("type", (byte) changes.type.ordinal());
-
-                List<Long> chunks = entry.getValue();
-                int[] chunksArr = new int[chunks.size() * 2];
-                int i = 0;
-
-                for (long chunk : chunks)
-                {
-                    chunksArr[i    ] = (int) (chunk & 0xFFFFFFFF);
-                    chunksArr[i + 1] = (int) (chunk >>> 32);
-                    i += 2;
-                }
-
-                tag.setIntArray("chunks", chunksArr);
-                list.appendTag(tag);
-            }
-
-            nbt.setString("user", user);
-            nbt.setTag("changes", list);
+            return nbt;
         }
+
+        Map<String, List<Long>> changesPerWorld = new HashMap<String, List<Long>>();
+
+        for (Map.Entry<Long, String> entry : modifiedChunks.entrySet())
+        {
+            String worldName = entry.getValue();
+            List<Long> locations = changesPerWorld.get(worldName);
+
+            if (locations == null)
+            {
+                locations = new ArrayList<Long>();
+                changesPerWorld.put(worldName, locations);
+            }
+
+            locations.add(entry.getKey());
+        }
+
+        NBTTagList list = new NBTTagList();
+
+        for (Map.Entry<String, List<Long>> entry : changesPerWorld.entrySet())
+        {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString("world", entry.getKey());
+
+            List<Long> chunks = entry.getValue();
+            int[] chunksArr = new int[chunks.size() * 2];
+            int i = 0;
+
+            for (long chunk : chunks)
+            {
+                chunksArr[i    ] = (int) (chunk & 0xFFFFFFFF);
+                chunksArr[i + 1] = (int) (chunk >>> 32);
+                i += 2;
+            }
+
+            tag.setIntArray("chunks", chunksArr);
+            list.appendTag(tag);
+        }
+
+        nbt.setString("user", user);
+        nbt.setInteger("dim", dimension);
+        nbt.setTag(tagName, list);
 
         return nbt;
     }
@@ -626,7 +678,7 @@ public class ChunkChanger
                                 chunkCurrent.setBiomeArray(biomes);
                                 chunkCurrent.setChunkModified();
                                 this.sendChunkToWatchers(world, chunkCurrent);
-                                this.addChangedChunkLocation(user, pos, ChangeType.BIOME_IMPORT, worldName, true);
+                                this.addChangedChunkLocation(world, pos, ChangeType.BIOME_IMPORT, worldName, user);
                             }
                         }
                     }
@@ -655,14 +707,14 @@ public class ChunkChanger
             if (chunk != null)
             {
                 this.sendChunkToWatchers(world, world.getChunkFromChunkCoords(pos.chunkXPos, pos.chunkZPos));
-                this.addChangedChunkLocation(user, pos, ChangeType.CHUNK_CHANGE, worldName, true);
+                this.addChangedChunkLocation(world, pos, ChangeType.CHUNK_CHANGE, worldName, user);
             }
         }
     }
 
-    public void clearChangedChunksForUser(String user)
+    public void clearChangedChunksForUser(World world, String user)
     {
-        this.changedChunks.remove(user);
+        this.getChangeMap(this.changedChunks, world).remove(user);
     }
 }
 

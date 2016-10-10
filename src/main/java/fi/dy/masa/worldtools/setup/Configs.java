@@ -13,13 +13,13 @@ import fi.dy.masa.worldtools.reference.Reference;
 public class Configs
 {
     public static final String CATEGORY_CLIENT = "Client";
-    public static final String CATEGORY_GENERIC = "Generic";
     public static File configurationFile;
     public static Configuration config;
 
     public static String ignoreWorld;
     public static int colorChangedChunks;
     public static int colorImportedBiomes;
+    public static int colorChangedChunksAndImportedBiomes;
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
@@ -42,20 +42,24 @@ public class Configs
     public static void loadConfigs(Configuration conf)
     {
         Property prop;
-        String category = CATEGORY_GENERIC;
+        String category = CATEGORY_CLIENT;
 
         prop = conf.get(category, "ignoreWorld", "");
         prop.setComment("The exact name of the world that is the same as the current world, and will thus be displayed as \"no-changes\" on the map overlay");
         ignoreWorld = prop.getString();
         ChunkChangeTracker.instance().setIgnoredWorld(ignoreWorld);
 
-        prop = conf.get(CATEGORY_GENERIC, "colorChangedChunks", "0x00FFF6");
-        prop.setComment("Overlay color for chunks that have been changed to a different version (default: 0x00FFF6 = 65526)");
-        colorChangedChunks = getColor(prop.getString(), 0x00FFF6);
+        prop = conf.get(category, "colorChangedChunks", "0xFD9500");
+        prop.setComment("Overlay color for chunks that have been changed to a different version (default: 0xFD9500 = 16618752)");
+        colorChangedChunks = getColor(prop.getString(), 0xFD9500);
 
-        prop = conf.get(CATEGORY_GENERIC, "colorImportedBiomes", "0xFD9500");
-        prop.setComment("Overlay color for chunks that have had their biomes imported (default: 0xFD9500 = 16618752)");
-        colorImportedBiomes = getColor(prop.getString(), 0xFD9500);
+        prop = conf.get(category, "colorImportedBiomes", "0x00FFF6");
+        prop.setComment("Overlay color for chunks that have had their biomes imported (default: 0x00FFF6 = 65526)");
+        colorImportedBiomes = getColor(prop.getString(), 0x00FFF6);
+
+        prop = conf.get(category, "colorChangedChunksAndImportedBiomes", "0xFF22FF");
+        prop.setComment("Overlay color for chunks that have had their biomes imported (default: 0xFF22FF = 16720639)");
+        colorChangedChunksAndImportedBiomes = getColor(prop.getString(), 0xFF22FF);
 
         if (conf.hasChanged() == true)
         {
