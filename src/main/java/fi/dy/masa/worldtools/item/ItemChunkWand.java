@@ -35,8 +35,8 @@ import fi.dy.masa.worldtools.network.PacketHandler;
 import fi.dy.masa.worldtools.reference.HotKeys;
 import fi.dy.masa.worldtools.reference.HotKeys.EnumKey;
 import fi.dy.masa.worldtools.reference.ReferenceNames;
-import fi.dy.masa.worldtools.util.ChunkChanger;
-import fi.dy.masa.worldtools.util.ChunkChanger.ChangeType;
+import fi.dy.masa.worldtools.util.ChunkUtils;
+import fi.dy.masa.worldtools.util.ChunkUtils.ChangeType;
 import fi.dy.masa.worldtools.util.EntityUtils;
 import fi.dy.masa.worldtools.util.NBTUtils;
 import fi.dy.masa.worldtools.util.PositionUtils;
@@ -267,7 +267,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
     private void setNumTargets(ItemStack stack, World world)
     {
-        int num = ChunkChanger.instance().getNumberOfAlternateWorlds(world);
+        int num = ChunkUtils.instance().getNumberOfAlternateWorlds(world);
         NBTUtils.setByte(stack, WRAPPER_TAG_NAME, "NumTargets", (byte) num);
     }
 
@@ -282,7 +282,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
         int max = this.getNumTargets(stack);
         NBTUtils.cycleByteValue(tag, TAG_NAME_SELECTION, 0, max - 1, reverse);
-        tag.setString("WorldName", ChunkChanger.instance().getWorldName(world, tag.getByte(TAG_NAME_SELECTION)));
+        tag.setString("WorldName", ChunkUtils.instance().getWorldName(world, tag.getByte(TAG_NAME_SELECTION)));
     }
 
     public String getWorldName(ItemStack stack)
@@ -313,7 +313,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
         for (ChunkPos pos : locations)
         {
-            ChunkChanger.instance().loadChunkFromAlternateWorld(world, pos, worldName, player.getName());
+            ChunkUtils.instance().loadChunkFromAlternateWorld(world, pos, worldName, player.getName());
         }
 
         PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(ChangeType.CHUNK_CHANGE, locations, worldName), (EntityPlayerMP) player);
@@ -328,7 +328,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
         for (ChunkPos pos : locations)
         {
-            ChunkChanger.instance().loadBiomesFromAlternateWorld(world, pos, worldName, player.getName());
+            ChunkUtils.instance().loadBiomesFromAlternateWorld(world, pos, worldName, player.getName());
         }
 
         PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(ChangeType.BIOME_IMPORT, locations, worldName), (EntityPlayerMP) player);
@@ -384,7 +384,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
         // Ctrl + Shift + Alt + Toggle key: Clear chunk change tracker
         else if (EnumKey.TOGGLE.matches(key, HotKeys.MOD_SHIFT_CTRL_ALT))
         {
-            ChunkChanger.instance().clearChangedChunksForUser(player.worldObj, player.getName());
+            ChunkUtils.instance().clearChangedChunksForUser(player.worldObj, player.getName());
             player.addChatMessage(new TextComponentTranslation("enderutilities.chat.message.chunkwand.clearedchangedchunks"));
         }
         // Just Toggle key: Execute the chunk operation

@@ -8,7 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.util.Constants;
-import fi.dy.masa.worldtools.util.ChunkChanger.ChangeType;
+import fi.dy.masa.worldtools.util.ChunkUtils.ChangeType;
 
 public class ChunkChangeTracker
 {

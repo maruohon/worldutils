@@ -6,6 +6,8 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import fi.dy.masa.worldtools.command.CommandWorldTools;
 import fi.dy.masa.worldtools.network.PacketHandler;
 import fi.dy.masa.worldtools.proxy.IProxy;
 import fi.dy.masa.worldtools.reference.Reference;
@@ -24,6 +26,7 @@ public class WorldTools
     @SidedProxy(clientSide = Reference.PROXY_CLASS_CLIENT, serverSide = Reference.PROXY_CLASS_SERVER)
     public static IProxy proxy;
     public static Logger logger;
+    public static String configDirPath;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -31,6 +34,7 @@ public class WorldTools
         instance = this;
         logger = event.getModLog();
         Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
+        configDirPath = event.getModConfigurationDirectory().getAbsolutePath().concat("/" + Reference.MOD_ID);
 
         WorldToolsItems.init();
         PacketHandler.init(); // Initialize network stuff
@@ -38,5 +42,11 @@ public class WorldTools
         proxy.registerModels();
         proxy.registerKeyBindings();
         proxy.registerEventHandlers();
+    }
+
+    @EventHandler
+    public void serverStarting(FMLServerStartingEvent event)
+    {
+        event.registerServerCommand(new CommandWorldTools());
     }
 }

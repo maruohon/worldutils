@@ -25,6 +25,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.SPacketChunkData;
+import net.minecraft.network.play.server.SPacketUnloadChunk;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
@@ -47,9 +48,9 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindMethodExce
 import fi.dy.masa.worldtools.WorldTools;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-public class ChunkChanger
+public class ChunkUtils
 {
-    private static final ChunkChanger INSTANCE = new ChunkChanger();
+    private static final ChunkUtils INSTANCE = new ChunkUtils();
     private final Map<File, AnvilChunkLoader> chunkLoaders = new HashMap<File, AnvilChunkLoader>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> changedChunks  = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> importedBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
@@ -110,42 +111,54 @@ public class ChunkChanger
         }
     }
 
-    private ChunkChanger()
+    private ChunkUtils()
     {
     }
 
-    public static ChunkChanger instance()
+    public static ChunkUtils instance()
     {
         return INSTANCE;
     }
 
-    private File getWorldSaveLocation(WorldServer world)
+    private static File getBaseWorldSaveLocation(World world)
     {
-        File baseDir = world.getSaveHandler().getWorldDirectory();
+        return world.getSaveHandler().getWorldDirectory();
+    }
+
+    public static File getWorldSaveLocation(World world)
+    {
+        File dir = getBaseWorldSaveLocation(world);
+
+        if (world.provider.getSaveFolder() != null)
+        {
+            dir = new File(dir, world.provider.getSaveFolder());
+        }
+
+        return dir;
+    }
+
+    private static File getAlternateWorldsBaseDirectory(World world)
+    {
+        return new File(getBaseWorldSaveLocation(world), "alternate_worlds");
+    }
+
+    private static File getAlternateWorldSaveLocation(World world, String worldName)
+    {
+        File baseDir = getAlternateWorldsBaseDirectory(world);
 
         if (world.provider.getSaveFolder() != null)
         {
             baseDir = new File(baseDir, world.provider.getSaveFolder());
         }
 
-        return baseDir;
+        return new File(baseDir, worldName);
     }
 
-    private File getAlternateWorldsBaseDirectory(WorldServer world)
-    {
-        return new File(this.getWorldSaveLocation(world), "alternate_worlds");
-    }
-
-    private File getWorldLocation(WorldServer world, String worldName)
-    {
-        return new File(this.getAlternateWorldsBaseDirectory(world), worldName);
-    }
-
-    public int getNumberOfAlternateWorlds(World world)
+    public static int getNumberOfAlternateWorlds(World world)
     {
         if (world instanceof WorldServer)
         {
-            File dir = this.getAlternateWorldsBaseDirectory((WorldServer) world);
+            File dir = getAlternateWorldsBaseDirectory((WorldServer) world);
             String[] names = dir.list();
             int num = 0;
 
@@ -169,11 +182,11 @@ public class ChunkChanger
         return 0;
     }
 
-    public String getWorldName(World world, int index)
+    public static String getWorldName(World world, int index)
     {
-        if (world instanceof WorldServer && index < this.getNumberOfAlternateWorlds(world))
+        if (world instanceof WorldServer && index < getNumberOfAlternateWorlds(world))
         {
-            File dir = this.getAlternateWorldsBaseDirectory((WorldServer) world);
+            File dir = getAlternateWorldsBaseDirectory((WorldServer) world);
             String[] names = dir.list();
 
             if (names != null)
@@ -200,7 +213,7 @@ public class ChunkChanger
         return "";
     }
 
-    private AnvilChunkLoader getChunkLoader(File worldDir)
+    public AnvilChunkLoader getChunkLoader(File worldDir)
     {
         AnvilChunkLoader loader = this.chunkLoaders.get(worldDir);
 
@@ -213,9 +226,21 @@ public class ChunkChanger
         return loader;
     }
 
-    private AnvilChunkLoader getChunkLoader(WorldServer world, String worldName)
+    public AnvilChunkLoader getChunkLoaderForWorld(World world)
     {
-        File worldDir = this.getWorldLocation(world, worldName);
+        File worldDir = getWorldSaveLocation(world);
+
+        if (worldDir.exists() && worldDir.isDirectory())
+        {
+            return this.getChunkLoader(worldDir);
+        }
+
+        return null;
+    }
+
+    public AnvilChunkLoader getChunkLoaderForAlternateWorld(World world, String alternateWorldName)
+    {
+        File worldDir = getAlternateWorldSaveLocation(world, alternateWorldName);
 
         if (worldDir.exists() && worldDir.isDirectory())
         {
@@ -308,7 +333,7 @@ public class ChunkChanger
 
     private Chunk loadChunk(WorldServer world, ChunkPos pos, String worldName)
     {
-        AnvilChunkLoader loader = this.getChunkLoader(world, worldName);
+        AnvilChunkLoader loader = this.getChunkLoaderForAlternateWorld(world, worldName);
 
         if (loader != null)
         {
@@ -405,6 +430,7 @@ public class ChunkChanger
             }
             }))
         {
+            player.connection.sendPacket(new SPacketUnloadChunk(chunk.xPosition, chunk.zPosition));
             Packet<?> packet = new SPacketChunkData(chunk, 65535);
             player.connection.sendPacket(packet);
             world.getEntityTracker().sendLeashedEntitiesInChunk(player, chunk);
@@ -472,7 +498,7 @@ public class ChunkChanger
 
         try
         {
-            File saveDir = this.getAlternateWorldsBaseDirectory((WorldServer) world);
+            File saveDir = getAlternateWorldsBaseDirectory((WorldServer) world);
 
             if (saveDir == null || saveDir.isDirectory() == false)
             {
@@ -517,7 +543,7 @@ public class ChunkChanger
 
         try
         {
-            File saveDir = this.getAlternateWorldsBaseDirectory((WorldServer) world);
+            File saveDir = getAlternateWorldsBaseDirectory((WorldServer) world);
 
             if (saveDir == null || (saveDir.exists() == false && saveDir.mkdirs() == false))
             {
@@ -654,7 +680,7 @@ public class ChunkChanger
 
         if (StringUtils.isBlank(worldName) == false)
         {
-            IChunkLoader loader = this.getChunkLoader(world, worldName);
+            IChunkLoader loader = this.getChunkLoaderForAlternateWorld(world, worldName);
 
             try
             {

@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldtools.WorldTools;
 import fi.dy.masa.worldtools.compat.journeymap.ChunkChangeTracker;
-import fi.dy.masa.worldtools.util.ChunkChanger.ChangeType;
+import fi.dy.masa.worldtools.util.ChunkUtils.ChangeType;
 import io.netty.buffer.ByteBuf;
 
 public class MessageChunkChanges implements IMessage

@@ -6,7 +6,7 @@ import net.minecraft.util.math.ChunkPos;
 import fi.dy.masa.worldtools.WorldTools;
 import fi.dy.masa.worldtools.reference.Reference;
 import fi.dy.masa.worldtools.setup.Configs;
-import fi.dy.masa.worldtools.util.ChunkChanger.ChangeType;
+import fi.dy.masa.worldtools.util.ChunkUtils.ChangeType;
 import journeymap.client.api.IClientAPI;
 import journeymap.client.api.IClientPlugin;
 import journeymap.client.api.display.PolygonOverlay;

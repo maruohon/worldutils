@@ -19,7 +19,7 @@ import fi.dy.masa.worldtools.network.MessageKeyPressed;
 import fi.dy.masa.worldtools.network.PacketHandler;
 import fi.dy.masa.worldtools.reference.HotKeys;
 import fi.dy.masa.worldtools.setup.WorldToolsItems;
-import fi.dy.masa.worldtools.util.ChunkChanger;
+import fi.dy.masa.worldtools.util.ChunkUtils;
 
 public class PlayerEventHandler
 {
@@ -84,7 +84,7 @@ public class PlayerEventHandler
 
     private static void sendChunkChanges(World world, EntityPlayerMP player)
     {
-        NBTTagCompound nbt = ChunkChanger.instance().writeToNBT(world, player.getName());
+        NBTTagCompound nbt = ChunkUtils.instance().writeToNBT(world, player.getName());
 
         if (nbt.hasNoTags() == false)
         {
