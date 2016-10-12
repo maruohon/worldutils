@@ -21,7 +21,8 @@ public class SubCommandEntities extends SubCommand
         super(baseCommand);
 
         this.subSubCommands.add("list");
-        this.subSubCommands.add("list-duplicates");
+        this.subSubCommands.add("list-duplicates-all");
+        this.subSubCommands.add("list-duplicates-only");
         this.subSubCommands.add("read-all");
         this.subSubCommands.add("remove-duplicate-uuids");
     }
@@ -55,10 +56,20 @@ public class SubCommandEntities extends SubCommand
                     sender.addChatMessage(new TextComponentString("Output written to file " + file.getName()));
                 }
             }
-            else if (args[1].equals("list-duplicates"))
+            else if (args[1].equals("list-duplicates-all") || args[1].equals("list-duplicates-only"))
             {
                 List<EntityData> entities = EntityReader.instance().getEntities();
-                List<EntityData> dupes = EntityReader.getDuplicateEntriesIncludingFirst(entities, true);
+                List<EntityData> dupes;
+
+                if (args[1].equals("list-duplicates-all"))
+                {
+                    dupes = EntityReader.getDuplicateEntriesIncludingFirst(entities, true);
+                }
+                else
+                {
+                    dupes = EntityReader.getDuplicateEntriesExcludingFirst(entities, true);
+                }
+
                 File file = FileHelpers.dumpDataToFile("entity_duplicates", EntityReader.getFormattedOutputLines(dupes, false));
 
                 if (file != null)

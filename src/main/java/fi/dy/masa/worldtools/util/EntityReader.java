@@ -68,6 +68,13 @@ public class EntityReader
         this.entities.clear();
         String chatOutput = "";
 
+        World world = DimensionManager.getWorld(dimension);
+        ChunkProviderServer provider = null;
+        if (world != null && world.getChunkProvider() instanceof ChunkProviderServer)
+        {
+            provider = (ChunkProviderServer) world.getChunkProvider();
+        }
+
         File worldSaveLocation = getWorldSaveLocation(dimension);
         File regionDir = new File(worldSaveLocation, "region");
         int regionCount = 0;
@@ -77,7 +84,7 @@ public class EntityReader
         {
             for (File regionFile : regionDir.listFiles(this.anvilRegionFileFilter))
             {
-                totalEntityCount += this.readEntitiesFromRegion(regionFile);
+                totalEntityCount += this.readEntitiesFromRegion(regionFile, provider);
                 regionCount++;
             }
         }
@@ -88,17 +95,16 @@ public class EntityReader
             WorldTools.logger.info(chatOutput);
         }
 
-        World world = DimensionManager.getWorld(dimension);
-        if (world != null && world.getChunkProvider() instanceof ChunkProviderServer)
+        if (provider != null)
         {
-            WorldTools.logger.warn("There were {} chunks currently loaded, the entity list will be inaccurate for those chunks!",
-                    ((ChunkProviderServer) world.getChunkProvider()).getLoadedChunkCount());
+            WorldTools.logger.warn("There were {} chunks currently loaded, the entity list does not include entities in those chunks!!",
+                    provider.getLoadedChunkCount());
         }
 
         return chatOutput;
     }
 
-    private int readEntitiesFromRegion(File regionFile)
+    private int readEntitiesFromRegion(File regionFile, ChunkProviderServer provider)
     {
         RegionFile region = new RegionFile(regionFile);
         int entityCount = 0;
@@ -109,7 +115,7 @@ public class EntityReader
             {
                 if (region.isChunkSaved(cx, cz))
                 {
-                    entityCount += this.readEntitiesFromChunk(region, cx, cz, regionFile.getName());
+                    entityCount += this.readEntitiesFromChunk(region, cx, cz, provider, regionFile.getName());
                 }
             }
         }
@@ -117,7 +123,7 @@ public class EntityReader
         return entityCount;
     }
 
-    private int readEntitiesFromChunk(RegionFile region, int chunkX, int chunkZ, String regionName)
+    private int readEntitiesFromChunk(RegionFile region, int chunkX, int chunkZ, ChunkProviderServer provider, String regionName)
     {
         int entityCount = 0;
         DataInputStream data = region.getChunkDataInputStream(chunkX, chunkZ);
@@ -137,6 +143,11 @@ public class EntityReader
             if (level.hasKey("Entities", Constants.NBT.TAG_LIST))
             {
                 ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
+                if (provider != null && provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                {
+                    return 0;
+                }
+
                 NBTTagList list = level.getTagList("Entities", Constants.NBT.TAG_COMPOUND);
 
                 for (int i = 0; i < list.tagCount(); i++)
@@ -202,10 +213,12 @@ public class EntityReader
     private int removeEntitiesFromChunkInRegion(RegionFile region, ChunkPos chunkPos, List<EntityData> toRemove, String regionName, boolean simulate)
     {
         int entityCount = 0;
+        int chunkX = chunkPos.chunkXPos & 0x1F;
+        int chunkZ = chunkPos.chunkZPos & 0x1F;
 
-        if (region.isChunkSaved(chunkPos.chunkXPos, chunkPos.chunkZPos))
+        if (region.isChunkSaved(chunkX, chunkZ))
         {
-            DataInputStream data = region.getChunkDataInputStream(chunkPos.chunkXPos, chunkPos.chunkZPos);
+            DataInputStream data = region.getChunkDataInputStream(chunkX, chunkZ);
 
             if (data == null)
             {
@@ -246,7 +259,7 @@ public class EntityReader
 
                     if (simulate == false)
                     {
-                        DataOutputStream dataOut = region.getChunkDataOutputStream(chunkPos.chunkXPos, chunkPos.chunkZPos);
+                        DataOutputStream dataOut = region.getChunkDataOutputStream(chunkX, chunkZ);
                         CompressedStreamTools.write(level, dataOut);
                         dataOut.close();
                     }
@@ -269,6 +282,8 @@ public class EntityReader
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
+            this.readEntities(dimension);
+
             List<EntityData> dupes = getDuplicateEntriesExcludingFirst(this.entities, true);
             Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
 
