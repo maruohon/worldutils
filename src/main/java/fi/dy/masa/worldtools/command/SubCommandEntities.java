@@ -7,8 +7,10 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
+import fi.dy.masa.worldtools.util.EntityData;
 import fi.dy.masa.worldtools.util.EntityReader;
 import fi.dy.masa.worldtools.util.FileHelpers;
 
@@ -18,9 +20,10 @@ public class SubCommandEntities extends SubCommand
     {
         super(baseCommand);
 
-        this.subSubCommands.add("fix-duplicate-uuids");
         this.subSubCommands.add("list");
+        this.subSubCommands.add("list-duplicates");
         this.subSubCommands.add("read-all");
+        this.subSubCommands.add("remove-duplicate-uuids");
     }
 
     @Override
@@ -42,12 +45,21 @@ public class SubCommandEntities extends SubCommand
 
         if (args.length >= 2)
         {
-            if (args[1].equals("fix-duplicate-uuids"))
+            if (args[1].equals("list"))
             {
+                List<EntityData> entities = EntityReader.instance().getEntities();
+                File file = FileHelpers.dumpDataToFile("entities", EntityReader.getFormattedOutputLines(entities, true));
+
+                if (file != null)
+                {
+                    sender.addChatMessage(new TextComponentString("Output written to file " + file.getName()));
+                }
             }
-            else if (args[1].equals("list"))
+            else if (args[1].equals("list-duplicates"))
             {
-                File file = FileHelpers.dumpDataToFile("entities", EntityReader.instance().getEntityList());
+                List<EntityData> entities = EntityReader.instance().getEntities();
+                List<EntityData> dupes = EntityReader.getDuplicateEntriesIncludingFirst(entities, true);
+                File file = FileHelpers.dumpDataToFile("entity_duplicates", EntityReader.getFormattedOutputLines(dupes, false));
 
                 if (file != null)
                 {
@@ -56,20 +68,39 @@ public class SubCommandEntities extends SubCommand
             }
             else if (args[1].equals("read-all"))
             {
+                int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).dimension : 0;
+
                 if (args.length == 3)
                 {
-                    int dim = CommandBase.parseInt(args[2]);
-                    String output = EntityReader.instance().readEntities(dim);
-
-                    if (StringUtils.isBlank(output) == false)
-                    {
-                        sender.addChatMessage(new TextComponentString(output));
-                    }
+                    dimension = CommandBase.parseInt(args[2]);
                 }
-                else
+                else if (args.length > 3)
                 {
-                    throw new WrongUsageException("/" + this.getBaseCommand().getCommandName() + " " + args[1] + " <dimension>", new Object[0]);
+                    throw new WrongUsageException("/" + this.getBaseCommand().getCommandName() + " " + args[1] + " [dimension]", new Object[0]);
                 }
+
+                String output = EntityReader.instance().readEntities(dimension);
+
+                if (StringUtils.isBlank(output) == false)
+                {
+                    sender.addChatMessage(new TextComponentString(output));
+                }
+            }
+            else if (args[1].equals("remove-duplicate-uuids"))
+            {
+                int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).dimension : 0;
+
+                if (args.length == 3)
+                {
+                    dimension = CommandBase.parseInt(args[2]);
+                }
+                else if (args.length > 3)
+                {
+                    throw new WrongUsageException("/" + this.getBaseCommand().getCommandName() + " " + args[1] + " [dimension]", new Object[0]);
+                }
+
+                String output = EntityReader.instance().removeAllDuplicateEntities(dimension, false);
+                sender.addChatMessage(new TextComponentString(output));
             }
             else
             {

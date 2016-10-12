@@ -39,6 +39,7 @@ import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.chunk.storage.RegionFileCache;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -120,14 +121,14 @@ public class ChunkUtils
         return INSTANCE;
     }
 
-    private static File getBaseWorldSaveLocation(World world)
+    private static File getBaseWorldSaveLocation()
     {
-        return world.getSaveHandler().getWorldDirectory();
+        return DimensionManager.getCurrentSaveRootDirectory();
     }
 
-    public static File getWorldSaveLocation(World world)
+    private static File getWorldSaveLocation(World world)
     {
-        File dir = getBaseWorldSaveLocation(world);
+        File dir = getBaseWorldSaveLocation();
 
         if (world.provider.getSaveFolder() != null)
         {
@@ -137,14 +138,14 @@ public class ChunkUtils
         return dir;
     }
 
-    private static File getAlternateWorldsBaseDirectory(World world)
+    private static File getAlternateWorldsBaseDirectory()
     {
-        return new File(getBaseWorldSaveLocation(world), "alternate_worlds");
+        return new File(getBaseWorldSaveLocation(), "alternate_worlds");
     }
 
     private static File getAlternateWorldSaveLocation(World world, String worldName)
     {
-        File baseDir = getAlternateWorldsBaseDirectory(world);
+        File baseDir = getAlternateWorldsBaseDirectory();
 
         if (world.provider.getSaveFolder() != null)
         {
@@ -154,60 +155,54 @@ public class ChunkUtils
         return new File(baseDir, worldName);
     }
 
-    public static int getNumberOfAlternateWorlds(World world)
+    public static int getNumberOfAlternateWorlds()
     {
-        if (world instanceof WorldServer)
+        File dir = getAlternateWorldsBaseDirectory();
+        String[] names = dir.list();
+        int num = 0;
+
+        if (names != null)
         {
-            File dir = getAlternateWorldsBaseDirectory((WorldServer) world);
-            String[] names = dir.list();
-            int num = 0;
-
-            if (names != null)
+            for (String name : names)
             {
-                for (String name : names)
+                File tmp1 = new File(dir, name);
+                File tmp2 = new File(tmp1, "region");
+
+                if (tmp1.isDirectory() && tmp2.isDirectory())
                 {
-                    File tmp1 = new File(dir, name);
-                    File tmp2 = new File(tmp1, "region");
-
-                    if (tmp1.isDirectory() && tmp2.isDirectory())
-                    {
-                        num++;
-                    }
+                    num++;
                 }
-
-                return num;
             }
+
+            return num;
         }
 
         return 0;
     }
 
-    public static String getWorldName(World world, int index)
+    public static String getWorldName(int index)
     {
-        if (world instanceof WorldServer && index < getNumberOfAlternateWorlds(world))
+        File dir = getAlternateWorldsBaseDirectory();
+        String[] names = dir.list();
+
+        if (names != null)
         {
-            File dir = getAlternateWorldsBaseDirectory((WorldServer) world);
-            String[] names = dir.list();
+            List<String> namesList = new ArrayList<String>();
 
-            if (names != null)
+            for (String name : names)
             {
-                List<String> namesList = new ArrayList<String>();
+                File tmp1 = new File(dir, name);
+                File tmp2 = new File(tmp1, "region");
 
-                for (String name : names)
+                if (tmp1.isDirectory() && tmp2.isDirectory())
                 {
-                    File tmp1 = new File(dir, name);
-                    File tmp2 = new File(tmp1, "region");
-
-                    if (tmp1.isDirectory() && tmp2.isDirectory())
-                    {
-                        namesList.add(name);
-                    }
+                    namesList.add(name);
                 }
-
-                Collections.sort(namesList);
-
-                return index < namesList.size() ? namesList.get(index) : "";
             }
+
+            Collections.sort(namesList);
+
+            return index < namesList.size() ? namesList.get(index) : "";
         }
 
         return "";
@@ -498,7 +493,7 @@ public class ChunkUtils
 
         try
         {
-            File saveDir = getAlternateWorldsBaseDirectory((WorldServer) world);
+            File saveDir = getAlternateWorldsBaseDirectory();
 
             if (saveDir == null || saveDir.isDirectory() == false)
             {
@@ -543,7 +538,7 @@ public class ChunkUtils
 
         try
         {
-            File saveDir = getAlternateWorldsBaseDirectory((WorldServer) world);
+            File saveDir = getAlternateWorldsBaseDirectory();
 
             if (saveDir == null || (saveDir.exists() == false && saveDir.mkdirs() == false))
             {

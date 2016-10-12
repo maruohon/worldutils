@@ -1,6 +1,7 @@
 package fi.dy.masa.worldtools.util;
 
 import java.util.UUID;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 
 public class EntityData implements Comparable<EntityData>
@@ -8,13 +9,15 @@ public class EntityData implements Comparable<EntityData>
     public final int dimension;
     public final String id;
     public final Vec3d pos;
+    public final ChunkPos chunkPos;
     public final UUID uuid;
 
-    public EntityData(int dimension, String id, Vec3d pos, UUID uuid)
+    public EntityData(int dimension, String id, Vec3d pos, ChunkPos chunkPos, UUID uuid)
     {
         this.dimension = dimension;
         this.id = id;
         this.pos = pos;
+        this.chunkPos = chunkPos;
         this.uuid = uuid;
     }
 
@@ -38,6 +41,7 @@ public class EntityData implements Comparable<EntityData>
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
         return result;
     }
@@ -52,6 +56,13 @@ public class EntityData implements Comparable<EntityData>
         if (getClass() != obj.getClass())
             return false;
         EntityData other = (EntityData) obj;
+        if (id == null)
+        {
+            if (other.id != null)
+                return false;
+        }
+        else if (!id.equals(other.id))
+            return false;
         if (uuid == null)
         {
             if (other.uuid != null)
@@ -61,4 +72,6 @@ public class EntityData implements Comparable<EntityData>
             return false;
         return true;
     }
+
+
 }

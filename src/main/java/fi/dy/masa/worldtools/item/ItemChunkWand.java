@@ -267,7 +267,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
     private void setNumTargets(ItemStack stack, World world)
     {
-        int num = ChunkUtils.instance().getNumberOfAlternateWorlds(world);
+        int num = ChunkUtils.getNumberOfAlternateWorlds();
         NBTUtils.setByte(stack, WRAPPER_TAG_NAME, "NumTargets", (byte) num);
     }
 
@@ -282,7 +282,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
 
         int max = this.getNumTargets(stack);
         NBTUtils.cycleByteValue(tag, TAG_NAME_SELECTION, 0, max - 1, reverse);
-        tag.setString("WorldName", ChunkUtils.instance().getWorldName(world, tag.getByte(TAG_NAME_SELECTION)));
+        tag.setString("WorldName", ChunkUtils.getWorldName(tag.getByte(TAG_NAME_SELECTION)));
     }
 
     public String getWorldName(ItemStack stack)
