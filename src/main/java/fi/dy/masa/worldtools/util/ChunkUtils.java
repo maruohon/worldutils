@@ -35,7 +35,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.chunk.storage.RegionFileCache;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -675,11 +674,11 @@ public class ChunkUtils
 
         if (StringUtils.isBlank(worldName) == false)
         {
-            IChunkLoader loader = this.getChunkLoaderForAlternateWorld(world, worldName);
+            AnvilChunkLoader loader = this.getChunkLoaderForAlternateWorld(world, worldName);
 
             try
             {
-                DataInputStream stream = RegionFileCache.getChunkInputStream(((AnvilChunkLoader) loader).chunkSaveLocation, pos.chunkXPos, pos.chunkZPos);
+                DataInputStream stream = RegionFileCache.getChunkInputStream(loader.chunkSaveLocation, pos.chunkXPos, pos.chunkZPos);
 
                 if (stream != null)
                 {

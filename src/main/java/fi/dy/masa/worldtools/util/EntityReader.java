@@ -106,18 +106,29 @@ public class EntityReader
 
     private int readEntitiesFromRegion(File regionFile, ChunkProviderServer provider)
     {
-        RegionFile region = new RegionFile(regionFile);
         int entityCount = 0;
 
-        for (int cz = 0; cz < 32; cz++)
+        try
         {
-            for (int cx = 0; cx < 32; cx++)
+            RegionFile region = new RegionFile(regionFile);
+
+            for (int cz = 0; cz < 32; cz++)
             {
-                if (region.isChunkSaved(cx, cz))
+                for (int cx = 0; cx < 32; cx++)
                 {
-                    entityCount += this.readEntitiesFromChunk(region, cx, cz, provider, regionFile.getName());
+                    if (region.isChunkSaved(cx, cz))
+                    {
+                        entityCount += this.readEntitiesFromChunk(region, cx, cz, provider, regionFile.getName());
+                    }
                 }
             }
+
+            region.close();
+        }
+        catch (IOException e)
+        {
+            WorldTools.logger.warn("Exception while reading entities from region '{}'", regionFile.getName());
+            e.printStackTrace();
         }
 
         return entityCount;
@@ -279,32 +290,43 @@ public class EntityReader
         File worldSaveLocation = getWorldSaveLocation(dimension);
         File regionDir = new File(worldSaveLocation, "region");
         int removedTotal = 0;
+        String regionName = "";
 
-        if (regionDir.exists() && regionDir.isDirectory())
+        try
         {
-            this.readEntities(dimension);
-
-            List<EntityData> dupes = getDuplicateEntriesExcludingFirst(this.entities, true);
-            Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
-
-            for (Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry : entitiesByRegion.entrySet())
+            if (regionDir.exists() && regionDir.isDirectory())
             {
-                ChunkPos rPos = regionEntry.getKey();
-                String regionName = "r." + rPos.chunkXPos + "." + rPos.chunkZPos;
-                File regionFile = new File(regionDir, regionName + ".mca");
-                RegionFile region = new RegionFile(regionFile);
+                this.readEntities(dimension);
 
-                for (Map.Entry<ChunkPos, List<EntityData>> chunkEntry : regionEntry.getValue().entrySet())
+                List<EntityData> dupes = getDuplicateEntriesExcludingFirst(this.entities, true);
+                Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
+
+                for (Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry : entitiesByRegion.entrySet())
                 {
-                    ChunkPos cPos = chunkEntry.getKey();
-                    List<EntityData> toRemove = chunkEntry.getValue();
-                    int removed = this.removeEntitiesFromChunkInRegion(region, cPos, toRemove, regionName, simulate);
-                    removedTotal += removed;
+                    ChunkPos rPos = regionEntry.getKey();
+                    regionName = "r." + rPos.chunkXPos + "." + rPos.chunkZPos;
+                    File regionFile = new File(regionDir, regionName + ".mca");
+                    RegionFile region = new RegionFile(regionFile);
 
-                    WorldTools.logger.info("In region r.{}.{}, chunk {}, {} - removed {} duplicate entities",
-                            rPos.chunkXPos, rPos.chunkZPos, cPos.chunkXPos, cPos.chunkZPos, removed);
+                    for (Map.Entry<ChunkPos, List<EntityData>> chunkEntry : regionEntry.getValue().entrySet())
+                    {
+                        ChunkPos cPos = chunkEntry.getKey();
+                        List<EntityData> toRemove = chunkEntry.getValue();
+                        int removed = this.removeEntitiesFromChunkInRegion(region, cPos, toRemove, regionName, simulate);
+                        removedTotal += removed;
+
+                        WorldTools.logger.info("In region r.{}.{}, chunk {}, {} - removed {} duplicate entities",
+                                rPos.chunkXPos, rPos.chunkZPos, cPos.chunkXPos, cPos.chunkZPos, removed);
+                    }
+
+                    region.close();
                 }
             }
+        }
+        catch (IOException e)
+        {
+            WorldTools.logger.warn("Exception while removing duplicate entities from region '{}'", regionName);
+            e.printStackTrace();
         }
 
         return "Removed a total of " + removedTotal + " entities";
