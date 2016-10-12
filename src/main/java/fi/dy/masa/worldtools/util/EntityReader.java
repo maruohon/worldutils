@@ -260,7 +260,7 @@ public class EntityReader
                     if (simulate == false)
                     {
                         DataOutputStream dataOut = region.getChunkDataOutputStream(chunkX, chunkZ);
-                        CompressedStreamTools.write(level, dataOut);
+                        CompressedStreamTools.write(nbt, dataOut);
                         dataOut.close();
                     }
                 }
