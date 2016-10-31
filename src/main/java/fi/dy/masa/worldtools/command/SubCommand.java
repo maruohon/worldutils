@@ -87,4 +87,9 @@ public abstract class SubCommand implements ISubCommand
             }
         }
     }
+
+    public String getUsageStringPre()
+    {
+        return "/" + this.getBaseCommand().getCommandName() + " " + this.getCommandName() + " ";
+    }
 }

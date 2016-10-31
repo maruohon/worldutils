@@ -87,7 +87,7 @@ public class SubCommandEntities extends SubCommand
                 }
                 else if (args.length > 3)
                 {
-                    throw new WrongUsageException("/" + this.getBaseCommand().getCommandName() + " " + args[1] + " [dimension]", new Object[0]);
+                    throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
                 }
 
                 String output = EntityReader.instance().readEntities(dimension);
@@ -107,7 +107,7 @@ public class SubCommandEntities extends SubCommand
                 }
                 else if (args.length > 3)
                 {
-                    throw new WrongUsageException("/" + this.getBaseCommand().getCommandName() + " " + args[1] + " [dimension]", new Object[0]);
+                    throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
                 }
 
                 String output = EntityReader.instance().removeAllDuplicateEntities(dimension, false);
