@@ -150,7 +150,7 @@ public class ChunkWandRenderer
 
     public void renderHudChunkWand(EntityPlayer player)
     {
-        ItemStack stack = this.mc.thePlayer.getHeldItemMainhand();
+        ItemStack stack = player.getHeldItemMainhand();
         if (stack == null || stack.getItem() != WorldToolsItems.chunkWand)
         {
             return;
@@ -187,7 +187,7 @@ public class ChunkWandRenderer
 
     private int getMaxY(EntityPlayer player)
     {
-        return MathHelper.clamp_int(Math.min((int) player.posY - 16, 120), 1, 255);
+        return MathHelper.clamp(Math.min((int) player.posY - 16, 120), 1, 255);
     }
 
     private AxisAlignedBB createEnclosingChunkAABB(ChunkPos posStart, ChunkPos posEnd, EntityPlayer player, float partialTicks)

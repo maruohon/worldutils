@@ -64,7 +64,7 @@ public class PlayerEventHandler
     {
         if (event.player instanceof EntityPlayerMP)
         {
-            sendChunkChanges(event.player.worldObj, (EntityPlayerMP) event.player);
+            sendChunkChanges(event.player.getEntityWorld(), (EntityPlayerMP) event.player);
         }
     }
 

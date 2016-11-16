@@ -341,7 +341,7 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
     {
         if (key == HotKeys.KEYCODE_CUSTOM_1)
         {
-            this.onItemLeftClick(stack, player.worldObj, player);
+            this.onItemLeftClick(stack, player.getEntityWorld(), player);
             return;
         }
 
@@ -358,8 +358,8 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
         // Alt + Scroll: Change world selection
         else if (EnumKey.SCROLL.matches(key, HotKeys.MOD_ALT))
         {
-            this.setNumTargets(stack, player.worldObj);
-            this.changeTargetSelection(stack, player.worldObj, EnumKey.keypressActionIsReversed(key));
+            this.setNumTargets(stack, player.getEntityWorld());
+            this.changeTargetSelection(stack, player.getEntityWorld(), EnumKey.keypressActionIsReversed(key));
         }
         // Ctrl + Scroll: Cycle the mode
         else if (EnumKey.SCROLL.matches(key, HotKeys.MOD_CTRL))
@@ -384,15 +384,15 @@ public class ItemChunkWand extends ItemWorldTools implements IKeyBound
         // Ctrl + Shift + Alt + Toggle key: Clear chunk change tracker
         else if (EnumKey.TOGGLE.matches(key, HotKeys.MOD_SHIFT_CTRL_ALT))
         {
-            ChunkUtils.instance().clearChangedChunksForUser(player.worldObj, player.getName());
+            ChunkUtils.instance().clearChangedChunksForUser(player.getEntityWorld(), player.getName());
             player.addChatMessage(new TextComponentTranslation("enderutilities.chat.message.chunkwand.clearedchangedchunks"));
         }
         // Just Toggle key: Execute the chunk operation
         else if (EnumKey.TOGGLE.matches(key, HotKeys.MOD_NONE))
         {
-            if (this.useWand(stack, player.worldObj, player) == EnumActionResult.SUCCESS)
+            if (this.useWand(stack, player.getEntityWorld(), player) == EnumActionResult.SUCCESS)
             {
-                player.worldObj.playSound(null, player.getPosition(), SoundEvents.ENTITY_ENDERMEN_TELEPORT, SoundCategory.MASTER, 0.4f, 0.7f);
+                player.getEntityWorld().playSound(null, player.getPosition(), SoundEvents.ENTITY_ENDERMEN_TELEPORT, SoundCategory.MASTER, 0.4f, 0.7f);
             }
         }
     }

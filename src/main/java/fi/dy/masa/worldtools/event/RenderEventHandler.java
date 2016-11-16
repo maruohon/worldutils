@@ -35,15 +35,15 @@ public class RenderEventHandler
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event)
     {
-        this.renderItemExtras(this.mc.theWorld, this.mc.thePlayer, this.mc.thePlayer, event.getPartialTicks());
+        this.renderItemExtras(this.mc.world, this.mc.player, this.mc.player, event.getPartialTicks());
 
         //if (Configs.buildersWandRenderForOtherPlayers)
         {
-            for (EntityPlayer player : this.mc.theWorld.getPlayers(EntityPlayer.class, EntitySelectors.NOT_SPECTATING))
+            for (EntityPlayer player : this.mc.world.getPlayers(EntityPlayer.class, EntitySelectors.NOT_SPECTATING))
             {
-                if (player != this.mc.thePlayer)
+                if (player != this.mc.player)
                 {
-                    this.renderItemExtras(this.mc.theWorld, player, this.mc.thePlayer, event.getPartialTicks());
+                    this.renderItemExtras(this.mc.world, player, this.mc.player, event.getPartialTicks());
                 }
             }
         }
@@ -67,9 +67,9 @@ public class RenderEventHandler
             return;
         }
 
-        if ((this.mc.currentScreen instanceof GuiChat) == false && this.mc.thePlayer != null)
+        if ((this.mc.currentScreen instanceof GuiChat) == false && this.mc.player != null)
         {
-            this.chunkWandRenderer.renderHudChunkWand(this.mc.thePlayer);
+            this.chunkWandRenderer.renderHudChunkWand(this.mc.player);
         }
     }
 }
