@@ -32,7 +32,7 @@ public abstract class SubCommand implements ISubCommand
     }
 
     @Override
-    public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args)
     {
         if (args.length == 2 || (args.length == 3 && args[1].equals("help")))
         {
@@ -45,7 +45,7 @@ public abstract class SubCommand implements ISubCommand
     abstract protected List<String> getTabCompletionOptionsSub(MinecraftServer server, ICommandSender sender, String[] args);
 
     @Override
-    public String getSubCommandsHelpString()
+    public String getHelp()
     {
         return "Available sub-commands: " + String.join(", ", this.subSubCommands);
     }
@@ -56,14 +56,14 @@ public abstract class SubCommand implements ISubCommand
         // "/wt command"
         if (args.length == 1)
         {
-            sender.addChatMessage(new TextComponentString(this.getSubCommandsHelpString()));
+            sender.sendMessage(new TextComponentString(this.getHelp()));
         }
         // "/wt command [help|unknown]"
         else if (args.length == 2)
         {
             if (args[1].equals("help"))
             {
-                sender.addChatMessage(new TextComponentString(this.getSubCommandsHelpString()));
+                sender.sendMessage(new TextComponentString(this.getHelp()));
             }
             else if (this.subSubCommands.contains(args[1]) == false)
             {
@@ -75,11 +75,11 @@ public abstract class SubCommand implements ISubCommand
         {
             if (args[2].equals("help"))
             {
-                sender.addChatMessage(new TextComponentString("info.subcommands.help"));
+                sender.sendMessage(new TextComponentString("info.subcommands.help"));
             }
             else if (this.subSubCommands.contains(args[2]) == true)
             {
-                sender.addChatMessage(new TextComponentString("info.subcommand." + args[0] + ".help." + args[2]));
+                sender.sendMessage(new TextComponentString("info.subcommand." + args[0] + ".help." + args[2]));
             }
             else
             {
@@ -90,6 +90,6 @@ public abstract class SubCommand implements ISubCommand
 
     public String getUsageStringPre()
     {
-        return "/" + this.getBaseCommand().getCommandName() + " " + this.getCommandName() + " ";
+        return "/" + this.getBaseCommand().getName() + " " + this.getName() + " ";
     }
 }

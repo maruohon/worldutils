@@ -28,7 +28,7 @@ public class SubCommandEntities extends SubCommand
     }
 
     @Override
-    public String getCommandName()
+    public String getName()
     {
         return "entities";
     }
@@ -53,7 +53,7 @@ public class SubCommandEntities extends SubCommand
 
                 if (file != null)
                 {
-                    sender.addChatMessage(new TextComponentString("Output written to file " + file.getName()));
+                    sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
                 }
             }
             else if (args[1].equals("list-duplicates-all") || args[1].equals("list-duplicates-only"))
@@ -74,7 +74,7 @@ public class SubCommandEntities extends SubCommand
 
                 if (file != null)
                 {
-                    sender.addChatMessage(new TextComponentString("Output written to file " + file.getName()));
+                    sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
                 }
             }
             else if (args[1].equals("read-all"))
@@ -94,7 +94,7 @@ public class SubCommandEntities extends SubCommand
 
                 if (StringUtils.isBlank(output) == false)
                 {
-                    sender.addChatMessage(new TextComponentString(output));
+                    sender.sendMessage(new TextComponentString(output));
                 }
             }
             else if (args[1].equals("remove-duplicate-uuids"))
@@ -111,7 +111,7 @@ public class SubCommandEntities extends SubCommand
                 }
 
                 String output = EntityReader.instance().removeAllDuplicateEntities(dimension, false);
-                sender.addChatMessage(new TextComponentString(output));
+                sender.sendMessage(new TextComponentString(output));
             }
             else
             {
