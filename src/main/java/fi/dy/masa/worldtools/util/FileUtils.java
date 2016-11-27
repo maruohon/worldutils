@@ -8,12 +8,16 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.RegionFile;
+import net.minecraft.world.chunk.storage.RegionFileCache;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldtools.WorldTools;
@@ -27,7 +31,17 @@ public class FileUtils
         @Override
         public boolean accept(File dir, String name)
         {
-            return name.startsWith("r.") && name.endsWith(".mca");
+            //return name.startsWith("r.") && name.endsWith(".mca");
+            try
+            {
+                return Pattern.matches("r\\.-?[0-9]+\\.-?[0-9]+\\.mca", name);
+            }
+            catch (PatternSyntaxException e)
+            {
+                WorldTools.logger.error("Failed to regex match a region file '{}'", name);
+                e.printStackTrace();
+                return false;
+            }
         }
     };
 
@@ -37,16 +51,33 @@ public class FileUtils
         private final File regionFile;
         private final RegionFile region;
 
-        public Region(File regionDir, ChunkPos regionPos)
+        private Region(File worldDir, int regionX, int regionZ)
         {
-            this(new File(regionDir, "r." + regionPos.chunkXPos + "." + regionPos.chunkZPos + ".mca"));
+            this.regionFile = new File(new File(worldDir, "region"), "r." + regionX + "." + regionZ + ".mca");
+            this.regionName = this.regionFile.getName();
+            this.region = RegionFileCache.createOrLoadRegionFile(worldDir, regionX << 5, regionZ << 5);
         }
 
-        public Region(File regionFile)
+        public static Region fromRegionFile(File regionFile)
         {
-            this.regionName = regionFile.getName();
-            this.regionFile = regionFile;
-            this.region = new RegionFile(this.regionFile);
+            ChunkPos regionPos = getRegionPos(regionFile);
+
+            if (regionPos != null)
+            {
+                return fromRegionCoords(regionFile.getParentFile().getParentFile(), regionPos.chunkXPos, regionPos.chunkZPos);
+            }
+
+            return null;
+        }
+
+        public static Region fromRegionCoords(File worldDir, ChunkPos regionPos)
+        {
+            return fromRegionCoords(worldDir, regionPos.chunkXPos, regionPos.chunkZPos);
+        }
+
+        public static Region fromRegionCoords(File worldDir, int regionX, int regionZ)
+        {
+            return new Region(worldDir, regionX, regionZ);
         }
 
         public String getName()
@@ -57,6 +88,36 @@ public class FileUtils
         public RegionFile getRegionFile()
         {
             return this.region;
+        }
+
+        public static ChunkPos getRegionPos(File regionFile)
+        {
+            String name = regionFile.getName();
+
+            if (ANVIL_REGION_FILE_FILTER.accept(regionFile.getParentFile(), name))
+            {
+                try
+                {
+                    Pattern pattern = Pattern.compile("^r\\.(-?[0-9]+)\\.(-?[0-9]+)\\.mca$");
+                    Matcher matcher = pattern.matcher(name);
+                    //WorldTools.logger.error("Pattern: {}", pattern.toString());
+
+                    if (matcher.matches())
+                    {
+                        int x = Integer.valueOf(matcher.group(1));
+                        int z = Integer.valueOf(matcher.group(2));
+
+                        return new ChunkPos(x, z);
+                    }
+                }
+                catch (Exception e)
+                {
+                    WorldTools.logger.error("getRegionPos(): Failed to regex match a region file '{}'", name);
+                    e.printStackTrace();
+                }
+            }
+
+            return null;
         }
     }
 
@@ -90,7 +151,13 @@ public class FileUtils
     {
         try
         {
-            Region region = new Region(regionFile);
+            Region region = Region.fromRegionFile(regionFile);
+
+            if (region == null)
+            {
+                WorldTools.logger.warn("regionProcessor(): Failed to get region data for region '{}'", regionFile.getName());
+                return;
+            }
 
             if (worldDataHandler.processRegion(region, simulate) == 0)
             {
@@ -110,7 +177,7 @@ public class FileUtils
         }
         catch (IOException e)
         {
-            WorldTools.logger.warn("Exception while processing region '{}'", regionFile.getName());
+            WorldTools.logger.warn("regionProcessor(): Exception while processing region '{}'", regionFile.getName());
             e.printStackTrace();
         }
     }
@@ -131,7 +198,7 @@ public class FileUtils
 
         if (data == null)
         {
-            WorldTools.logger.warn("Failed to read chunk data for chunk ({}, {}) from region '{}'",
+            WorldTools.logger.warn("handleChunkInRegion(): Failed to read chunk data for chunk ({}, {}) from region '{}'",
                     chunkPos.chunkXPos, chunkPos.chunkZPos, region.getName());
 
             return 0;

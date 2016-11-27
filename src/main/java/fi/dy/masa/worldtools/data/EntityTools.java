@@ -251,8 +251,8 @@ public class EntityTools
 
     public String removeAllDuplicateEntities(int dimension, boolean simulate, ICommandSender sender)
     {
-        File worldSaveLocation = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldSaveLocation, "region");
+        File worldDir = FileUtils.getWorldSaveLocation(dimension);
+        File regionDir = new File(worldDir, "region");
         int removedTotal = 0;
         Region region = null;
 
@@ -269,7 +269,7 @@ public class EntityTools
                 for (Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry : entitiesByRegion.entrySet())
                 {
                     ChunkPos regionPos = regionEntry.getKey();
-                    region = new Region(regionDir, regionPos);
+                    region = Region.fromRegionCoords(worldDir, regionPos);
 
                     for (Map.Entry<ChunkPos, List<EntityData>> chunkEntry : regionEntry.getValue().entrySet())
                     {

@@ -87,7 +87,8 @@ public class TileTickTools
 
             if (data == null)
             {
-                WorldTools.logger.warn("Failed to read chunk data for chunk ({}, {}) from file '{}'", chunkX, chunkZ, region.getName());
+                WorldTools.logger.warn("TileTickReader#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
+                        chunkX, chunkZ, region.getName());
                 return 0;
             }
 
@@ -257,7 +258,8 @@ public class TileTickTools
 
             if (data == null)
             {
-                WorldTools.logger.warn("Failed to read chunk data for chunk ({}, {}) from file '{}'", chunkX, chunkZ, region.getName());
+                WorldTools.logger.warn("TileTickRemover#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
+                        chunkX, chunkZ, region.getName());
                 return 0;
             }
 
@@ -442,8 +444,8 @@ public class TileTickTools
 
     public String removeTileTicks(int dimension, RemoveType type, boolean simulate, ICommandSender sender)
     {
-        File worldSaveLocation = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldSaveLocation, "region");
+        File worldDir = FileUtils.getWorldSaveLocation(dimension);
+        File regionDir = new File(worldDir, "region");
         int removedTotal = 0;
         Region region = null;
 
@@ -471,7 +473,7 @@ public class TileTickTools
                     for (Map.Entry<ChunkPos, Set<ChunkPos>> regionEntry : tileTicksByRegion.entrySet())
                     {
                         ChunkPos regionPos = regionEntry.getKey();
-                        region = new Region(regionDir, regionPos);
+                        region = Region.fromRegionCoords(worldDir, regionPos);
                         WorldTools.logger.info("looping regions: {}", regionPos);
 
                         for (ChunkPos chunkPos : regionEntry.getValue())
