@@ -12,7 +12,7 @@ public class WorldToolsItems
 
     public static void init()
     {
-        registerItem(chunkWand,     ReferenceNames.NAME_ITEM_CHUNK_WAND,            false);
+        registerItem(chunkWand, ReferenceNames.NAME_ITEM_CHUNK_WAND, Configs.disableChunkWand);
     }
 
     private static void registerItem(Item item, String registryName, boolean isDisabled)

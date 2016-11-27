@@ -12,11 +12,13 @@ import fi.dy.masa.worldtools.reference.Reference;
 
 public class Configs
 {
+    public static final String CATEGORY_GENERIC = "Generic";
     public static final String CATEGORY_CLIENT = "Client";
     public static File configurationFile;
     public static Configuration config;
 
-    public static String ignoreWorld;
+    public static boolean disableChunkWand;
+    public static String chunkSwappingIgnoreWorld;
     public static int colorChangedChunks;
     public static int colorImportedBiomes;
     public static int colorChangedChunksAndImportedBiomes;
@@ -42,12 +44,18 @@ public class Configs
     public static void loadConfigs(Configuration conf)
     {
         Property prop;
-        String category = CATEGORY_CLIENT;
+        String category = CATEGORY_GENERIC;
 
-        prop = conf.get(category, "ignoreWorld", "");
+        prop = conf.get(category, "disableChunkWand", true);
+        prop.setComment("Whether to enable the Chunk Wand item");
+        disableChunkWand = prop.getBoolean();
+
+        category = CATEGORY_CLIENT;
+
+        prop = conf.get(category, "chunkSwappingIgnoreWorld", "");
         prop.setComment("The exact name of the world that is the same as the current world, and will thus be displayed as \"no-changes\" on the map overlay");
-        ignoreWorld = prop.getString();
-        ChunkChangeTracker.instance().setIgnoredWorld(ignoreWorld);
+        chunkSwappingIgnoreWorld = prop.getString();
+        ChunkChangeTracker.instance().setIgnoredWorld(chunkSwappingIgnoreWorld);
 
         prop = conf.get(category, "colorChangedChunks", "0xFD9500");
         prop.setComment("Overlay color for chunks that have been changed to a different version (default: 0xFD9500 = 16618752)");
