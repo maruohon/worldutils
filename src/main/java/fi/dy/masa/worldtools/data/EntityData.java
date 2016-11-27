@@ -1,4 +1,4 @@
-package fi.dy.masa.worldtools.util;
+package fi.dy.masa.worldtools.data;
 
 import java.util.UUID;
 import net.minecraft.util.math.ChunkPos;

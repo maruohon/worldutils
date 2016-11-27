@@ -10,6 +10,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 
 public class CommandWorldTools extends CommandBase
 {
@@ -48,11 +49,13 @@ public class CommandWorldTools extends CommandBase
         else if (this.subCommands.containsKey(strArr[0]))
         {
             ISubCommand command = this.subCommands.get(strArr[0]);
+
             if (command != null)
             {
                 return command.getTabCompletions(server, sender, strArr);
             }
         }
+
         return null;
     }
 
@@ -61,22 +64,28 @@ public class CommandWorldTools extends CommandBase
     {
         if (commandArgs.length > 0)
         {
-            if (this.subCommands.containsKey(commandArgs[0]) == true)
+            if (this.subCommands.containsKey(commandArgs[0]))
             {
                 ISubCommand command = this.subCommands.get(commandArgs[0]);
+
                 if (command != null)
                 {
                     command.execute(server, sender, commandArgs);
-                    return;
                 }
+            }
+            else if (commandArgs[0].equals("help"))
+            {
+                sender.sendMessage(new TextComponentString("Usage: /wt " + String.join(", ", this.subCommands.keySet())));
             }
             else
             {
                 throw new WrongUsageException("Unknown command: /" + this.getName() + " " + commandArgs[0], new Object[0]);
             }
         }
-
-        throw new WrongUsageException("Usage: '" + this.getUsage(sender) + "'", new Object[0]);
+        else
+        {
+            throw new WrongUsageException("Usage: '" + this.getUsage(sender) + "'", new Object[0]);
+        }
     }
 
     public void registerSubCommand(ISubCommand cmd)

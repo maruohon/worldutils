@@ -2,7 +2,6 @@ package fi.dy.masa.worldtools.command;
 
 import java.io.File;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -10,9 +9,8 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
-import fi.dy.masa.worldtools.util.EntityData;
-import fi.dy.masa.worldtools.util.EntityReader;
-import fi.dy.masa.worldtools.util.FileHelpers;
+import fi.dy.masa.worldtools.data.EntityReader;
+import fi.dy.masa.worldtools.util.FileUtils;
 
 public class SubCommandEntities extends SubCommand
 {
@@ -48,8 +46,7 @@ public class SubCommandEntities extends SubCommand
         {
             if (args[1].equals("list"))
             {
-                List<EntityData> entities = EntityReader.instance().getEntities();
-                File file = FileHelpers.dumpDataToFile("entities", EntityReader.getFormattedOutputLines(entities, true));
+                File file = FileUtils.dumpDataToFile("entities", EntityReader.instance().getAllEntitiesOutput(true));
 
                 if (file != null)
                 {
@@ -58,19 +55,16 @@ public class SubCommandEntities extends SubCommand
             }
             else if (args[1].equals("list-duplicates-all") || args[1].equals("list-duplicates-only"))
             {
-                List<EntityData> entities = EntityReader.instance().getEntities();
-                List<EntityData> dupes;
+                File file;
 
                 if (args[1].equals("list-duplicates-all"))
                 {
-                    dupes = EntityReader.getDuplicateEntriesIncludingFirst(entities, true);
+                    file = FileUtils.dumpDataToFile("entity_duplicates_all", EntityReader.instance().getDuplicateEntitiesOutput(true, true));
                 }
                 else
                 {
-                    dupes = EntityReader.getDuplicateEntriesExcludingFirst(entities, true);
+                    file = FileUtils.dumpDataToFile("entity_duplicates_only", EntityReader.instance().getDuplicateEntitiesOutput(false, true));
                 }
-
-                File file = FileHelpers.dumpDataToFile("entity_duplicates", EntityReader.getFormattedOutputLines(dupes, false));
 
                 if (file != null)
                 {
@@ -90,12 +84,7 @@ public class SubCommandEntities extends SubCommand
                     throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
                 }
 
-                String output = EntityReader.instance().readEntities(dimension);
-
-                if (StringUtils.isBlank(output) == false)
-                {
-                    sender.sendMessage(new TextComponentString(output));
-                }
+                EntityReader.instance().readEntities(dimension, sender);
             }
             else if (args[1].equals("remove-duplicate-uuids"))
             {
@@ -110,7 +99,7 @@ public class SubCommandEntities extends SubCommand
                     throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
                 }
 
-                String output = EntityReader.instance().removeAllDuplicateEntities(dimension, false);
+                String output = EntityReader.instance().removeAllDuplicateEntities(dimension, false, sender);
                 sender.sendMessage(new TextComponentString(output));
             }
             else
