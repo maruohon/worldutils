@@ -62,7 +62,7 @@ public class EntityTools
         }
 
         @Override
-        public int processRegion(Region region)
+        public int processRegion(Region region, boolean simulate)
         {
             this.regionCount++;
 
@@ -70,7 +70,7 @@ public class EntityTools
         }
 
         @Override
-        public int processChunk(Region region, int chunkX, int chunkZ)
+        public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
             int count = 0;
             DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
@@ -90,7 +90,7 @@ public class EntityTools
                 if (level.hasKey("Entities", Constants.NBT.TAG_LIST))
                 {
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
-                    if (provider != null && provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
                     {
                         return 0;
                     }
@@ -122,7 +122,7 @@ public class EntityTools
         }
 
         @Override
-        public void finish(ICommandSender sender)
+        public void finish(ICommandSender sender, boolean simulate)
         {
             if (this.entityCount > 0)
             {
@@ -157,7 +157,7 @@ public class EntityTools
         }
 
         @Override
-        public int processData(ChunkPos chunkPos, NBTTagCompound chunkNBT, boolean simulate)
+        public int processChunkData(ChunkPos chunkPos, NBTTagCompound chunkNBT, boolean simulate)
         {
             int entityCount = 0;
             NBTTagCompound level = chunkNBT.getCompoundTag("Level");
@@ -246,7 +246,7 @@ public class EntityTools
     public void readEntities(int dimension, ICommandSender sender)
     {
         this.entityDataReader.init();
-        FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender);
+        FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender, false);
     }
 
     public String removeAllDuplicateEntities(int dimension, boolean simulate, ICommandSender sender)
@@ -261,9 +261,9 @@ public class EntityTools
             if (regionDir.exists() && regionDir.isDirectory())
             {
                 this.entityDataReader.init();
-                FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender);
+                FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender, false);
 
-                List<EntityData> dupes = getDuplicateEntriesExcludingFirst(this.entityDataReader.getEntities(), true);
+                List<EntityData> dupes = this.getDuplicateEntriesExcludingFirst(this.entityDataReader.getEntities(), true);
                 Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
 
                 for (Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry : entitiesByRegion.entrySet())

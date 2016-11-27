@@ -13,5 +13,5 @@ public interface IChunkDataHandler
      * @return the number of operations that was done. The meaning is implementor-specific, <b>BUT</b>
      * a value > 0 means that the Chunk NBT data will get written back to the RegionFile, if simulate is false.
      */
-    public int processData(ChunkPos chunkPos, NBTTagCompound chunkNBT, boolean simulate);
+    public int processChunkData(ChunkPos chunkPos, NBTTagCompound chunkNBT, boolean simulate);
 }

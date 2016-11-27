@@ -19,12 +19,14 @@ public class CommandWorldTools extends CommandBase
     public CommandWorldTools()
     {
         this.registerSubCommand(new SubCommandEntities(this));
+        this.registerSubCommand(new SubCommandPrintSpawn(this));
+        this.registerSubCommand(new SubCommandTileTicks(this));
     }
 
     @Override
     public String getName()
     {
-        return "wt";
+        return "worldtools";
     }
 
     @Override

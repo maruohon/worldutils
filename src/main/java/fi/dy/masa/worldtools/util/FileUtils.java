@@ -60,7 +60,7 @@ public class FileUtils
         }
     }
 
-    public static void worldDataProcessor(int dimension, IWorldDataHandler worldDataHandler, ICommandSender sender)
+    public static void worldDataProcessor(int dimension, IWorldDataHandler worldDataHandler, ICommandSender sender, boolean simulate)
     {
         World world = DimensionManager.getWorld(dimension);
         ChunkProviderServer provider = null;
@@ -79,20 +79,20 @@ public class FileUtils
 
             for (File regionFile : regionDir.listFiles(ANVIL_REGION_FILE_FILTER))
             {
-                regionProcessor(regionFile, worldDataHandler);
+                regionProcessor(regionFile, worldDataHandler, simulate);
             }
         }
 
-        worldDataHandler.finish(sender);
+        worldDataHandler.finish(sender, simulate);
     }
 
-    private static void regionProcessor(File regionFile, IWorldDataHandler worldDataHandler)
+    private static void regionProcessor(File regionFile, IWorldDataHandler worldDataHandler, boolean simulate)
     {
         try
         {
             Region region = new Region(regionFile);
 
-            if (worldDataHandler.processRegion(region) == 0)
+            if (worldDataHandler.processRegion(region, simulate) == 0)
             {
                 for (int chunkZ = 0; chunkZ < 32; chunkZ++)
                 {
@@ -100,7 +100,7 @@ public class FileUtils
                     {
                         if (region.getRegionFile().isChunkSaved(chunkX, chunkZ))
                         {
-                            worldDataHandler.processChunk(region, chunkX, chunkZ);
+                            worldDataHandler.processChunk(region, chunkX, chunkZ, simulate);
                         }
                     }
                 }
@@ -142,7 +142,7 @@ public class FileUtils
             NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
             data.close();
 
-            count = chunkDataHandler.processData(chunkPos, chunkNBT, simulate);
+            count = chunkDataHandler.processChunkData(chunkPos, chunkNBT, simulate);
 
             if (count > 0 && simulate == false)
             {

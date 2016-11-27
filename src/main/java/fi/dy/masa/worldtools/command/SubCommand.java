@@ -77,7 +77,7 @@ public abstract class SubCommand implements ISubCommand
             {
                 sender.sendMessage(new TextComponentString("info.subcommands.help"));
             }
-            else if (this.subSubCommands.contains(args[2]) == true)
+            else if (this.subSubCommands.contains(args[2]))
             {
                 sender.sendMessage(new TextComponentString("info.subcommand." + args[0] + ".help." + args[2]));
             }

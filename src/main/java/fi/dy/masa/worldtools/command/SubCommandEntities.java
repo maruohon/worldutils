@@ -73,32 +73,12 @@ public class SubCommandEntities extends SubCommand
             }
             else if (args[1].equals("read-all"))
             {
-                int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).dimension : 0;
-
-                if (args.length == 3)
-                {
-                    dimension = CommandBase.parseInt(args[2]);
-                }
-                else if (args.length > 3)
-                {
-                    throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
-                }
-
+                int dimension = this.getDimension(sender, args);
                 EntityTools.instance().readEntities(dimension, sender);
             }
             else if (args[1].equals("remove-duplicate-uuids"))
             {
-                int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).dimension : 0;
-
-                if (args.length == 3)
-                {
-                    dimension = CommandBase.parseInt(args[2]);
-                }
-                else if (args.length > 3)
-                {
-                    throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
-                }
-
+                int dimension = this.getDimension(sender, args);
                 String output = EntityTools.instance().removeAllDuplicateEntities(dimension, false, sender);
                 sender.sendMessage(new TextComponentString(output));
             }
@@ -111,5 +91,21 @@ public class SubCommandEntities extends SubCommand
         {
             //throw new WrongUsageException("Unknown sub-command argument '" + args[1] + "'", new Object[0]);
         }
+    }
+
+    private int getDimension(ICommandSender sender, String[] args) throws CommandException
+    {
+        int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
+
+        if (args.length == 3)
+        {
+            dimension = CommandBase.parseInt(args[2]);
+        }
+        else if (args.length > 3)
+        {
+            throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
+        }
+
+        return dimension;
     }
 }
