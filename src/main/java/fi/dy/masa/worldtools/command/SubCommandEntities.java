@@ -9,7 +9,7 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
-import fi.dy.masa.worldtools.data.EntityReader;
+import fi.dy.masa.worldtools.data.EntityTools;
 import fi.dy.masa.worldtools.util.FileUtils;
 
 public class SubCommandEntities extends SubCommand
@@ -46,7 +46,7 @@ public class SubCommandEntities extends SubCommand
         {
             if (args[1].equals("list"))
             {
-                File file = FileUtils.dumpDataToFile("entities", EntityReader.instance().getAllEntitiesOutput(true));
+                File file = FileUtils.dumpDataToFile("entities", EntityTools.instance().getAllEntitiesOutput(true));
 
                 if (file != null)
                 {
@@ -59,11 +59,11 @@ public class SubCommandEntities extends SubCommand
 
                 if (args[1].equals("list-duplicates-all"))
                 {
-                    file = FileUtils.dumpDataToFile("entity_duplicates_all", EntityReader.instance().getDuplicateEntitiesOutput(true, true));
+                    file = FileUtils.dumpDataToFile("entity_duplicates_all", EntityTools.instance().getDuplicateEntitiesOutput(true, true));
                 }
                 else
                 {
-                    file = FileUtils.dumpDataToFile("entity_duplicates_only", EntityReader.instance().getDuplicateEntitiesOutput(false, true));
+                    file = FileUtils.dumpDataToFile("entity_duplicates_only", EntityTools.instance().getDuplicateEntitiesOutput(false, true));
                 }
 
                 if (file != null)
@@ -84,7 +84,7 @@ public class SubCommandEntities extends SubCommand
                     throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
                 }
 
-                EntityReader.instance().readEntities(dimension, sender);
+                EntityTools.instance().readEntities(dimension, sender);
             }
             else if (args[1].equals("remove-duplicate-uuids"))
             {
@@ -99,7 +99,7 @@ public class SubCommandEntities extends SubCommand
                     throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
                 }
 
-                String output = EntityReader.instance().removeAllDuplicateEntities(dimension, false, sender);
+                String output = EntityTools.instance().removeAllDuplicateEntities(dimension, false, sender);
                 sender.sendMessage(new TextComponentString(output));
             }
             else

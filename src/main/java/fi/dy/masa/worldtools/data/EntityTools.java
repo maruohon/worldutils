@@ -23,9 +23,9 @@ import fi.dy.masa.worldtools.WorldTools;
 import fi.dy.masa.worldtools.util.FileUtils;
 import fi.dy.masa.worldtools.util.FileUtils.Region;
 
-public class EntityReader
+public class EntityTools
 {
-    private static final EntityReader INSTANCE = new EntityReader();
+    private static final EntityTools INSTANCE = new EntityTools();
     private final EntityDataReader entityDataReader = new EntityDataReader();
 
     private class EntityDataReader implements IWorldDataHandler
@@ -195,11 +195,11 @@ public class EntityReader
         }
     }
 
-    private EntityReader()
+    private EntityTools()
     {
     }
 
-    public static EntityReader instance()
+    public static EntityTools instance()
     {
         return INSTANCE;
     }
