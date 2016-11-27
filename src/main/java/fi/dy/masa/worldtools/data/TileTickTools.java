@@ -82,8 +82,8 @@ public class TileTickTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
-            int count = 0;
             DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+            int count = 0;
 
             if (data == null)
             {
@@ -102,6 +102,7 @@ public class TileTickTools
                 {
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
 
+                    // This needs to use absolute Chunk coordinates
                     if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
                     {
                         return 0;
@@ -119,9 +120,11 @@ public class TileTickTools
                         int priority = tag.getInteger("p");
                         Pair<ResourceLocation, String> pair = getBlockIdentifiers(tag, "i");
 
-                        this.tileTicks.add(new TileTickData(new BlockPos(x, y, z), pair.getLeft(), pair.getRight(), delay, priority));
+                        this.tileTicks.add(new TileTickData(chunkPos, new BlockPos(x, y, z), pair.getLeft(), pair.getRight(), delay, priority));
                         count++;
                     }
+
+                    //WorldTools.logger.info("Read {} tile ticks in chunk [{}, {}] in region '{}'", count, chunkX, chunkZ, region.getName());
                 }
             }
             catch (IOException e)
@@ -138,19 +141,16 @@ public class TileTickTools
         @Override
         public void finish(ICommandSender sender, boolean simulate)
         {
-            if (this.processedCount > 0)
-            {
-                String chatOutput = String.format("Read a total of %d tile ticks from %d chunks in %d region files",
-                        this.processedCount, this.chunkCount, this.regionCount);
+            String chatOutput = String.format("Read a total of %d tile ticks from %d chunks in %d region files",
+                    this.processedCount, this.chunkCount, this.regionCount);
 
-                sender.sendMessage(new TextComponentString(chatOutput));
-                WorldTools.logger.info(chatOutput);
-            }
+            sender.sendMessage(new TextComponentString(chatOutput));
+            WorldTools.logger.info(chatOutput);
 
             if (this.provider != null && this.provider.getLoadedChunkCount() > 0)
             {
-                String chatOutput = String.format("There were %d chunks currently loaded, the tile tick list does not include data in those chunks!!",
-                        this.provider.getLoadedChunkCount());
+                chatOutput = String.format("There were %d chunks currently loaded, the tile tick list does not include data in those chunks!!",
+                    this.provider.getLoadedChunkCount());
 
                 sender.sendMessage(new TextComponentString(chatOutput));
                 WorldTools.logger.warn(chatOutput);
@@ -271,9 +271,8 @@ public class TileTickTools
 
                 if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
                 {
-                    ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
-
-                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    // This needs to use absolute Chunk coordinates
+                    if (this.provider != null && this.provider.chunkExists(level.getInteger("xPos"), level.getInteger("zPos")))
                     {
                         return 0;
                     }
@@ -409,8 +408,7 @@ public class TileTickTools
         for (TileTickData entry : listIn)
         {
             ChunkPos regionPos = new ChunkPos(entry.pos.getX() >> 9, entry.pos.getZ() >> 9);
-            ChunkPos chunkPos = new ChunkPos(entry.pos.getX() >> 4, entry.pos.getZ() >> 4);
-            this.getSetForChunks(tileTicksByRegion, regionPos).add(chunkPos);
+            this.getSetForChunks(tileTicksByRegion, regionPos).add(entry.chunk);
         }
 
         return tileTicksByRegion;
@@ -528,6 +526,6 @@ public class TileTickTools
     private String getFormattedOutput(TileTickData data, String format)
     {
         return String.format(format, data.blockId, data.delay, data.priority, data.pos.getX(), data.pos.getY(), data.pos.getZ(),
-                data.pos.getX() >> 4, data.pos.getZ() >> 4, data.pos.getX() >> 9, data.pos.getZ() >> 9);
+                data.chunk.chunkXPos, data.chunk.chunkZPos, data.pos.getX() >> 9, data.pos.getZ() >> 9);
     }
 }

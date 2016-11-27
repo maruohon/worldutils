@@ -2,17 +2,20 @@ package fi.dy.masa.worldtools.data;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
 public class TileTickData implements Comparable<TileTickData>
 {
+    public final ChunkPos chunk;
     public final BlockPos pos;
     public final String blockId;
     public final ResourceLocation resource;
     public final int delay;
     public final int priority;
 
-    public TileTickData(BlockPos pos, ResourceLocation blockResource, String blockId, int delay, int priority)
+    public TileTickData(ChunkPos chunkPos, BlockPos pos, ResourceLocation blockResource, String blockId, int delay, int priority)
     {
+        this.chunk = chunkPos;
         this.pos = pos;
         this.resource = blockResource;
         this.blockId = blockId;
