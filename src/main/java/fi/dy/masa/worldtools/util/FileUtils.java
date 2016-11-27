@@ -149,36 +149,26 @@ public class FileUtils
 
     private static void regionProcessor(File regionFile, IWorldDataHandler worldDataHandler, boolean simulate)
     {
-        try
+        Region region = Region.fromRegionFile(regionFile);
+
+        if (region == null)
         {
-            Region region = Region.fromRegionFile(regionFile);
+            WorldTools.logger.warn("regionProcessor(): Failed to get region data for region '{}'", regionFile.getName());
+            return;
+        }
 
-            if (region == null)
+        if (worldDataHandler.processRegion(region, simulate) == 0)
+        {
+            for (int chunkZ = 0; chunkZ < 32; chunkZ++)
             {
-                WorldTools.logger.warn("regionProcessor(): Failed to get region data for region '{}'", regionFile.getName());
-                return;
-            }
-
-            if (worldDataHandler.processRegion(region, simulate) == 0)
-            {
-                for (int chunkZ = 0; chunkZ < 32; chunkZ++)
+                for (int chunkX = 0; chunkX < 32; chunkX++)
                 {
-                    for (int chunkX = 0; chunkX < 32; chunkX++)
+                    if (region.getRegionFile().isChunkSaved(chunkX, chunkZ))
                     {
-                        if (region.getRegionFile().isChunkSaved(chunkX, chunkZ))
-                        {
-                            worldDataHandler.processChunk(region, chunkX, chunkZ, simulate);
-                        }
+                        worldDataHandler.processChunk(region, chunkX, chunkZ, simulate);
                     }
                 }
             }
-
-            region.getRegionFile().close();
-        }
-        catch (IOException e)
-        {
-            WorldTools.logger.warn("regionProcessor(): Exception while processing region '{}'", regionFile.getName());
-            e.printStackTrace();
         }
     }
 

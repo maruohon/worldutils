@@ -112,7 +112,6 @@ public class SubCommandTileTicks extends SubCommand
                     RemoveType types = args[1].equals("remove-by-name") ? RemoveType.BY_NAME : RemoveType.BY_MOD;
                     int dimension = this.getDimension(sender, args, 3, " " + args[2]);
                     TileTickTools.instance().removeTileTicks(dimension, types, false, sender);
-                    sender.sendMessage(new TextComponentString("foo"));
                 }
                 else
                 {
