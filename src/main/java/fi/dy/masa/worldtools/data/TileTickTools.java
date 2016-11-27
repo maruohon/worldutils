@@ -459,22 +459,15 @@ public class TileTickTools
                 FileUtils.worldDataProcessor(dimension, this.tileTickReader, sender, false);
 
                 List<TileTickData> toRemove = this.getTileTicksToRemove(this.tileTickReader.getTileTicks(), type, this.namesToRemove);
-                for (TileTickData d : toRemove)
-                {
-                    WorldTools.logger.info("to remove: {} @ {}", d.blockId, d.pos.toString());
-                }
-
                 Map<ChunkPos, Set<ChunkPos>> tileTicksByRegion = this.sortTileTicksByRegionAndChunk(toRemove);
 
                 for (Map.Entry<ChunkPos, Set<ChunkPos>> regionEntry : tileTicksByRegion.entrySet())
                 {
                     ChunkPos regionPos = regionEntry.getKey();
                     region = Region.fromRegionCoords(worldDir, regionPos);
-                    WorldTools.logger.info("looping regions: {}", regionPos);
 
                     for (ChunkPos chunkPos : regionEntry.getValue())
                     {
-                        WorldTools.logger.info("looping chunks in region: {} @ {}", chunkPos, regionPos);
                         TileTickRemover tileTickRemover = new TileTickRemover(region, type, this.namesToRemove);
                         removedTotal += FileUtils.handleChunkInRegion(region, chunkPos, tileTickRemover, simulate);
                     }

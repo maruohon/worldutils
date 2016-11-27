@@ -1,6 +1,7 @@
 package fi.dy.masa.worldtools.command;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.command.CommandBase;
@@ -9,7 +10,9 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldtools.data.TileTickTools;
 import fi.dy.masa.worldtools.data.TileTickTools.RemoveType;
 import fi.dy.masa.worldtools.util.FileUtils;
@@ -36,7 +39,37 @@ public class SubCommandTileTicks extends SubCommand
     @Override
     protected List<String> getTabCompletionOptionsSub(MinecraftServer server, ICommandSender sender, String[] args)
     {
-        return null;
+        List<String> options = new ArrayList<String>();
+
+        if (args.length == 1)
+        {
+            return CommandBase.getListOfStringsMatchingLastWord(args, "read-all", "list", "remove-all", "remove-by-mod", "remove-by-name");
+        }
+        else if (args[1].equals("remove-by-mod") || args[1].equals("remove-by-name"))
+        {
+            if (args.length >= 4)
+            {
+                if (args[2].equals("add"))
+                {
+                    for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
+                    {
+                        options.add(rl.toString());
+                    }
+                }
+                else if (args[2].equals("remove"))
+                {
+                    options.addAll(TileTickTools.instance().getFilters());
+                }
+
+                return CommandBase.getListOfStringsMatchingLastWord(args, options);
+            }
+            else if (args.length >= 3)
+            {
+                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "remove", "list", "clear-list", "execute");
+            }
+        }
+
+        return options;
     }
 
     @Override
@@ -52,7 +85,22 @@ public class SubCommandTileTicks extends SubCommand
 
         if (args.length >= 2)
         {
-            if (args[1].equals("list"))
+            if (args[1].equals("help"))
+            {
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "read-all [dimension]"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "list"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "remove-all [dimension]"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> <add | remove> <block name> [block name] ..."));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> clear-list"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> list"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> execute [dimension]"));
+            }
+            else if (args[1].equals("read-all"))
+            {
+                int dimension = this.getDimension(sender, args, 2, "");
+                TileTickTools.instance().readTileTicks(dimension, sender);
+            }
+            else if (args[1].equals("list"))
             {
                 File file = FileUtils.dumpDataToFile("tileticks", TileTickTools.instance().getAllTileTicksOutput(false));
 
@@ -60,11 +108,6 @@ public class SubCommandTileTicks extends SubCommand
                 {
                     sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
                 }
-            }
-            else if (args[1].equals("read-all"))
-            {
-                int dimension = this.getDimension(sender, args, 2, "");
-                TileTickTools.instance().readTileTicks(dimension, sender);
             }
             else if (args[1].equals("remove-all"))
             {
@@ -99,10 +142,10 @@ public class SubCommandTileTicks extends SubCommand
                     }
                     else
                     {
-                        sender.sendMessage(new TextComponentString("Tile ticks to be removed for types: " + String.join(", ", toRemove)));
+                        sender.sendMessage(new TextComponentString("Tile ticks will be be removed for anything matching: " + String.join(", ", toRemove)));
                     }
                 }
-                else if (args.length == 3 && args[2].equals("clear"))
+                else if (args.length == 3 && args[2].equals("clear-list"))
                 {
                     TileTickTools.instance().resetFilters();
                     sender.sendMessage(new TextComponentString("List cleared"));
@@ -115,8 +158,8 @@ public class SubCommandTileTicks extends SubCommand
                 }
                 else
                 {
-                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " <add | remove> <name> [name] ..."));
-                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " clear"));
+                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " <add | remove> <block name> [block name] ..."));
+                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " clear-list"));
                     sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " list"));
                     sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " execute [dimension]"));
                 }
