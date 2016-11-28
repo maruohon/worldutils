@@ -1,0 +1,35 @@
+language.name=English
+language.region=US
+language.code=en_US
+
+category.worldutils=World Utils
+worldutils.key.togglemode=Toggle Mode
+
+#############
+# Item names:
+#############
+
+item.worldutils_chunkwand.name=Chunk Wand
+
+###################################################
+# Tips displayed on 'fresh' items without NBT data:
+###################################################
+
+###################
+# Individual items:
+###################
+item.worldutils_chunkwand.tooltips=!!! WARNING !!! Admin-only tool!|lf DO NOT USE UNLESS YOU HAVE A WORLD BACKUP|lf- Allows changing entire chunks between alternate versions|lf  or importing the biomes to chunks from alternate versions|lf- Left/right click to set area corners|lf- Ctrl + scroll: Change mode|lf- Alt + scroll: Change target world|lf- (Alt +) Shift + scroll: Move area corners|lf- Alt + toggle: Add current selection to "stored" selection|lf- Shift + toggle: Remove current selection from "stored" selection|lf- Ctrl + Alt + toggle: Clear "stored" selection|lf- Ctrl + Shift + Alt + toggle: Clear the changed chunks exporter data|lf- Toggle key alone: Execute the selected action
+
+
+###################################
+# Item labels/tooltips etc:
+###################################
+worldutils.tooltip.item.chunkwand.biomes=Import biomes
+worldutils.tooltip.item.chunkwand.load=Change chunks
+worldutils.tooltip.item.chunkwand.preview=Preview chunks
+worldutils.tooltip.item.chunkwand.select=Select chunks
+worldutils.tooltip.item.chunkwand.target=Target world
+
+worldutils.tooltip.item.holdshift=Hold §e§oShift§7 for more
+worldutils.tooltip.item.holdshiftfordescription=Hold §e§oShift§7 for description
+worldutils.tooltip.item.mode=Mode

@@ -1,11 +1,11 @@
 [
 {
-  "modid": "worldtools",
-  "name": "World Tools",
-  "description": "Some tools to edit chunks or blocks in world",
+  "modid": "worldutils",
+  "name": "World Utils",
+  "description": "Commands and items to edit chunks/blocks/entities/tile-entities/chunks etc",
   "version": "${mod_version}",
   "mcversion": "${minecraft_version}",
-  "url": "http://minecraft.curseforge.com/projects/world-tools",
+  "url": "http://minecraft.curseforge.com/projects/world-utils",
   "updateUrl": "",
   "authorList": ["masa"],
   "credits": "",
