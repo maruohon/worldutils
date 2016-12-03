@@ -438,7 +438,7 @@ public class TileTickTools
 
         for (TileTickData entry : listIn)
         {
-            ChunkPos regionPos = new ChunkPos(entry.pos.getX() >> 9, entry.pos.getZ() >> 9);
+            ChunkPos regionPos = new ChunkPos(entry.chunk.chunkXPos >> 5, entry.chunk.chunkZPos >> 5);
             this.getSetForChunks(tileTicksByRegion, regionPos).add(entry.chunk);
         }
 
@@ -599,6 +599,6 @@ public class TileTickTools
     private String getFormattedOutput(TileTickData data, String format)
     {
         return String.format(format, data.blockId, data.delay, data.priority, data.pos.getX(), data.pos.getY(), data.pos.getZ(),
-                data.chunk.chunkXPos, data.chunk.chunkZPos, data.pos.getX() >> 9, data.pos.getZ() >> 9);
+                data.chunk.chunkXPos, data.chunk.chunkZPos, data.chunk.chunkXPos >> 5, data.chunk.chunkZPos >> 5);
     }
 }
