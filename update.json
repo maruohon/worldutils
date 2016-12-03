@@ -1,10 +1,11 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.10.2-latest": "0.1.0-alpha.1",
-        "1.10.2-recommended": "0.1.0-alpha.1"
+        "1.10.2-latest": "0.1.0-alpha.2",
+        "1.10.2-recommended": "0.1.0-alpha.2"
     },
     "1.10.2": {
+        "0.1.0-alpha.2": "Add 'tileticks find-invalid' and 'tileticks remove-invalid' commands.\nFix getting a wrong region in certain situations.",
         "0.1.0-alpha.1": "Initial release"
     }
 }
