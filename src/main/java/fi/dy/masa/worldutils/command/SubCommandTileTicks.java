@@ -23,11 +23,13 @@ public class SubCommandTileTicks extends SubCommand
     {
         super(baseCommand);
 
+        this.subSubCommands.add("find-invalid");
         this.subSubCommands.add("list");
         this.subSubCommands.add("read-all");
         this.subSubCommands.add("remove-all");
         this.subSubCommands.add("remove-by-mod");
         this.subSubCommands.add("remove-by-name");
+        this.subSubCommands.add("remove-invalid");
     }
 
     @Override
@@ -43,7 +45,16 @@ public class SubCommandTileTicks extends SubCommand
 
         if (args.length == 1)
         {
-            return CommandBase.getListOfStringsMatchingLastWord(args, "read-all", "list", "remove-all", "remove-by-mod", "remove-by-name");
+            // "find-invalid", "read-all", "list", "remove-all", "remove-invalid", "remove-by-mod", "remove-by-name"
+            return CommandBase.getListOfStringsMatchingLastWord(args, this.subSubCommands);
+        }
+        else if (args[1].equals("find-invalid") && args.length == 3)
+        {
+            return CommandBase.getListOfStringsMatchingLastWord(args, "list", "rescan");
+        }
+        else if (args[1].equals("remove-invalid") && args.length == 3)
+        {
+            return CommandBase.getListOfStringsMatchingLastWord(args, "rescan");
         }
         else if (args[1].equals("remove-by-mod") || args[1].equals("remove-by-name"))
         {
@@ -87,18 +98,60 @@ public class SubCommandTileTicks extends SubCommand
         {
             if (args[1].equals("help"))
             {
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "read-all [dimension]"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "find-invalid [rescan] [dimension]"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "find-invalid list"));
                 sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "list"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "read-all [dimension]"));
                 sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "remove-all [dimension]"));
                 sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> <add | remove> <block name> [block name] ..."));
                 sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> clear-list"));
                 sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> list"));
                 sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> execute [dimension]"));
+                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "remove-invalid [rescan] [dimension]"));
             }
             else if (args[1].equals("read-all"))
             {
+                sender.sendMessage(new TextComponentString("Reading tile ticks from the world, this may take a while, depending on the world size..."));
                 int dimension = this.getDimension(sender, args, 2, "");
-                TileTickTools.instance().readTileTicks(dimension, sender);
+                int count = TileTickTools.instance().readTileTicks(dimension, sender);
+                sender.sendMessage(new TextComponentString("Read " + count + " scheduled tile ticks from the world"));
+            }
+            else if (args[1].equals("find-invalid") || args[1].equals("remove-invalid"))
+            {
+                if (args[1].equals("find-invalid") && args.length == 3 && args[2].equals("list"))
+                {
+                    File file = FileUtils.dumpDataToFile("tileticks_invalid", TileTickTools.instance().getInvalidTileTicksOutput(true));
+
+                    if (file != null)
+                    {
+                        sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
+                    }
+                }
+                else
+                {
+                    boolean forceRescan = false;
+                    int dimIndex = 2;
+                    if (args.length >= 3 && args[2].equals("rescan"))
+                    {
+                        forceRescan = true;
+                        dimIndex++;
+                    }
+
+                    int dimension = this.getDimension(sender, args, dimIndex, "");
+
+                    if (args[1].equals("find-invalid"))
+                    {
+                        sender.sendMessage(new TextComponentString("Reading tile ticks and finding invalid ones, this may take a while, depending on the world size..."));
+                        int count = TileTickTools.instance().findInvalid(dimension, forceRescan, sender);
+                        sender.sendMessage(new TextComponentString("Found " + count + " invalid scheduled tile ticks in the world"));
+                    }
+                    else
+                    {
+                        sender.sendMessage(new TextComponentString("Removing invalid tile ticks, this may take a while, depending on the world size..."));
+                        String str = TileTickTools.instance().removeInvalid(dimension, forceRescan, sender);
+                        sender.sendMessage(new TextComponentString(str));
+                    }
+                }
             }
             else if (args[1].equals("list"))
             {
@@ -154,7 +207,8 @@ public class SubCommandTileTicks extends SubCommand
                 {
                     RemoveType types = args[1].equals("remove-by-name") ? RemoveType.BY_NAME : RemoveType.BY_MOD;
                     int dimension = this.getDimension(sender, args, 3, " " + args[2]);
-                    TileTickTools.instance().removeTileTicks(dimension, types, false, sender);
+                    String str = TileTickTools.instance().removeTileTicks(dimension, types, false, sender);
+                    sender.sendMessage(new TextComponentString(str));
                 }
                 else
                 {

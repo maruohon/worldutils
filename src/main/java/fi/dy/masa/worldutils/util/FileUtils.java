@@ -180,6 +180,8 @@ public class FileUtils
 
         if (regionFile.isChunkSaved(chunkX, chunkZ) == false)
         {
+            WorldUtils.logger.warn("handleChunkInRegion(): Chunk ({}, {}) was not found in region '{}'",
+                    chunkPos.chunkXPos, chunkPos.chunkZPos, region.getName());
             return 0;
         }
 

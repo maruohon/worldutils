@@ -25,6 +25,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
@@ -49,10 +50,40 @@ public class TileTickTools
         protected int chunkCount;
         protected int processedCount;
         protected List<TileTickData> tileTicks = new ArrayList<TileTickData>();
+        protected List<TileTickData> invalidTicks = new ArrayList<TileTickData>();
+        protected Set<String> missingIds = new HashSet<String>();
 
-        public List<TileTickData> getTileTicks()
+        public List<TileTickData> getAllTileTicks()
         {
             return this.tileTicks;
+        }
+
+        public Set<String> getMissingIdsSet()
+        {
+            return this.missingIds;
+        }
+
+        public List<TileTickData> getInvalidTicksList()
+        {
+            return this.invalidTicks;
+        }
+
+        public void findInvalid()
+        {
+            Set<ResourceLocation> existingBlocks = ForgeRegistries.BLOCKS.getKeys();
+            this.missingIds.clear();
+            this.invalidTicks.clear();
+
+            for (TileTickData data : this.tileTicks)
+            {
+                // The ResourceLocation should only be null if the data was saved with an integer ID
+                // and the block wasn't found.
+                if (data.resource == null || existingBlocks.contains(data.resource) == false)
+                {
+                    this.invalidTicks.add(data);
+                    this.missingIds.add(data.blockId);
+                }
+            }
         }
 
         @Override
@@ -434,13 +465,53 @@ public class TileTickTools
         return ImmutableSet.copyOf(this.namesToRemove);
     }
 
-    public void readTileTicks(int dimension, ICommandSender sender)
+    public int readTileTicks(int dimension, ICommandSender sender)
     {
         this.tileTickReader.init();
         FileUtils.worldDataProcessor(dimension, this.tileTickReader, sender, false);
+
+        return this.tileTickReader.getAllTileTicks().size();
+    }
+
+    public int findInvalid(int dimension, boolean forceRescan, ICommandSender sender)
+    {
+        if (forceRescan || this.tileTickReader.getAllTileTicks().size() == 0)
+        {
+            this.readTileTicks(dimension, sender);
+        }
+
+        this.tileTickReader.findInvalid();
+
+        return this.tileTickReader.getInvalidTicksList().size();
+    }
+
+    public String removeInvalid(int dimension, boolean forceRescan, ICommandSender sender)
+    {
+        if (forceRescan || this.tileTickReader.getMissingIdsSet().size() == 0)
+        {
+            this.findInvalid(dimension, forceRescan, sender);
+        }
+
+        Set<String> toRemove = this.tileTickReader.getMissingIdsSet();
+        return this.removeTileTicks(dimension, RemoveType.BY_NAME, toRemove, false, sender);
     }
 
     public String removeTileTicks(int dimension, RemoveType type, boolean simulate, ICommandSender sender)
+    {
+        if (type == RemoveType.ALL)
+        {
+            return this.removeTileTicks(dimension, type, this.namesToRemove, simulate, sender);
+        }
+
+        if (this.tileTickReader.getAllTileTicks().size() == 0)
+        {
+            this.readTileTicks(dimension, sender);
+        }
+
+        return this.removeTileTicks(dimension, type, this.namesToRemove, simulate, sender);
+    }
+
+    private String removeTileTicks(int dimension, RemoveType type, Set<String> namesToRemove, boolean simulate, ICommandSender sender)
     {
         File worldDir = FileUtils.getWorldSaveLocation(dimension);
         File regionDir = new File(worldDir, "region");
@@ -453,26 +524,27 @@ public class TileTickTools
             {
                 FileUtils.worldDataProcessor(dimension, new TileTickRemover(), sender, false);
             }
-            else
+            else if (namesToRemove != null)
             {
-                if (this.tileTickReader.getTileTicks().size() == 0)
+                List<TileTickData> toRemove = this.getTileTicksToRemove(this.tileTickReader.getAllTileTicks(), type, namesToRemove);
+                for (TileTickData m : toRemove)
                 {
-                    this.tileTickReader.init();
-                    FileUtils.worldDataProcessor(dimension, this.tileTickReader, sender, false);
+                    WorldUtils.logger.info("toRemove: {} @ {}", m.resource, m.chunk);
                 }
 
-                List<TileTickData> toRemove = this.getTileTicksToRemove(this.tileTickReader.getTileTicks(), type, this.namesToRemove);
                 Map<ChunkPos, Set<ChunkPos>> tileTicksByRegion = this.sortTileTicksByRegionAndChunk(toRemove);
 
                 for (Map.Entry<ChunkPos, Set<ChunkPos>> regionEntry : tileTicksByRegion.entrySet())
                 {
                     ChunkPos regionPos = regionEntry.getKey();
                     region = Region.fromRegionCoords(worldDir, regionPos);
+                    WorldUtils.logger.info("in region: r.{}.{}.mca", regionPos.chunkXPos, regionPos.chunkZPos);
 
                     for (ChunkPos chunkPos : regionEntry.getValue())
                     {
-                        TileTickRemover tileTickRemover = new TileTickRemover(region, type, this.namesToRemove);
+                        TileTickRemover tileTickRemover = new TileTickRemover(region, type, namesToRemove);
                         removedTotal += FileUtils.handleChunkInRegion(region, chunkPos, tileTickRemover, simulate);
+                        WorldUtils.logger.info("in chunk: {},{} removed in total: {}", chunkPos.chunkXPos, chunkPos.chunkZPos, removedTotal);
                     }
                 }
 
@@ -485,7 +557,12 @@ public class TileTickTools
 
     public List<String> getAllTileTicksOutput(boolean sortFirst)
     {
-        return this.getFormattedOutputLines(this.tileTickReader.getTileTicks(), sortFirst);
+        return this.getFormattedOutputLines(this.tileTickReader.getAllTileTicks(), sortFirst);
+    }
+
+    public List<String> getInvalidTileTicksOutput(boolean sortFirst)
+    {
+        return this.getFormattedOutputLines(this.tileTickReader.getInvalidTicksList(), sortFirst);
     }
 
     private List<String> getFormattedOutputLines(List<TileTickData> dataIn, boolean sortFirst)
