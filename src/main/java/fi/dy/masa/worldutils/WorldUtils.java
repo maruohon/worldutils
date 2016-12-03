@@ -1,5 +1,6 @@
 package fi.dy.masa.worldutils;
 
+import java.io.File;
 import org.apache.logging.log4j.Logger;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -17,7 +18,7 @@ import fi.dy.masa.worldutils.setup.WorldUtilsItems;
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
     guiFactory = "fi.dy.masa.worldutils.setup.WorldUtilsGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/worldutils/master/update.json",
-    acceptedMinecraftVersions = "1.10.2")
+    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "1.10.2")
 public class WorldUtils
 {
     @Instance(Reference.MOD_ID)
@@ -34,7 +35,7 @@ public class WorldUtils
         instance = this;
         logger = event.getModLog();
         Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
-        configDirPath = event.getModConfigurationDirectory().getAbsolutePath().concat("/" + Reference.MOD_ID);
+        configDirPath = new File(event.getModConfigurationDirectory(), Reference.MOD_ID).getAbsolutePath();
 
         WorldUtilsItems.init();
         PacketHandler.init(); // Initialize network stuff
