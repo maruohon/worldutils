@@ -455,8 +455,11 @@ public class TileTickTools
             }
             else
             {
-                this.tileTickReader.init();
-                FileUtils.worldDataProcessor(dimension, this.tileTickReader, sender, false);
+                if (this.tileTickReader.getTileTicks().size() == 0)
+                {
+                    this.tileTickReader.init();
+                    FileUtils.worldDataProcessor(dimension, this.tileTickReader, sender, false);
+                }
 
                 List<TileTickData> toRemove = this.getTileTicksToRemove(this.tileTickReader.getTileTicks(), type, this.namesToRemove);
                 Map<ChunkPos, Set<ChunkPos>> tileTicksByRegion = this.sortTileTicksByRegionAndChunk(toRemove);
