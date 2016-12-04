@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -12,7 +13,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.data.TileTickTools;
 import fi.dy.masa.worldutils.data.TileTickTools.RemoveType;
 import fi.dy.masa.worldutils.util.FileUtils;
@@ -62,7 +62,7 @@ public class SubCommandTileTicks extends SubCommand
             {
                 if (args[2].equals("add"))
                 {
-                    for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
+                    for (ResourceLocation rl : Block.REGISTRY.getKeys())
                     {
                         options.add(rl.toString());
                     }

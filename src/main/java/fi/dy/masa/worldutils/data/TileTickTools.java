@@ -25,7 +25,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
@@ -70,7 +69,7 @@ public class TileTickTools
 
         public void findInvalid()
         {
-            Set<ResourceLocation> existingBlocks = ForgeRegistries.BLOCKS.getKeys();
+            Set<ResourceLocation> existingBlocks = Block.REGISTRY.getKeys();
             this.missingIds.clear();
             this.invalidTicks.clear();
 
