@@ -14,6 +14,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.reference.Reference;
 import fi.dy.masa.worldutils.reference.ReferenceNames;
 
 public class ItemWorldUtils extends Item
@@ -72,7 +73,7 @@ public class ItemWorldUtils extends Item
 
             if (verbose == false && tmpList.size() > 2)
             {
-                list.add(I18n.format("worldtools.tooltip.item.holdshiftfordescription"));
+                list.add(I18n.format(Reference.MOD_ID + ".tooltip.item.holdshiftfordescription"));
             }
             else
             {
@@ -93,7 +94,7 @@ public class ItemWorldUtils extends Item
             {
                 list.add(tmpList.get(0));
             }
-            list.add(I18n.format("worldtools.tooltip.item.holdshift"));
+            list.add(I18n.format(Reference.MOD_ID + ".tooltip.item.holdshift"));
         }
         else
         {

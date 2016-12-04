@@ -154,7 +154,7 @@ public class TileTickTools
                         count++;
                     }
 
-                    //WorldTools.logger.info("Read {} tile ticks in chunk [{}, {}] in region '{}'", count, chunkX, chunkZ, region.getName());
+                    //WorldUtils.logger.info("Read {} tile ticks in chunk [{}, {}] in region '{}'", count, chunkX, chunkZ, region.getName());
                 }
             }
             catch (IOException e)
