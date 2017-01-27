@@ -1,14 +1,11 @@
 package fi.dy.masa.worldutils.command;
 
 import java.io.File;
-import java.util.List;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.data.EntityTools;
 import fi.dy.masa.worldutils.util.FileUtils;
 
@@ -18,7 +15,7 @@ public class SubCommandEntities extends SubCommand
     {
         super(baseCommand);
 
-        this.subSubCommands.add("list");
+        this.subSubCommands.add("list-all");
         this.subSubCommands.add("list-duplicates-all");
         this.subSubCommands.add("list-duplicates-only");
         this.subSubCommands.add("read-all");
@@ -32,78 +29,89 @@ public class SubCommandEntities extends SubCommand
     }
 
     @Override
-    protected List<String> getTabCompletionOptionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    public void printFullHelp(ICommandSender sender, String[] args)
     {
-        return null;
+        this.sendMessage(sender, this.getUsageStringCommon() + " list-all");
+        this.sendMessage(sender, this.getUsageStringCommon() + " list-duplicates-all");
+        this.sendMessage(sender, this.getUsageStringCommon() + " list-duplicates-only");
+        this.sendMessage(sender, this.getUsageStringCommon() + " read-all [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove-duplicate-uuids [dimension id]");
     }
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        super.execute(server, sender, args);
-
-        if (args.length >= 2)
+        if (args.length < 1)
         {
-            if (args[1].equals("list"))
-            {
-                File file = FileUtils.dumpDataToFile("entities", EntityTools.instance().getAllEntitiesOutput(true));
+            this.printHelpGeneric(sender);
+            return;
+        }
 
-                if (file != null)
-                {
-                    sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
-                }
-            }
-            else if (args[1].equals("list-duplicates-all") || args[1].equals("list-duplicates-only"))
-            {
-                File file;
+        String cmd = args[0];
+        args = dropFirstStrings(args, 1);
 
-                if (args[1].equals("list-duplicates-all"))
-                {
-                    file = FileUtils.dumpDataToFile("entity_duplicates_all", EntityTools.instance().getDuplicateEntitiesOutput(true, true));
-                }
-                else
-                {
-                    file = FileUtils.dumpDataToFile("entity_duplicates_only", EntityTools.instance().getDuplicateEntitiesOutput(false, true));
-                }
+        if (cmd.equals("help"))
+        {
+            this.printFullHelp(sender, args);
+        }
+        else if (cmd.equals("list-all"))
+        {
+            File file = FileUtils.dumpDataToFile("entities", EntityTools.instance().getAllEntitiesOutput(true));
 
-                if (file != null)
-                {
-                    sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
-                }
-            }
-            else if (args[1].equals("read-all"))
+            if (file != null)
             {
-                int dimension = this.getDimension(sender, args);
-                EntityTools.instance().readEntities(dimension, sender);
+                this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
             }
-            else if (args[1].equals("remove-duplicate-uuids"))
+        }
+        else if (cmd.equals("list-duplicates-all") || cmd.equals("list-duplicates-only"))
+        {
+            File file;
+
+            if (cmd.equals("list-duplicates-all"))
             {
-                int dimension = this.getDimension(sender, args);
-                String output = EntityTools.instance().removeAllDuplicateEntities(dimension, false, sender);
-                sender.sendMessage(new TextComponentString(output));
+                file = FileUtils.dumpDataToFile("entity_duplicates_all", EntityTools.instance().getDuplicateEntitiesOutput(true, true));
             }
             else
             {
-                throw new WrongUsageException("Unknown sub-command argument '" + args[1] + "'", new Object[0]);
+                file = FileUtils.dumpDataToFile("entity_duplicates_only", EntityTools.instance().getDuplicateEntitiesOutput(false, true));
             }
+
+            if (file != null)
+            {
+                this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
+            }
+        }
+        else if (cmd.equals("read-all"))
+        {
+            int dimension = this.getDimension(cmd, args, sender);
+            EntityTools.instance().readEntities(dimension, sender);
+
+            this.sendMessage(sender, "worldutils.commands.entities.readall.done");
+        }
+        else if (cmd.equals("remove-duplicate-uuids"))
+        {
+            int dimension = this.getDimension(cmd, args, sender);
+            int count = EntityTools.instance().removeAllDuplicateEntities(dimension, false, sender);
+
+            this.sendMessage(sender, "worldutils.commands.entities.removeall.done", Integer.valueOf(count));
         }
         else
         {
-            //throw new WrongUsageException("Unknown sub-command argument '" + args[1] + "'", new Object[0]);
+            throwCommand("worldutils.commands.error.unknowncommandargument", cmd);
         }
     }
 
-    private int getDimension(ICommandSender sender, String[] args) throws CommandException
+    private int getDimension(String cmd, String[] args, ICommandSender sender) throws CommandException
     {
         int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
 
-        if (args.length == 3)
+        if (args.length == 1)
         {
-            dimension = CommandBase.parseInt(args[2]);
+            dimension = CommandBase.parseInt(args[0]);
         }
-        else if (args.length > 3)
+        else if (args.length > 1)
         {
-            throw new WrongUsageException(this.getUsageStringPre() + args[1] + " [dimension]", new Object[0]);
+            throwUsage(this.getUsageStringCommon() + " " + cmd + " [dimension id]");
         }
 
         return dimension;

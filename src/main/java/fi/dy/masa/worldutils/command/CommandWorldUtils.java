@@ -1,16 +1,19 @@
 package fi.dy.masa.worldutils.command;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.NumberInvalidException;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 
 public class CommandWorldUtils extends CommandBase
 {
@@ -32,7 +35,17 @@ public class CommandWorldUtils extends CommandBase
     @Override
     public String getUsage(ICommandSender sender)
     {
-        return "/" + this.getName() + " help";
+        return "/" + this.getName() + " <" + String.join(" | ", this.getCommandNamesSorted()) + ">";
+    }
+
+    public List<String> getCommandNamesSorted()
+    {
+        List<String> commands = new ArrayList<String>();
+        commands.addAll(this.getSubCommandNames());
+        commands.add("help");
+        Collections.sort(commands);
+
+        return commands;
     }
 
     @Override
@@ -42,51 +55,60 @@ public class CommandWorldUtils extends CommandBase
     }
 
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] strArr, BlockPos pos)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
     {
-        if (strArr.length == 1)
+        if (args.length == 1 || (args.length == 2 && args[0].equals("help")))
         {
-            return getListOfStringsMatchingLastWord(strArr, this.subCommands.keySet());
+            return getListOfStringsMatchingLastWord(args, this.getCommandNamesSorted());
         }
-        else if (this.subCommands.containsKey(strArr[0]))
+        else if (args.length > 1 && this.subCommands.containsKey(args[0]))
         {
-            ISubCommand command = this.subCommands.get(strArr[0]);
-
-            if (command != null)
-            {
-                return command.getTabCompletions(server, sender, strArr);
-            }
+            ISubCommand command = this.subCommands.get(args[0]);
+            return command.getTabCompletions(server, sender, dropFirstStrings(args, 1));
         }
 
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] commandArgs) throws CommandException
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        if (commandArgs.length > 0)
+        if (args.length == 0)
         {
-            if (this.subCommands.containsKey(commandArgs[0]))
-            {
-                ISubCommand command = this.subCommands.get(commandArgs[0]);
+            throwUsage(this.getUsage(sender));
+        }
 
-                if (command != null)
-                {
-                    command.execute(server, sender, commandArgs);
-                }
-            }
-            else if (commandArgs[0].equals("help"))
+        String cmd = args[0];
+
+        if (this.subCommands.containsKey(cmd))
+        {
+            this.subCommands.get(cmd).execute(server, sender, dropFirstStrings(args, 1));;
+        }
+        else if (cmd.equals("help"))
+        {
+            if (args.length == 1)
             {
-                sender.sendMessage(new TextComponentString("Usage: /" + this.getName() + " " + String.join(", ", this.subCommands.keySet())));
+                sendMessage(sender, "worldutils.commands.help.generic.usage", this.getUsage(sender));
+            }
+            else if (args.length == 2)
+            {
+                if (this.subCommands.containsKey(args[1]))
+                {
+                    this.subCommands.get(args[1]).execute(server, sender, new String[] { "help" });
+                }
+                else
+                {
+                    throwCommand("worldutils.commands.error.unknowncommandvariant", args[1]);
+                }
             }
             else
             {
-                throw new WrongUsageException("Unknown command: /" + this.getName() + " " + commandArgs[0], new Object[0]);
+                throwUsage(this.getUsage(sender));
             }
         }
         else
         {
-            throw new WrongUsageException("Usage: '" + this.getUsage(sender) + "'", new Object[0]);
+            throwCommand("worldutils.commands.error.unknowncommandvariant", args[1]);
         }
     }
 
@@ -98,8 +120,40 @@ public class CommandWorldUtils extends CommandBase
         }
     }
 
-    public Set<String> getSubCommandList()
+    public Collection<String> getSubCommandNames()
     {
         return this.subCommands.keySet();
+    }
+
+    public static String[] dropFirstStrings(String[] input, int toDrop)
+    {
+        if (toDrop >= input.length)
+        {
+            return new String[0];
+        }
+
+        String[] arr = new String[input.length - toDrop];
+        System.arraycopy(input, toDrop, arr, 0, input.length - toDrop);
+        return arr;
+    }
+
+    public static void sendMessage(ICommandSender sender, String message, Object... params)
+    {
+        sender.sendMessage(new TextComponentTranslation(message, params));
+    }
+
+    public static void throwUsage(String message, Object... params) throws CommandException
+    {
+        throw new WrongUsageException(message, params);
+    }
+
+    public static void throwNumber(String message, Object... params) throws CommandException
+    {
+        throw new NumberInvalidException(message, params);
+    }
+
+    public static void throwCommand(String message, Object... params) throws CommandException
+    {
+        throw new CommandException(message, params);
     }
 }

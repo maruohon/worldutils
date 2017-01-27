@@ -22,7 +22,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldutils.WorldUtils;
@@ -171,19 +171,16 @@ public class TileTickTools
         @Override
         public void finish(ICommandSender sender, boolean simulate)
         {
-            String chatOutput = String.format("Read a total of %d tile ticks from %d chunks in %d region files",
+            WorldUtils.logger.info("Read a total of {} tile ticks from {} chunks in {} region files",
                     this.processedCount, this.chunkCount, this.regionCount);
-
-            sender.sendMessage(new TextComponentString(chatOutput));
-            WorldUtils.logger.info(chatOutput);
+            sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.reader.info",
+                    Integer.valueOf(this.processedCount), Integer.valueOf(this.chunkCount), Integer.valueOf(this.regionCount)));
 
             if (this.provider != null && this.provider.getLoadedChunkCount() > 0)
             {
-                chatOutput = String.format("There were %d chunks currently loaded, the tile tick list does not include data in those chunks!!",
-                    this.provider.getLoadedChunkCount());
-
-                sender.sendMessage(new TextComponentString(chatOutput));
-                WorldUtils.logger.warn(chatOutput);
+                int loaded = this.provider.getLoadedChunkCount();
+                WorldUtils.logger.warn("There were {} chunks currently loaded, the tile tick list does not include data from those chunks!", loaded);
+                sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.reader.loaded", Integer.valueOf(loaded)));
             }
         }
         
@@ -335,20 +332,17 @@ public class TileTickTools
         {
             if (this.processedCount > 0)
             {
-                String chatOutput = String.format("Removed a total of %d tile ticks from %d chunks in %d region files",
+                WorldUtils.logger.info("Removed a total of {} tile ticks from {} chunks in {} region files",
                         this.processedCount, this.chunkCount, this.regionCount);
-
-                sender.sendMessage(new TextComponentString(chatOutput));
-                WorldUtils.logger.info(chatOutput);
+                sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.remover.info",
+                        Integer.valueOf(this.processedCount), Integer.valueOf(this.chunkCount), Integer.valueOf(this.regionCount)));
             }
 
             if (this.provider != null && this.provider.getLoadedChunkCount() > 0)
             {
-                String chatOutput = String.format("There were %d chunks currently loaded, the tile ticks were not removed from those chunks!!",
-                        this.provider.getLoadedChunkCount());
-
-                sender.sendMessage(new TextComponentString(chatOutput));
-                WorldUtils.logger.warn(chatOutput);
+                int loaded = this.provider.getLoadedChunkCount();
+                WorldUtils.logger.warn("There were {} chunks currently loaded, the tile ticks were NOT removed from those chunks", loaded);
+                sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.remover.loaded", Integer.valueOf(loaded)));
             }
         }
     }
@@ -437,8 +431,8 @@ public class TileTickTools
 
         for (TileTickData entry : listIn)
         {
-            ChunkPos regionPos = new ChunkPos(entry.chunk.chunkXPos >> 5, entry.chunk.chunkZPos >> 5);
-            this.getSetForChunks(tileTicksByRegion, regionPos).add(entry.chunk);
+            ChunkPos regionPos = new ChunkPos(entry.chunkPos.chunkXPos >> 5, entry.chunkPos.chunkZPos >> 5);
+            this.getSetForChunks(tileTicksByRegion, regionPos).add(entry.chunkPos);
         }
 
         return tileTicksByRegion;
@@ -484,7 +478,7 @@ public class TileTickTools
         return this.tileTickReader.getInvalidTicksList().size();
     }
 
-    public String removeInvalid(int dimension, boolean forceRescan, ICommandSender sender)
+    public int removeInvalid(int dimension, boolean forceRescan, ICommandSender sender)
     {
         if (forceRescan || this.tileTickReader.getMissingIdsSet().size() == 0)
         {
@@ -495,7 +489,7 @@ public class TileTickTools
         return this.removeTileTicks(dimension, RemoveType.BY_NAME, toRemove, false, sender);
     }
 
-    public String removeTileTicks(int dimension, RemoveType type, boolean simulate, ICommandSender sender)
+    public int removeTileTicks(int dimension, RemoveType type, boolean simulate, ICommandSender sender)
     {
         if (type == RemoveType.ALL)
         {
@@ -510,7 +504,7 @@ public class TileTickTools
         return this.removeTileTicks(dimension, type, this.namesToRemove, simulate, sender);
     }
 
-    private String removeTileTicks(int dimension, RemoveType type, Set<String> namesToRemove, boolean simulate, ICommandSender sender)
+    private int removeTileTicks(int dimension, RemoveType type, Set<String> namesToRemove, boolean simulate, ICommandSender sender)
     {
         File worldDir = FileUtils.getWorldSaveLocation(dimension);
         File regionDir = new File(worldDir, "region");
@@ -526,9 +520,9 @@ public class TileTickTools
             else if (namesToRemove != null)
             {
                 List<TileTickData> toRemove = this.getTileTicksToRemove(this.tileTickReader.getAllTileTicks(), type, namesToRemove);
-                for (TileTickData m : toRemove)
+                for (TileTickData data : toRemove)
                 {
-                    WorldUtils.logger.info("toRemove: {} @ {}", m.resource, m.chunk);
+                    WorldUtils.logger.info("toRemove: {} @ {}", data.resource, data.chunkPos);
                 }
 
                 Map<ChunkPos, Set<ChunkPos>> tileTicksByRegion = this.sortTileTicksByRegionAndChunk(toRemove);
@@ -546,12 +540,10 @@ public class TileTickTools
                         WorldUtils.logger.info("in chunk: {},{} removed in total: {}", chunkPos.chunkXPos, chunkPos.chunkZPos, removedTotal);
                     }
                 }
-
-                sender.sendMessage(new TextComponentString("Removed " + removedTotal + " tile ticks in total"));
             }
         }
 
-        return "Removed a total of " + removedTotal + " tile ticks";
+        return removedTotal;
     }
 
     public List<String> getAllTileTicksOutput(boolean sortFirst)
@@ -585,7 +577,7 @@ public class TileTickTools
             }
         }
 
-        String format = "%" + longestId + "s - delay: %4d, priority: %2d @ {pos: x = %6d, y = %3d, z = %6d chunk: (%5d, %5d) region: r.%d.%d.mca}";
+        String format = "%-" + longestId + "s - delay: %4d, priority: %2d @ {pos: x = %6d, y = %3d, z = %6d chunk: (%5d, %5d) region: r.%d.%d.mca}";
 
         for (TileTickData entry : dataIn)
         {
@@ -597,7 +589,7 @@ public class TileTickTools
 
     private String getFormattedOutput(TileTickData data, String format)
     {
-        return String.format(format, data.blockId, data.delay, data.priority, data.pos.getX(), data.pos.getY(), data.pos.getZ(),
-                data.chunk.chunkXPos, data.chunk.chunkZPos, data.chunk.chunkXPos >> 5, data.chunk.chunkZPos >> 5);
+        return String.format(format, data.blockId, data.delay, data.priority, data.blockPos.getX(), data.blockPos.getY(), data.blockPos.getZ(),
+                data.chunkPos.chunkXPos, data.chunkPos.chunkZPos, data.chunkPos.chunkXPos >> 5, data.chunkPos.chunkZPos >> 5);
     }
 }

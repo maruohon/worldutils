@@ -249,7 +249,7 @@ public class EntityTools
         FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender, false);
     }
 
-    public String removeAllDuplicateEntities(int dimension, boolean simulate, ICommandSender sender)
+    public int removeAllDuplicateEntities(int dimension, boolean simulate, ICommandSender sender)
     {
         File worldDir = FileUtils.getWorldSaveLocation(dimension);
         File regionDir = new File(worldDir, "region");
@@ -279,7 +279,7 @@ public class EntityTools
             }
         }
 
-        return "Removed a total of " + removedTotal + " entities";
+        return removedTotal;
     }
 
     private List<EntityData> getDuplicateEntriesIncludingFirst(List<EntityData> dataIn, boolean sortFirst)

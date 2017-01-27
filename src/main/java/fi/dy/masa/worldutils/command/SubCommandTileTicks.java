@@ -2,17 +2,16 @@ package fi.dy.masa.worldutils.command;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.data.TileTickTools;
 import fi.dy.masa.worldutils.data.TileTickTools.RemoveType;
 import fi.dy.masa.worldutils.util.FileUtils;
@@ -39,193 +38,206 @@ public class SubCommandTileTicks extends SubCommand
     }
 
     @Override
-    protected List<String> getTabCompletionOptionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    public void printHelpGeneric(ICommandSender sender)
     {
-        List<String> options = new ArrayList<String>();
+        this.sendMessage(sender, "worldutils.commands.help.generic.runhelpforallcommands", this.getUsageStringCommon() + " help");
+    }
 
-        if (args.length == 1)
-        {
-            // "find-invalid", "read-all", "list", "remove-all", "remove-invalid", "remove-by-mod", "remove-by-name"
-            return CommandBase.getListOfStringsMatchingLastWord(args, this.subSubCommands);
-        }
-        else if (args[1].equals("find-invalid") && args.length == 3)
+    @Override
+    public void printFullHelp(ICommandSender sender, String[] args)
+    {
+        this.sendMessage(sender, this.getUsageStringCommon() + " find-invalid [rescan] [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " find-invalid list");
+        this.sendMessage(sender, this.getUsageStringCommon() + " list");
+        this.sendMessage(sender, this.getUsageStringCommon() + " read-all [dimension]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove-all [dimension]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " <remove-by-mod | remove-by-name> <add | remove> <block name> [block name] ...");
+        this.sendMessage(sender, this.getUsageStringCommon() + " <remove-by-mod | remove-by-name> clear-list");
+        this.sendMessage(sender, this.getUsageStringCommon() + " <remove-by-mod | remove-by-name> list");
+        this.sendMessage(sender, this.getUsageStringCommon() + " <remove-by-mod | remove-by-name> execute [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove-invalid [rescan] [dimension id]");
+    }
+
+    @Override
+    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    {
+        String cmd = args[0];
+        args = dropFirstStrings(args, 1);
+
+        if (cmd.equals("find-invalid") && args.length == 1)
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, "list", "rescan");
         }
-        else if (args[1].equals("remove-invalid") && args.length == 3)
+        else if (cmd.equals("remove-invalid") && args.length == 1)
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, "rescan");
         }
-        else if (args[1].equals("remove-by-mod") || args[1].equals("remove-by-name"))
+        else if (cmd.equals("remove-by-mod") || cmd.equals("remove-by-name"))
         {
-            if (args.length >= 4)
+            if (args.length >= 2)
             {
-                if (args[2].equals("add"))
+                List<String> options = new ArrayList<String>();
+
+                if (args[0].equals("add"))
                 {
                     for (ResourceLocation rl : Block.REGISTRY.getKeys())
                     {
                         options.add(rl.toString());
                     }
                 }
-                else if (args[2].equals("remove"))
+                else if (args[0].equals("remove"))
                 {
                     options.addAll(TileTickTools.instance().getFilters());
                 }
 
                 return CommandBase.getListOfStringsMatchingLastWord(args, options);
             }
-            else if (args.length >= 3)
+            else if (args.length == 1)
             {
                 return CommandBase.getListOfStringsMatchingLastWord(args, "add", "remove", "list", "clear-list", "execute");
             }
         }
 
-        return options;
-    }
-
-    @Override
-    public String getHelp()
-    {
-        return super.getHelp();
+        return Collections.emptyList();
     }
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        super.execute(server, sender, args);
-
-        if (args.length >= 2)
+        if (args.length < 1)
         {
-            if (args[1].equals("help"))
-            {
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "find-invalid [rescan] [dimension]"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "find-invalid list"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "list"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "read-all [dimension]"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "remove-all [dimension]"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> <add | remove> <block name> [block name] ..."));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> clear-list"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> list"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "<remove-by-mod | remove-by-name> execute [dimension]"));
-                sender.sendMessage(new TextComponentString(this.getUsageStringPre() + "remove-invalid [rescan] [dimension]"));
-            }
-            else if (args[1].equals("read-all"))
-            {
-                sender.sendMessage(new TextComponentString("Reading tile ticks from the world, this may take a while, depending on the world size..."));
-                int dimension = this.getDimension(sender, args, 2, "");
-                int count = TileTickTools.instance().readTileTicks(dimension, sender);
-                sender.sendMessage(new TextComponentString("Read " + count + " scheduled tile ticks from the world"));
-            }
-            else if (args[1].equals("find-invalid") || args[1].equals("remove-invalid"))
-            {
-                if (args[1].equals("find-invalid") && args.length == 3 && args[2].equals("list"))
-                {
-                    File file = FileUtils.dumpDataToFile("tileticks_invalid", TileTickTools.instance().getInvalidTileTicksOutput(true));
+            this.printHelpGeneric(sender);
+            return;
+        }
 
-                    if (file != null)
-                    {
-                        sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
-                    }
-                }
-                else
-                {
-                    boolean forceRescan = false;
-                    int dimIndex = 2;
-                    if (args.length >= 3 && args[2].equals("rescan"))
-                    {
-                        forceRescan = true;
-                        dimIndex++;
-                    }
+        String cmd = args[0];
+        args = dropFirstStrings(args, 1);
 
-                    int dimension = this.getDimension(sender, args, dimIndex, "");
+        if (cmd.equals("help"))
+        {
+            this.printFullHelp(sender, args);
+        }
+        else if (cmd.equals("read-all"))
+        {
+            this.sendMessage(sender, "worldutils.commands.tileticks.reading.start");
 
-                    if (args[1].equals("find-invalid"))
-                    {
-                        sender.sendMessage(new TextComponentString("Reading tile ticks and finding invalid ones, this may take a while, depending on the world size..."));
-                        int count = TileTickTools.instance().findInvalid(dimension, forceRescan, sender);
-                        sender.sendMessage(new TextComponentString("Found " + count + " invalid scheduled tile ticks in the world"));
-                    }
-                    else
-                    {
-                        sender.sendMessage(new TextComponentString("Removing invalid tile ticks, this may take a while, depending on the world size..."));
-                        String str = TileTickTools.instance().removeInvalid(dimension, forceRescan, sender);
-                        sender.sendMessage(new TextComponentString(str));
-                    }
-                }
-            }
-            else if (args[1].equals("list"))
+            int dimension = this.getDimension(sender, args, 0, "");
+            int count = TileTickTools.instance().readTileTicks(dimension, sender);
+
+            this.sendMessage(sender, "worldutils.commands.tileticks.reading.complete", Integer.valueOf(count));
+        }
+        else if (cmd.equals("find-invalid") || cmd.equals("remove-invalid"))
+        {
+            if (cmd.equals("find-invalid") && args.length == 1 && args[0].equals("list"))
             {
-                File file = FileUtils.dumpDataToFile("tileticks", TileTickTools.instance().getAllTileTicksOutput(false));
+                File file = FileUtils.dumpDataToFile("tileticks_invalid", TileTickTools.instance().getInvalidTileTicksOutput(true));
 
                 if (file != null)
                 {
-                    sender.sendMessage(new TextComponentString("Output written to file " + file.getName()));
-                }
-            }
-            else if (args[1].equals("remove-all"))
-            {
-                int dimension = this.getDimension(sender, args, 2, "");
-                TileTickTools.instance().removeTileTicks(dimension, RemoveType.ALL, false, sender);
-            }
-            else if (args[1].equals("remove-by-mod") || args[1].equals("remove-by-name"))
-            {
-                if (args.length >= 4 && args[2].equals("add"))
-                {
-                    for (int i = 3; i < args.length; i++)
-                    {
-                        TileTickTools.instance().addFilter(args[i]);
-                        sender.sendMessage(new TextComponentString("Added '" + args[i] + "' to the list"));
-                    }
-                }
-                else if (args.length >= 4 && args[2].equals("remove"))
-                {
-                    for (int i = 3; i < args.length; i++)
-                    {
-                        TileTickTools.instance().removeFilter(args[i]);
-                        sender.sendMessage(new TextComponentString("Removed '" + args[i] + "' from the list"));
-                    }
-                }
-                else if (args.length == 3 && args[2].equals("list"))
-                {
-                    Set<String> toRemove = TileTickTools.instance().getFilters();
-
-                    if (toRemove.isEmpty())
-                    {
-                        sender.sendMessage(new TextComponentString("Nothing added to be removed"));
-                    }
-                    else
-                    {
-                        sender.sendMessage(new TextComponentString("Tile ticks will be be removed for anything matching: " + String.join(", ", toRemove)));
-                    }
-                }
-                else if (args.length == 3 && args[2].equals("clear-list"))
-                {
-                    TileTickTools.instance().resetFilters();
-                    sender.sendMessage(new TextComponentString("List cleared"));
-                }
-                else if (args.length >= 3 && args.length <= 4 && args[2].equals("execute"))
-                {
-                    RemoveType types = args[1].equals("remove-by-name") ? RemoveType.BY_NAME : RemoveType.BY_MOD;
-                    int dimension = this.getDimension(sender, args, 3, " " + args[2]);
-                    String str = TileTickTools.instance().removeTileTicks(dimension, types, false, sender);
-                    sender.sendMessage(new TextComponentString(str));
-                }
-                else
-                {
-                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " <add | remove> <block name> [block name] ..."));
-                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " clear-list"));
-                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " list"));
-                    sender.sendMessage(new TextComponentString(this.getUsageStringPre() + args[1] + " execute [dimension]"));
+                    this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
                 }
             }
             else
             {
-                throw new WrongUsageException("Unknown sub-command argument '" + args[1] + "'", new Object[0]);
+                boolean forceRescan = false;
+                int dimIndex = 0;
+                if (args.length >= 1 && args[0].equals("rescan"))
+                {
+                    forceRescan = true;
+                    dimIndex++;
+                }
+
+                int dimension = this.getDimension(sender, args, dimIndex, "");
+
+                if (cmd.equals("find-invalid"))
+                {
+                    this.sendMessage(sender, "worldutils.commands.tileticks.readingandfindinginvalid.start");
+
+                    int count = TileTickTools.instance().findInvalid(dimension, forceRescan, sender);
+
+                    this.sendMessage(sender, "worldutils.commands.tileticks.readingandfindinginvalid.complete", Integer.valueOf(count));
+                }
+                else
+                {
+                    this.sendMessage(sender, "worldutils.commands.tileticks.removeinvalid.start");
+
+                    int count = TileTickTools.instance().removeInvalid(dimension, forceRescan, sender);
+
+                    this.sendMessage(sender, "worldutils.commands.tileticks.remove.complete", Integer.valueOf(count));
+                }
+            }
+        }
+        else if (cmd.equals("list"))
+        {
+            File file = FileUtils.dumpDataToFile("tileticks_list", TileTickTools.instance().getAllTileTicksOutput(false));
+
+            if (file != null)
+            {
+                this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
+            }
+        }
+        else if (cmd.equals("remove-all"))
+        {
+            int dimension = this.getDimension(sender, args, 0, "");
+            TileTickTools.instance().removeTileTicks(dimension, RemoveType.ALL, false, sender);
+        }
+        else if (cmd.equals("remove-by-mod") || cmd.equals("remove-by-name"))
+        {
+            if (args.length >= 2 && args[0].equals("add"))
+            {
+                for (int i = 1; i < args.length; i++)
+                {
+                    TileTickTools.instance().addFilter(args[i]);
+
+                    this.sendMessage(sender, "worldutils.commands.generic.list.add", args[i]);
+                }
+            }
+            else if (args.length >= 2 && args[0].equals("remove"))
+            {
+                for (int i = 1; i < args.length; i++)
+                {
+                    TileTickTools.instance().removeFilter(args[i]);
+
+                    this.sendMessage(sender, "worldutils.commands.generic.list.remove", args[i]);
+                }
+            }
+            else if (args.length == 1 && args[0].equals("list"))
+            {
+                Set<String> toRemove = TileTickTools.instance().getFilters();
+
+                if (toRemove.isEmpty())
+                {
+                    this.sendMessage(sender, "worldutils.commands.tileticks.list.list.empty");
+                }
+                else
+                {
+                    this.sendMessage(sender, "worldutils.commands.tileticks.list.list.print", String.join(", ", toRemove));
+                }
+            }
+            else if (args.length == 1 && args[0].equals("clear-list"))
+            {
+                TileTickTools.instance().resetFilters();
+                this.sendMessage(sender, "worldutils.commands.tileticks.list.clear");
+            }
+            else if (args.length >= 1 && args.length <= 2 && args[0].equals("execute"))
+            {
+                RemoveType types = cmd.equals("remove-by-name") ? RemoveType.BY_NAME : RemoveType.BY_MOD;
+                int dimension = this.getDimension(sender, args, 1, " " + args[0]);
+                int count = TileTickTools.instance().removeTileTicks(dimension, types, false, sender);
+
+                this.sendMessage(sender, "worldutils.commands.tileticks.remove.complete", Integer.valueOf(count));
+            }
+            else
+            {
+                this.sendMessage(sender, this.getUsageStringCommon() + " " + cmd + " <add | remove> <block name> [block name] ...");
+                this.sendMessage(sender, this.getUsageStringCommon() + " " + cmd + " clear-list");
+                this.sendMessage(sender, this.getUsageStringCommon() + " " + cmd + " list");
+                this.sendMessage(sender, this.getUsageStringCommon() + " " + cmd + " execute [dimension]");
             }
         }
         else
         {
-            //throw new WrongUsageException("Unknown sub-command argument '" + args[1] + "'", new Object[0]);
+            throwCommand("worldutils.commands.error.unknowncommandargument", cmd);
         }
     }
 
@@ -239,7 +251,7 @@ public class SubCommandTileTicks extends SubCommand
         }
         else if (args.length > dimIndex + 1)
         {
-            throw new WrongUsageException(this.getUsageStringPre() + args[1] + usage + " [dimension]", new Object[0]);
+            throwUsage(this.getUsageStringCommon() + " " + usage + " [dimension id]");
         }
 
         return dimension;

@@ -6,8 +6,8 @@ import net.minecraft.util.math.ChunkPos;
 
 public class TileTickData implements Comparable<TileTickData>
 {
-    public final ChunkPos chunk;
-    public final BlockPos pos;
+    public final ChunkPos chunkPos;
+    public final BlockPos blockPos;
     public final String blockId;
     public final ResourceLocation resource;
     public final int delay;
@@ -15,8 +15,8 @@ public class TileTickData implements Comparable<TileTickData>
 
     public TileTickData(ChunkPos chunkPos, BlockPos pos, ResourceLocation blockResource, String blockId, int delay, int priority)
     {
-        this.chunk = chunkPos;
-        this.pos = pos;
+        this.chunkPos = chunkPos;
+        this.blockPos = pos;
         this.resource = blockResource;
         this.blockId = blockId;
         this.delay = delay;
@@ -26,10 +26,10 @@ public class TileTickData implements Comparable<TileTickData>
     @Override
     public int compareTo(TileTickData other)
     {
-        int tx = this.pos.getX() >> 4;
-        int tz = this.pos.getZ() >> 4;
-        int ox = other.pos.getX() >> 4;
-        int oz = other.pos.getZ() >> 4;
+        int tx = this.blockPos.getX() >> 4;
+        int tz = this.blockPos.getZ() >> 4;
+        int ox = other.blockPos.getX() >> 4;
+        int oz = other.blockPos.getZ() >> 4;
 
         if (tx > ox || tz > oz)
         {
@@ -41,18 +41,18 @@ public class TileTickData implements Comparable<TileTickData>
         }
         else
         {
-            if (this.pos.getX() > other.pos.getX() || this.pos.getZ() > other.pos.getZ())
+            if (this.blockPos.getX() > other.blockPos.getX() || this.blockPos.getZ() > other.blockPos.getZ())
             {
                 return 1;
             }
-            else if (this.pos.getX() < other.pos.getX() || this.pos.getZ() < other.pos.getZ())
+            else if (this.blockPos.getX() < other.blockPos.getX() || this.blockPos.getZ() < other.blockPos.getZ())
             {
                 return -1;
             }
             else
             {
-                if      (this.pos.getY() > other.pos.getY()) { return 1; }
-                else if (this.pos.getY() < other.pos.getY()) { return -1; }
+                if      (this.blockPos.getY() > other.blockPos.getY()) { return 1; }
+                else if (this.blockPos.getY() < other.blockPos.getY()) { return -1; }
                 else { return 0; }
             }
         }

@@ -7,18 +7,21 @@ import net.minecraft.server.MinecraftServer;
 
 public interface ISubCommand
 {
-    /* Returns the command name */
+    /** Returns the command name */
     String getName();
 
-    /* Processes the command */
+    /** Processes the command */
     void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException;
 
-    /* Adds the tab completion options */
+    /** Adds the tab completion options */
     List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args);
 
-    /* Gets the sub commands for this (sub) command.*/
-    List<String> getSubCommands();
+    /** Gets the sub commands for this (sub) command.*/
+    List<String> getSubSubCommands();
 
-    /* Gets the sub command help string ready for printing. */
-    String getHelp();
+    /** Gets the sub command's generic help to be sent to the user */
+    void printHelpGeneric(ICommandSender sender);
+
+    /** Sends the sub command's in-depth, possibly argument-dependent list of help strings to the user */
+    void printFullHelp(ICommandSender sender, String[] args);
 }
