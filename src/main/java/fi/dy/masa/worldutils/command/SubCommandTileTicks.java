@@ -198,7 +198,7 @@ public class SubCommandTileTicks extends SubCommand
                 {
                     TileTickTools.instance().removeFilter(args[i]);
 
-                    this.sendMessage(sender, "worldutils.commands.generic.list.remove", args[i]);
+                    this.sendMessage(sender, "worldutils.commands.generic.list.remove.success", args[i]);
                 }
             }
             else if (args.length == 1 && args[0].equals("list"))

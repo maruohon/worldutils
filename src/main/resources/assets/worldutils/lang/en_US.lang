@@ -47,10 +47,11 @@ worldutils.commands.info.outputtoconsole=Output printed to console
 worldutils.commands.info.outputtofile=Output written to file '%s'
 
 worldutils.commands.generic.list.add=Added '%s' to the list
-worldutils.commands.generic.list.remove=Removed '%s' from the list
+worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the list
+worldutils.commands.generic.list.remove.success=Removed '%s' from the list
 
-worldutils.commands.blockprune.info.blockstoremove.cleared=Remove list cleared
-worldutils.commands.blockprune.info.blockstoremove.print=The blocks to be removed/replaced have been printed to console:
+worldutils.commands.blockprune.info.removelist.cleared=Remove list cleared
+worldutils.commands.blockprune.info.removelist.print=A list of the blocks to be removed/replaced have also been printed to console
 worldutils.commands.blockprune.info.replacement.print.valid=Replacement block is set to %s
 worldutils.commands.blockprune.info.replacement.print.invalid=Replacement block is set to an INVALID value '%s'
 
