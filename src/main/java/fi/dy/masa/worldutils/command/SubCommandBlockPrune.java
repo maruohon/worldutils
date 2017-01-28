@@ -88,14 +88,7 @@ public class SubCommandBlockPrune extends SubCommand
 
                 if (cmd.equals("add"))
                 {
-                    List<String> options = new ArrayList<String>();
-
-                    for (ResourceLocation rl : Block.REGISTRY.getKeys())
-                    {
-                        options.add(rl.toString());
-                    }
-
-                    return CommandBase.getListOfStringsMatchingLastWord(args, options);
+                    return CommandBase.getListOfStringsMatchingLastWord(args, BlockUtils.getAllBlockNames());
                 }
                 else if (cmd.equals("remove"))
                 {

@@ -1,19 +1,17 @@
 package fi.dy.masa.worldutils.command;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
 import fi.dy.masa.worldutils.data.TileTickTools;
 import fi.dy.masa.worldutils.data.TileTickTools.RemoveType;
+import fi.dy.masa.worldutils.util.BlockUtils;
 import fi.dy.masa.worldutils.util.FileUtils;
 
 public class SubCommandTileTicks extends SubCommand
@@ -76,21 +74,14 @@ public class SubCommandTileTicks extends SubCommand
         {
             if (args.length >= 2)
             {
-                List<String> options = new ArrayList<String>();
-
                 if (args[0].equals("add"))
                 {
-                    for (ResourceLocation rl : Block.REGISTRY.getKeys())
-                    {
-                        options.add(rl.toString());
-                    }
+                    return CommandBase.getListOfStringsMatchingLastWord(args, BlockUtils.getAllBlockNames());
                 }
                 else if (args[0].equals("remove"))
                 {
-                    options.addAll(TileTickTools.instance().getFilters());
+                    return CommandBase.getListOfStringsMatchingLastWord(args, TileTickTools.instance().getFilters());
                 }
-
-                return CommandBase.getListOfStringsMatchingLastWord(args, options);
             }
             else if (args.length == 1)
             {
