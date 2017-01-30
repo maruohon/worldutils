@@ -200,6 +200,7 @@ public class BlockTools
         {
             boolean chunkDirty = false;
             int count = 0;
+            boolean[] replacedPositions = new boolean[65536];
             NBTTagCompound level = chunkNBT.getCompoundTag("Level");
             NBTTagList sectionsList = level.getTagList("Sections", Constants.NBT.TAG_COMPOUND);
 
@@ -207,9 +208,9 @@ public class BlockTools
             {
                 int countLast = count;
                 NBTTagCompound sectionTag = sectionsList.getCompoundTagAt(sec);
+                int sectionStart = sectionTag.getInteger("Y") * 4096;
                 byte[] blockArray = sectionTag.getByteArray("Blocks");
                 int[] blockStateIds = new int[4096];
-                boolean[] replacedPositions = new boolean[4096];
                 NibbleArray metaNibble = new NibbleArray(sectionTag.getByteArray("Data"));
                 boolean needsAdd = false;
 
@@ -224,7 +225,7 @@ public class BlockTools
                         if (this.blocksToReplaceLookup[id])
                         {
                             blockStateIds[i] = this.replacementBlockStateId;
-                            replacedPositions[i] = true;
+                            replacedPositions[sectionStart + i] = true;
                             count++;
                         }
                         else
@@ -246,7 +247,7 @@ public class BlockTools
                         if (this.blocksToReplaceLookup[id])
                         {
                             blockStateIds[i] = this.replacementBlockStateId;
-                            replacedPositions[i] = true;
+                            replacedPositions[sectionStart + i] = true;
                             count++;
                         }
                         else
@@ -262,8 +263,6 @@ public class BlockTools
                 // and then write the data back to the chunk NBT
                 if (count != countLast) // sectionDirty
                 {
-                    this.removeTileEntitiesAndTileTicks(level, sectionTag.getInteger("Y"), replacedPositions);
-
                     byte[] metaArray = new byte[2048];
 
                     if (needsAdd)
@@ -302,6 +301,8 @@ public class BlockTools
 
             if (chunkDirty)
             {
+                this.removeTileEntitiesAndTileTicks(level, replacedPositions);
+
                 DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
 
                 if (dataOut == null)
@@ -328,44 +329,40 @@ public class BlockTools
             return count;
         }
 
-        private void removeTileEntitiesAndTileTicks(NBTTagCompound level, int sectionY, boolean[] replacedPositions)
+        private void removeTileEntitiesAndTileTicks(NBTTagCompound level, boolean[] replacedPositions)
         {
-            NBTTagList listTE = level.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
+            NBTTagList list = level.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
 
-            if (listTE != null)
+            if (list != null)
             {
-                this.removeTileEntry(listTE, sectionY, replacedPositions);
+                this.removeTileEntry(list, replacedPositions);
             }
 
-            NBTTagList listTT = level.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
+            list = level.getTagList("TileTicks", Constants.NBT.TAG_COMPOUND);
 
-            if (listTT != null)
+            if (list != null)
             {
-                this.removeTileEntry(listTT, sectionY, replacedPositions);
+                this.removeTileEntry(list, replacedPositions);
             }
         }
 
-        private void removeTileEntry(NBTTagList list, int sectionY, boolean[] replacedPositions)
+        private void removeTileEntry(NBTTagList list, boolean[] replacedPositions)
         {
             int size = list.tagCount();
 
             for (int i = 0; i < size; i++)
             {
                 NBTTagCompound tag = list.getCompoundTagAt(i);
+                int x = tag.getInteger("x");
                 int y = tag.getInteger("y");
+                int z = tag.getInteger("z");
+                int pos = ((y & 0xFF) << 8) | ((z & 0xF) << 4) | (x & 0xF);
 
-                if (y >= (sectionY * 16) && y < (sectionY * 16 + 16))
+                if (replacedPositions[pos])
                 {
-                    int x = tag.getInteger("x");
-                    int z = tag.getInteger("z");
-                    int pos = ((y & 0xF) << 8) | ((z & 0xF) << 4) | (x & 0xF);
-
-                    if (replacedPositions[pos])
-                    {
-                        list.removeTag(i);
-                        i--;
-                        size--;
-                    }
+                    list.removeTag(i);
+                    i--;
+                    size--;
                 }
             }
         }
