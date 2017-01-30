@@ -50,6 +50,8 @@ worldutils.commands.generic.list.add=Added '%s' to the list
 worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the list
 worldutils.commands.generic.list.remove.success=Removed '%s' from the list
 
+worldutils.commands.blockprune.execute.start=Replacing the selected blocks in the entire world, this may take a while...
+worldutils.commands.blockprune.finished=Replaced a total of %d blocks in %d unloaded chunks and %d blocks in %d loaded chunks, touching %d region files
 worldutils.commands.blockprune.info.removelist.cleared=Remove list cleared
 worldutils.commands.blockprune.info.removelist.print=A list of the blocks to be removed/replaced have also been printed to console
 worldutils.commands.blockprune.info.replacement.print.valid=Replacement block is set to %s

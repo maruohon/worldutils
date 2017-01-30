@@ -7,23 +7,26 @@ import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.data.BlockTools;
+import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.BlockUtils;
-import fi.dy.masa.worldutils.util.BlockUtils.BlockData;
 
 public class SubCommandBlockPrune extends SubCommand
 {
-    private List<String> pruneList = new ArrayList<String>();
-    private String replacement = "minecraft:air";
+    private static List<String> toReplace = new ArrayList<String>();
+    private static String replacement = "minecraft:air";
 
     public SubCommandBlockPrune(CommandWorldUtils baseCommand)
     {
         super(baseCommand);
 
         this.subSubCommands.add("execute");
+        this.subSubCommands.add("execute-also-in-loaded-chunks");
         this.subSubCommands.add("removelist");
         this.subSubCommands.add("replacement");
     }
@@ -46,6 +49,7 @@ public class SubCommandBlockPrune extends SubCommand
         this.prinHelpRemovelist(sender);
         this.prinHelpReplacement(sender);
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-also-in-loaded-chunks [dimension id]"));
     }
 
     private void prinHelpRemovelist(ICommandSender sender)
@@ -92,7 +96,7 @@ public class SubCommandBlockPrune extends SubCommand
                 }
                 else if (cmd.equals("remove"))
                 {
-                    return CommandBase.getListOfStringsMatchingLastWord(args, this.pruneList);
+                    return CommandBase.getListOfStringsMatchingLastWord(args, toReplace);
                 }
             }
         }
@@ -142,7 +146,7 @@ public class SubCommandBlockPrune extends SubCommand
 
             if (cmd.equals("clear") && args.length == 0)
             {
-                this.pruneList.clear();
+                toReplace.clear();
                 this.sendMessage(sender, "worldutils.commands.blockprune.info.removelist.cleared");
             }
             else if (cmd.equals("list") && args.length == 0)
@@ -151,7 +155,7 @@ public class SubCommandBlockPrune extends SubCommand
                 WorldUtils.logger.info("  Blocks to be removed/replaced:  ");
                 WorldUtils.logger.info("----------------------------------");
 
-                for (String str : this.pruneList)
+                for (String str : toReplace)
                 {
                     WorldUtils.logger.info(str);
                     sender.sendMessage(new TextComponentString(str));
@@ -165,7 +169,7 @@ public class SubCommandBlockPrune extends SubCommand
             {
                 for (int i = 0; i < args.length; i++)
                 {
-                    this.pruneList.add(args[i]);
+                    toReplace.add(args[i]);
                     this.sendMessage(sender, "worldutils.commands.generic.list.add", args[i]);
                 }
             }
@@ -173,7 +177,7 @@ public class SubCommandBlockPrune extends SubCommand
             {
                 for (int i = 0; i < args.length; i++)
                 {
-                    if (this.pruneList.remove(args[i]))
+                    if (toReplace.remove(args[i]))
                     {
                         this.sendMessage(sender, "worldutils.commands.generic.list.remove.success", args[i]);
                     }
@@ -195,21 +199,23 @@ public class SubCommandBlockPrune extends SubCommand
 
             if (cmd.equals("print") && args.length == 0)
             {
-                this.replacementPrint(this.replacement, sender);
+                this.replacementPrint(replacement, sender);
             }
             else if (cmd.equals("set") && args.length == 1)
             {
-                this.replacement = args[0];
-                this.replacementPrint(this.replacement, sender);
+                replacement = args[0];
+                this.replacementPrint(replacement, sender);
             }
             else
             {
                 this.prinHelpReplacement(sender);
             }
         }
-        else if (cmd.equals("execute") && args.length <= 1)
+        else if ((cmd.equals("execute") || cmd.equals("execute-also-in-loaded-chunks")) && args.length <= 1)
         {
-            
+            this.sendMessage(sender, "worldutils.commands.blockprune.execute.start");
+            int dimension = this.getDimension(cmd, args, sender);
+            BlockTools.instance().replaceBlocks(dimension, replacement, toReplace, cmd.equals("execute-also-in-loaded-chunks"), sender);
         }
         else
         {
@@ -219,7 +225,7 @@ public class SubCommandBlockPrune extends SubCommand
 
     private void replacementPrint(String replacement, ICommandSender sender) throws CommandException
     {
-        BlockData type = BlockUtils.parseBlockTypeFromString(replacement);
+        BlockData type = BlockData.parseBlockTypeFromString(replacement);
 
         if (type != null)
         {
@@ -229,5 +235,21 @@ public class SubCommandBlockPrune extends SubCommand
         {
             throwCommand("worldutils.commands.blockprune.info.replacement.print.invalid", replacement);
         }
+    }
+
+    private int getDimension(String cmd, String[] args, ICommandSender sender) throws CommandException
+    {
+        int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
+
+        if (args.length == 1)
+        {
+            dimension = CommandBase.parseInt(args[0]);
+        }
+        else if (args.length > 1)
+        {
+            throwUsage(this.getUsageStringCommon() + " " + cmd + " [dimension id]");
+        }
+
+        return dimension;
     }
 }

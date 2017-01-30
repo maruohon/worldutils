@@ -41,7 +41,6 @@ public interface IWorldDataHandler
     /**
      * Called after all region files have been processed.
      * @param simulate If true, only simulate what would happen
-     * @return
      */
     public void finish(ICommandSender sender, boolean simulate);
 }
