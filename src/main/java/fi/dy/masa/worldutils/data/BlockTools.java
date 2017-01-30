@@ -148,7 +148,7 @@ public class BlockTools
                 return 0;
             }
 
-            NBTTagCompound nbt;
+            NBTTagCompound chunkNBT;
             DataInputStream dataIn = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
             int count = 0;
 
@@ -161,7 +161,7 @@ public class BlockTools
 
             try
             {
-                nbt = CompressedStreamTools.read(dataIn);
+                chunkNBT = CompressedStreamTools.read(dataIn);
                 dataIn.close();
             }
             catch (IOException e)
@@ -172,9 +172,9 @@ public class BlockTools
                 return 0;
             }
 
-            if (nbt.hasKey("Level", Constants.NBT.TAG_COMPOUND))
+            if (chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
             {
-                NBTTagCompound level = nbt.getCompoundTag("Level");
+                NBTTagCompound level = chunkNBT.getCompoundTag("Level");
                 ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
 
                 // This needs to use absolute Chunk coordinates
@@ -189,125 +189,185 @@ public class BlockTools
                 }
                 else
                 {
-                    boolean chunkDirty = false;
-                    NBTTagList sectionsList = level.getTagList("Sections", Constants.NBT.TAG_COMPOUND);
-
-                    for (int sec = 0; sec < sectionsList.tagCount(); sec++)
-                    {
-                        int countLast = count;
-                        NBTTagCompound sectionTag = sectionsList.getCompoundTagAt(sec);
-                        byte[] blockArray = sectionTag.getByteArray("Blocks");
-                        int[] blockStateIds = new int[4096];
-                        NibbleArray metaNibble = new NibbleArray(sectionTag.getByteArray("Data"));
-                        boolean needsAdd = false;
-
-                        if (sectionTag.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY))
-                        {
-                            NibbleArray nibbleArray = new NibbleArray(sectionTag.getByteArray("Add"));
-
-                            for (int i = 0; i < 4096; i++)
-                            {
-                                int id = (blockArray[i] | (nibbleArray.getFromIndex(i) & 0xF) << 8 | (metaNibble.getFromIndex(i) & 0xF) << 12) & 0xFFFF;
-
-                                if (this.blocksToReplaceLookup[id])
-                                {
-                                    blockStateIds[i] = this.replacementBlockStateId;
-                                    count++;
-                                }
-                                else
-                                {
-                                    blockStateIds[i] = id;
-                                }
-
-                                needsAdd |= (blockStateIds[i] & 0xF00) != 0;
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < 4096; i++)
-                            {
-                                int id = (blockArray[i] | (metaNibble.getFromIndex(i) & 0xF) << 12) & 0xFFFF;
-
-                                if (this.blocksToReplaceLookup[id])
-                                {
-                                    blockStateIds[i] = this.replacementBlockStateId;
-                                    count++;
-                                }
-                                else
-                                {
-                                    blockStateIds[i] = id;
-                                }
-
-                                needsAdd |= (blockStateIds[i] & 0xF00) != 0;
-                            }
-                        }
-
-                        if (count != countLast) // sectionDirty
-                        {
-                            byte[] metaArray = new byte[2048];
-
-                            if (needsAdd)
-                            {
-                                byte[] addArray = new byte[2048];
-
-                                for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
-                                {
-                                    blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
-                                    blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
-                                    metaArray[i] = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
-                                    addArray[i]  = (byte) (((blockStateIds[bi] >>  8) & 0x0F) | ((blockStateIds[bi + 1] >> 4) & 0xF0));
-                                }
-
-                                sectionTag.setByteArray("Blocks", blockArray);
-                                sectionTag.setByteArray("Data",   metaArray);
-                                sectionTag.setByteArray("Add",    addArray);
-                            }
-                            else
-                            {
-                                for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
-                                {
-                                    blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
-                                    blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
-                                    metaArray[i] = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
-                                }
-
-                                sectionTag.setByteArray("Blocks", blockArray);
-                                sectionTag.setByteArray("Data",   metaArray);
-                            }
-
-                            chunkDirty = true;
-                            countLast = count;
-                        }
-                    }
-
-                    if (chunkDirty)
-                    {
-                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
-
-                        if (dataOut == null)
-                        {
-                            WorldUtils.logger.warn("BlockReplacer#processChunk(): Failed to write chunk data for chunk ({}, {}) from file '{}'",
-                                    chunkX, chunkZ, region.getName());
-                            return 0;
-                        }
-
-                        try
-                        {
-                            CompressedStreamTools.write(nbt, dataOut);
-                            dataOut.close();
-                        }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    this.chunkCountUnloaded++;
-                    this.replaceCountUnloaded += count;
+                    count = this.processUnloadedChunk(region, chunkNBT, chunkX, chunkZ);
                 }
             }
 
             return count;
+        }
+
+        private int processUnloadedChunk(Region region, NBTTagCompound chunkNBT, int chunkX, int chunkZ)
+        {
+            boolean chunkDirty = false;
+            int count = 0;
+            NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+            NBTTagList sectionsList = level.getTagList("Sections", Constants.NBT.TAG_COMPOUND);
+
+            for (int sec = 0; sec < sectionsList.tagCount(); sec++)
+            {
+                int countLast = count;
+                NBTTagCompound sectionTag = sectionsList.getCompoundTagAt(sec);
+                byte[] blockArray = sectionTag.getByteArray("Blocks");
+                int[] blockStateIds = new int[4096];
+                boolean[] replacedPositions = new boolean[4096];
+                NibbleArray metaNibble = new NibbleArray(sectionTag.getByteArray("Data"));
+                boolean needsAdd = false;
+
+                if (sectionTag.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY))
+                {
+                    NibbleArray nibbleArray = new NibbleArray(sectionTag.getByteArray("Add"));
+
+                    for (int i = 0; i < 4096; i++)
+                    {
+                        int id = (((metaNibble.getFromIndex(i) & 0xF) << 12) | ((nibbleArray.getFromIndex(i) & 0xF) << 8) | blockArray[i] & 0xFF) & 0xFFFF;
+
+                        if (this.blocksToReplaceLookup[id])
+                        {
+                            blockStateIds[i] = this.replacementBlockStateId;
+                            replacedPositions[i] = true;
+                            count++;
+                        }
+                        else
+                        {
+                            blockStateIds[i] = id;
+                        }
+
+                        needsAdd |= (blockStateIds[i] & 0xF00) != 0;
+                    }
+                }
+                // These are completely separate cases so that they are possibly a little bit faster
+                // because the don't do Add array checking on each iteration
+                else
+                {
+                    for (int i = 0; i < 4096; i++)
+                    {
+                        int id = (((metaNibble.getFromIndex(i) & 0xF) << 12) | blockArray[i] & 0xFF) & 0xFFFF;
+
+                        if (this.blocksToReplaceLookup[id])
+                        {
+                            blockStateIds[i] = this.replacementBlockStateId;
+                            replacedPositions[i] = true;
+                            count++;
+                        }
+                        else
+                        {
+                            blockStateIds[i] = id;
+                        }
+
+                        needsAdd |= (blockStateIds[i] & 0xF00) != 0;
+                    }
+                }
+
+                // Replaced something, remove the corresponding TileEntities and TileTicks
+                // and then write the data back to the chunk NBT
+                if (count != countLast) // sectionDirty
+                {
+                    this.removeTileEntitiesAndTileTicks(level, sectionTag.getInteger("Y"), replacedPositions);
+
+                    byte[] metaArray = new byte[2048];
+
+                    if (needsAdd)
+                    {
+                        byte[] addArray = new byte[2048];
+
+                        for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
+                        {
+                            blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
+                            blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
+                            metaArray[i] = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
+                            addArray[i]  = (byte) (((blockStateIds[bi] >>  8) & 0x0F) | ((blockStateIds[bi + 1] >> 4) & 0xF0));
+                        }
+
+                        sectionTag.setByteArray("Blocks", blockArray);
+                        sectionTag.setByteArray("Data",   metaArray);
+                        sectionTag.setByteArray("Add",    addArray);
+                    }
+                    else
+                    {
+                        for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
+                        {
+                            blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
+                            blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
+                            metaArray[i] = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
+                        }
+
+                        sectionTag.setByteArray("Blocks", blockArray);
+                        sectionTag.setByteArray("Data",   metaArray);
+                    }
+
+                    chunkDirty = true;
+                    countLast = count;
+                }
+            }
+
+            if (chunkDirty)
+            {
+                DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+
+                if (dataOut == null)
+                {
+                    WorldUtils.logger.warn("BlockReplacer#processChunk(): Failed to write chunk data for chunk ({}, {}) from file '{}'",
+                            chunkX, chunkZ, region.getName());
+                    return 0;
+                }
+
+                try
+                {
+                    CompressedStreamTools.write(chunkNBT, dataOut);
+                    dataOut.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            this.chunkCountUnloaded++;
+            this.replaceCountUnloaded += count;
+
+            return count;
+        }
+
+        private void removeTileEntitiesAndTileTicks(NBTTagCompound level, int sectionY, boolean[] replacedPositions)
+        {
+            NBTTagList listTE = level.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
+
+            if (listTE != null)
+            {
+                this.removeTileEntry(listTE, sectionY, replacedPositions);
+            }
+
+            NBTTagList listTT = level.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
+
+            if (listTT != null)
+            {
+                this.removeTileEntry(listTT, sectionY, replacedPositions);
+            }
+        }
+
+        private void removeTileEntry(NBTTagList list, int sectionY, boolean[] replacedPositions)
+        {
+            int size = list.tagCount();
+
+            for (int i = 0; i < size; i++)
+            {
+                NBTTagCompound tag = list.getCompoundTagAt(i);
+                int y = tag.getInteger("y");
+
+                if (y >= (sectionY * 16) && y < (sectionY * 16 + 16))
+                {
+                    int x = tag.getInteger("x");
+                    int z = tag.getInteger("z");
+                    int pos = ((y & 0xF) << 8) | ((z & 0xF) << 4) | (x & 0xF);
+
+                    if (replacedPositions[pos])
+                    {
+                        list.removeTag(i);
+                        i--;
+                        size--;
+                    }
+                }
+            }
         }
 
         private int processLoadedChunk(int chunkX, int chunkZ)

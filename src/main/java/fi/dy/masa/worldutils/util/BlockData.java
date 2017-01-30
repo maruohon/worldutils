@@ -159,7 +159,7 @@ public class BlockData
                             int stateId = Block.getStateId(state);
                             this.id = stateId & 0xFFF;
                             this.meta = (stateId >> 12) & 0xF;
-                            return;
+                            break;
                         }
                     }
                     break;
@@ -175,7 +175,7 @@ public class BlockData
     {
         if (this.isValid())
         {
-            this.blockStateId = this.id | (this.meta << 12);
+            this.blockStateId = (this.meta << 12) | this.id;
 
             if (this.ignoreMeta())
             {
@@ -183,7 +183,7 @@ public class BlockData
 
                 for (int i = 0; i < 16; i++)
                 {
-                    ids[i] = this.id | (i << 12);
+                    ids[i] = (i << 12) | this.id;
                 }
 
                 this.blockStateIds = ids;
