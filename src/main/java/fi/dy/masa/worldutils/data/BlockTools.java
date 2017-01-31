@@ -333,6 +333,10 @@ public class BlockTools
             if (chunkDirty)
             {
                 this.removeTileEntitiesAndTileTicks(level, replacedPositions);
+                // Re-check the lighting if blocks were replaced. This still doesn't actually force a proper
+                // re-light calculation though... There doesn't seem to be any way to do that via the chunk NBT
+                // data, without actually re-calculating all the lighting here and updating the light arrays...
+                level.removeTag("LightPopulated");
 
                 DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
 
