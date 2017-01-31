@@ -15,6 +15,7 @@ import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
 import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.BlockUtils;
+import fi.dy.masa.worldutils.util.VanillaBlocks.VanillaVersion;
 
 public class SubCommandBlockPrune extends SubCommand
 {
@@ -29,6 +30,7 @@ public class SubCommandBlockPrune extends SubCommand
         this.subSubCommands.add("execute-also-in-loaded-chunks");
         this.subSubCommands.add("removelist");
         this.subSubCommands.add("replacement");
+        this.subSubCommands.add("replace-everything-except-vanilla-1.?");
     }
 
     @Override
@@ -50,6 +52,7 @@ public class SubCommandBlockPrune extends SubCommand
         this.prinHelpReplacement(sender);
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute [dimension id]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-also-in-loaded-chunks [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " replace-everything-except-vanilla-<1.5 ... 1.10> [dimension id]"));
     }
 
     private void prinHelpRemovelist(ICommandSender sender)
@@ -130,7 +133,8 @@ public class SubCommandBlockPrune extends SubCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        if (args.length < 1 || args[0].equals("help") || (args[0].equals("execute") == false && args.length < 2))
+        if (args.length < 1 || args[0].equals("help") ||
+            (args[0].equals("execute") == false && args[0].startsWith("replace-everything-except-vanilla-") == false && args.length < 2))
         {
             this.printFullHelp(sender, args);
             return;
@@ -215,7 +219,21 @@ public class SubCommandBlockPrune extends SubCommand
         {
             this.sendMessage(sender, "worldutils.commands.blockprune.execute.start");
             int dimension = this.getDimension(cmd, args, sender);
-            BlockTools.instance().replaceBlocks(dimension, replacement, toReplace, cmd.equals("execute-also-in-loaded-chunks"), sender);
+            BlockTools.instance().replaceBlocks(dimension, replacement, toReplace, false, cmd.equals("execute-also-in-loaded-chunks"), sender);
+        }
+        else if (cmd.startsWith("replace-everything-except-vanilla-") && args.length <= 1)
+        {
+            String versionStr = cmd.substring(34);
+            VanillaVersion version = VanillaVersion.fromVersion(versionStr);
+
+            if (version == null)
+            {
+                throwCommand("worldutils.commands.error.invalidgameversion", versionStr);
+            }
+
+            this.sendMessage(sender, "worldutils.commands.blockprune.execute.start");
+            int dimension = this.getDimension(cmd, args, sender);
+            BlockTools.instance().replaceBlocksNotInVanilla(dimension, replacement, version, false, sender);
         }
         else
         {

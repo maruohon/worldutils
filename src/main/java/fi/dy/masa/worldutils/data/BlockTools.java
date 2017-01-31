@@ -4,12 +4,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -24,6 +27,8 @@ import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
+import fi.dy.masa.worldutils.util.VanillaBlocks;
+import fi.dy.masa.worldutils.util.VanillaBlocks.VanillaVersion;
 
 public class BlockTools
 {
@@ -38,14 +43,30 @@ public class BlockTools
         return INSTANCE;
     }
 
-    public void replaceBlocks(int dimension, String replacement, Collection<String> toReplace, boolean loadedChunks, ICommandSender sender)
+    public void replaceBlocks(int dimension, String replacement, Collection<String> blockEntries,
+            boolean keepGivenEntries, boolean loadedChunks, ICommandSender sender)
     {
         File worldDir = FileUtils.getWorldSaveLocation(dimension);
         File regionDir = new File(worldDir, "region");
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
-            BlockReplacer replacer = new BlockReplacer(replacement, toReplace, loadedChunks);
+            BlockReplacer replacer = new BlockReplacer(replacement, loadedChunks);
+            replacer.setBlocksToReplaceFromString(blockEntries, keepGivenEntries);
+            replacer.init();
+            FileUtils.worldDataProcessor(dimension, replacer, sender, false);
+        }
+    }
+
+    public void replaceBlocksNotInVanilla(int dimension, String replacement, VanillaVersion version, boolean loadedChunks, ICommandSender sender)
+    {
+        File worldDir = FileUtils.getWorldSaveLocation(dimension);
+        File regionDir = new File(worldDir, "region");
+
+        if (regionDir.exists() && regionDir.isDirectory())
+        {
+            BlockReplacer replacer = new BlockReplacer(replacement, loadedChunks);
+            replacer.setBlocksToReplaceFromBlockStates(VanillaBlocks.getSerializableVanillaBlockStatesInVersion(version), true);
             replacer.init();
             FileUtils.worldDataProcessor(dimension, replacer, sender, false);
         }
@@ -54,50 +75,58 @@ public class BlockTools
     private class BlockReplacer implements IWorldDataHandler
     {
         private ChunkProviderServer provider;
-        private boolean loadedChunks;
+        private final boolean loadedChunks;
         private int regionCount;
         private int chunkCountUnloaded;
         private int chunkCountLoaded;
         private int replaceCountUnloaded;
         private int replaceCountLoaded;
         private final Set<BlockData> blocksToReplace = new HashSet<BlockData>();
-        private boolean[] blocksToReplaceLookup = new boolean[1 << 16];
-        private BlockData replacementBlock;
-        private IBlockState replacementBlockState;
-        private int replacementBlockStateId;
+        private final boolean[] blocksToReplaceLookup = new boolean[1 << 16];
+        private final BlockData replacementBlockData;
+        private final IBlockState replacementBlockState;
+        private final int replacementBlockStateId;
         private boolean validState;
 
-        private BlockReplacer(String replacement, Collection<String> toReplace)
-        {
-            this(replacement, toReplace, false);
-        }
-
-        private BlockReplacer(String replacement, Collection<String> toReplace, boolean loadedChunks)
+        private BlockReplacer(String replacement, boolean loadedChunks)
         {
             this.loadedChunks = loadedChunks;
-            this.setReplacementBlock(replacement);
-            this.setBlocksToReplace(toReplace);
-            this.validState = this.replacementBlock != null && this.blocksToReplace.isEmpty() == false;
-        }
+            this.replacementBlockData = BlockData.parseBlockTypeFromString(replacement);
 
-        public void setReplacementBlock(String replacement)
-        {
-            this.replacementBlock = BlockData.parseBlockTypeFromString(replacement);
-
-            if (this.replacementBlock == null)
+            if (this.replacementBlockData != null)
+            {
+                this.replacementBlockStateId = this.replacementBlockData.getBlockStateId();
+                this.replacementBlockState = Block.getStateById(this.replacementBlockStateId);
+            }
+            else
             {
                 WorldUtils.logger.warn("Failed to parse block from string '{}'", replacement);
+                this.replacementBlockState = Blocks.AIR.getDefaultState();
+                this.replacementBlockStateId = Block.getStateId(this.replacementBlockState);
             }
-
-            this.replacementBlockStateId = this.replacementBlock.getBlockStateId();
-            this.replacementBlockState = Block.getStateById(this.replacementBlockStateId);
         }
 
-        public void setBlocksToReplace(Collection<String> toReplace)
+        public void setBlocksToReplaceFromBlockStates(List<IBlockState> blockEntries, boolean keepGivenEntries)
+        {
+            boolean replace = keepGivenEntries == false;
+            this.blocksToReplace.clear();
+            Arrays.fill(this.blocksToReplaceLookup, keepGivenEntries);
+
+            for (IBlockState state : blockEntries)
+            {
+                this.blocksToReplaceLookup[Block.getStateId(state)] = replace;
+            }
+
+            this.validState = this.replacementBlockData != null && blockEntries.isEmpty() == false;
+        }
+
+        public void setBlocksToReplaceFromString(Collection<String> blockEntries, boolean keepGivenEntries)
         {
             this.blocksToReplace.clear();
+            boolean replace = keepGivenEntries == false;
+            Arrays.fill(this.blocksToReplaceLookup, keepGivenEntries);
 
-            for (String str : toReplace)
+            for (String str : blockEntries)
             {
                 BlockData data = BlockData.parseBlockTypeFromString(str);
 
@@ -107,7 +136,7 @@ public class BlockTools
 
                     for (int id : data.getBlockStateIds())
                     {
-                        this.blocksToReplaceLookup[id] = true;
+                        this.blocksToReplaceLookup[id] = replace;
                     }
                 }
                 else
@@ -115,6 +144,8 @@ public class BlockTools
                     WorldUtils.logger.warn("Failed to parse block from string '{}'", str);
                 }
             }
+
+            this.validState = this.replacementBlockData != null && this.blocksToReplace.isEmpty() == false;
         }
 
         @Override
