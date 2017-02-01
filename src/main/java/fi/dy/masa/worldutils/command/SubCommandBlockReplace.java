@@ -304,7 +304,7 @@ public class SubCommandBlockReplace extends SubCommand
     {
         BlockData type = BlockData.parseBlockTypeFromString(replacement);
 
-        if (type != null)
+        if (type != null && type.isValid())
         {
             this.sendMessage(sender, "worldutils.commands.blockprune.replacement.print.valid", type.toString());
         }

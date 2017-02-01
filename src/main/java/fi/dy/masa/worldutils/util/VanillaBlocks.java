@@ -47,7 +47,6 @@ public class VanillaBlocks
     public static void addVanillaBlocks_pre_1_6(List<IBlockState> blockStateList)
     {
         blockStateList.addAll(Blocks.ACTIVATOR_RAIL.getBlockState().getValidStates());
-        blockStateList.addAll(Blocks.AIR.getBlockState().getValidStates());
         blockStateList.addAll(Blocks.ANVIL.getBlockState().getValidStates());
         blockStateList.addAll(Blocks.BEACON.getBlockState().getValidStates());
         blockStateList.addAll(Blocks.BED.getBlockState().getValidStates());
@@ -360,6 +359,8 @@ public class VanillaBlocks
      * The list includes only states that serialize into different metadata values, so it doesn't include
      * states that are run-time calculated in getActualState(). Note however that this might not strictly
      * be the case for all blocks, some blocks may also include some run-time-only states...
+     * NOTE: This list specifically omits Blocks.AIR, so that the list can be used as a to-be-replaced list
+     * in the blockreplace command.
      * @param version
      * @return a list of all states that serialize into different metadata values on disk
      */
