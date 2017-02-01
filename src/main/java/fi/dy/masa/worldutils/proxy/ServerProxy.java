@@ -5,6 +5,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.event.PlayerEventHandler;
+import fi.dy.masa.worldutils.event.TickHandler;
 import fi.dy.masa.worldutils.event.WorldEventHandler;
 
 public class ServerProxy implements IProxy
@@ -27,6 +28,7 @@ public class ServerProxy implements IProxy
     public void registerEventHandlers()
     {
         MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
+        MinecraftForge.EVENT_BUS.register(new TickHandler());
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
     }
 

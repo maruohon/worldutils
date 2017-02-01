@@ -14,6 +14,7 @@ import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.event.InputEventHandler;
 import fi.dy.masa.worldutils.event.PlayerEventHandler;
 import fi.dy.masa.worldutils.event.RenderEventHandler;
+import fi.dy.masa.worldutils.event.TickHandler;
 import fi.dy.masa.worldutils.event.WorldEventHandler;
 import fi.dy.masa.worldutils.reference.HotKeys;
 import fi.dy.masa.worldutils.reference.Keybindings;
@@ -44,6 +45,7 @@ public class ClientProxy implements IProxy
         MinecraftForge.EVENT_BUS.register(new InputEventHandler());
         MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
         MinecraftForge.EVENT_BUS.register(new RenderEventHandler());
+        MinecraftForge.EVENT_BUS.register(new TickHandler());
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
     }
 

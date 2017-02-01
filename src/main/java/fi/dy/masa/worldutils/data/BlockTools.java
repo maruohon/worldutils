@@ -21,6 +21,8 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
+import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
@@ -39,17 +41,24 @@ public class BlockTools
     }
 
     public void replaceBlocks(int dimension, String replacement, List<String> blockNames, List<IBlockState> blockStates,
-            boolean keepListedBlocks, boolean loadedChunks, ICommandSender sender)
+            boolean keepListedBlocks, boolean loadedChunks, boolean scheduled, ICommandSender sender)
     {
-        File worldDir = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldDir, "region");
+        File regionDir = FileUtils.getRegionDirectory(dimension);
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
             BlockReplacer replacer = new BlockReplacer(replacement, keepListedBlocks, loadedChunks);
             replacer.addBlocksFromBlockStates(blockStates);
             replacer.addBlocksFromStrings(blockNames);
-            FileUtils.worldDataProcessor(dimension, replacer, sender, false);
+
+            if (scheduled)
+            {
+                TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+            }
+            else
+            {
+                FileUtils.worldDataProcessor(dimension, replacer, sender, false);
+            }
         }
     }
 

@@ -26,7 +26,7 @@ import fi.dy.masa.worldutils.data.IWorldDataHandler;
 
 public class FileUtils
 {
-    private static final FilenameFilter ANVIL_REGION_FILE_FILTER = new FilenameFilter()
+    public static final FilenameFilter ANVIL_REGION_FILE_FILTER = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
@@ -130,8 +130,7 @@ public class FileUtils
             provider = (ChunkProviderServer) world.getChunkProvider();
         }
 
-        File worldSaveLocation = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldSaveLocation, "region");
+        File regionDir = getRegionDirectory(dimension);
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
@@ -287,5 +286,10 @@ public class FileUtils
         }
 
         return dir;
+    }
+
+    public static File getRegionDirectory(int dimension)
+    {
+        return new File(FileUtils.getWorldSaveLocation(dimension), "region");
     }
 }
