@@ -5,10 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
@@ -27,8 +24,6 @@ import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
-import fi.dy.masa.worldutils.util.VanillaBlocks;
-import fi.dy.masa.worldutils.util.VanillaBlocks.VanillaVersion;
 
 public class BlockTools
 {
@@ -43,31 +38,17 @@ public class BlockTools
         return INSTANCE;
     }
 
-    public void replaceBlocks(int dimension, String replacement, Collection<String> blockEntries,
-            boolean keepGivenEntries, boolean loadedChunks, ICommandSender sender)
+    public void replaceBlocks(int dimension, String replacement, List<String> blockNames, List<IBlockState> blockStates,
+            boolean keepListedBlocks, boolean loadedChunks, ICommandSender sender)
     {
         File worldDir = FileUtils.getWorldSaveLocation(dimension);
         File regionDir = new File(worldDir, "region");
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
-            BlockReplacer replacer = new BlockReplacer(replacement, loadedChunks);
-            replacer.setBlocksToReplaceFromString(blockEntries, keepGivenEntries);
-            replacer.init();
-            FileUtils.worldDataProcessor(dimension, replacer, sender, false);
-        }
-    }
-
-    public void replaceBlocksNotInVanilla(int dimension, String replacement, VanillaVersion version, boolean loadedChunks, ICommandSender sender)
-    {
-        File worldDir = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldDir, "region");
-
-        if (regionDir.exists() && regionDir.isDirectory())
-        {
-            BlockReplacer replacer = new BlockReplacer(replacement, loadedChunks);
-            replacer.setBlocksToReplaceFromBlockStates(VanillaBlocks.getSerializableVanillaBlockStatesInVersion(version), true);
-            replacer.init();
+            BlockReplacer replacer = new BlockReplacer(replacement, keepListedBlocks, loadedChunks);
+            replacer.addBlocksFromBlockStates(blockStates);
+            replacer.addBlocksFromStrings(blockNames);
             FileUtils.worldDataProcessor(dimension, replacer, sender, false);
         }
     }
@@ -75,21 +56,22 @@ public class BlockTools
     private class BlockReplacer implements IWorldDataHandler
     {
         private ChunkProviderServer provider;
+        private final boolean keepListedBlocks;
         private final boolean loadedChunks;
         private int regionCount;
         private int chunkCountUnloaded;
         private int chunkCountLoaded;
         private int replaceCountUnloaded;
         private int replaceCountLoaded;
-        private final Set<BlockData> blocksToReplace = new HashSet<BlockData>();
         private final boolean[] blocksToReplaceLookup = new boolean[1 << 16];
         private final BlockData replacementBlockData;
         private final IBlockState replacementBlockState;
         private final int replacementBlockStateId;
         private boolean validState;
 
-        private BlockReplacer(String replacement, boolean loadedChunks)
+        private BlockReplacer(String replacement, boolean keepListedBlocks, boolean loadedChunks)
         {
+            this.keepListedBlocks = keepListedBlocks;
             this.loadedChunks = loadedChunks;
             this.replacementBlockData = BlockData.parseBlockTypeFromString(replacement);
 
@@ -104,27 +86,26 @@ public class BlockTools
                 this.replacementBlockState = Blocks.AIR.getDefaultState();
                 this.replacementBlockStateId = Block.getStateId(this.replacementBlockState);
             }
+
+            Arrays.fill(this.blocksToReplaceLookup, this.keepListedBlocks);
         }
 
-        public void setBlocksToReplaceFromBlockStates(List<IBlockState> blockEntries, boolean keepGivenEntries)
+        public void addBlocksFromBlockStates(List<IBlockState> blockStates)
         {
-            boolean replace = keepGivenEntries == false;
-            this.blocksToReplace.clear();
-            Arrays.fill(this.blocksToReplaceLookup, keepGivenEntries);
+            boolean replace = this.keepListedBlocks == false;
 
-            for (IBlockState state : blockEntries)
+            for (IBlockState state : blockStates)
             {
                 this.blocksToReplaceLookup[Block.getStateId(state)] = replace;
             }
 
-            this.validState = this.replacementBlockData != null && blockEntries.isEmpty() == false;
+            this.validState = this.validState || (this.replacementBlockData != null && blockStates.isEmpty() == false);
         }
 
-        public void setBlocksToReplaceFromString(Collection<String> blockEntries, boolean keepGivenEntries)
+        public void addBlocksFromStrings(List<String> blockEntries)
         {
-            this.blocksToReplace.clear();
-            boolean replace = keepGivenEntries == false;
-            Arrays.fill(this.blocksToReplaceLookup, keepGivenEntries);
+            boolean replace = this.keepListedBlocks == false;
+            boolean hasData = false;
 
             for (String str : blockEntries)
             {
@@ -132,7 +113,7 @@ public class BlockTools
 
                 if (data != null)
                 {
-                    this.blocksToReplace.add(data);
+                    hasData = true;
 
                     for (int id : data.getBlockStateIds())
                     {
@@ -145,7 +126,7 @@ public class BlockTools
                 }
             }
 
-            this.validState = this.replacementBlockData != null && this.blocksToReplace.isEmpty() == false;
+            this.validState = this.validState || (this.replacementBlockData != null && hasData);
         }
 
         @Override
@@ -336,7 +317,7 @@ public class BlockTools
                 // Re-check the lighting if blocks were replaced. This still doesn't actually force a proper
                 // re-light calculation though... There doesn't seem to be any way to do that via the chunk NBT
                 // data, without actually re-calculating all the lighting here and updating the light arrays...
-                level.removeTag("LightPopulated");
+                //level.removeTag("LightPopulated");
 
                 DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
 
@@ -436,7 +417,7 @@ public class BlockTools
             WorldUtils.logger.info("Replaced a total of {} blocks in {} unloaded chunks and {} blocks in {} loaded chunks, touching {} region files",
                     this.replaceCountUnloaded, this.chunkCountUnloaded, this.replaceCountLoaded, this.chunkCountLoaded, this.regionCount);
 
-            sender.sendMessage(new TextComponentTranslation("worldutils.commands.blockprune.finished",
+            sender.sendMessage(new TextComponentTranslation("worldutils.commands.blockprune.execute.finished",
                     Integer.valueOf(this.replaceCountUnloaded), Integer.valueOf(this.chunkCountUnloaded),
                     Integer.valueOf(this.replaceCountLoaded), Integer.valueOf(this.chunkCountLoaded),
                     Integer.valueOf(this.regionCount)));

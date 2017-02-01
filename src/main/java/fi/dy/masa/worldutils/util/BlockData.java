@@ -105,19 +105,18 @@ public class BlockData
                 return this.id >= 0 && this.id < 4096 && this.meta >= 0 && this.meta < 16;
 
             case NAME:
-                return Block.REGISTRY.getObject(new ResourceLocation(this.name)) != null;
+                return Block.REGISTRY.containsKey(new ResourceLocation(this.name));
 
             case NAME_META:
-                return Block.REGISTRY.getObject(new ResourceLocation(this.name)) != null && this.meta >= 0 && this.meta < 16;
+                return Block.REGISTRY.containsKey(new ResourceLocation(this.name)) && this.meta >= 0 && this.meta < 16;
 
             case NAME_PROPS:
-                Block block = Block.REGISTRY.getObject(new ResourceLocation(this.name));
-
-                if (block == null)
+                if (Block.REGISTRY.containsKey(new ResourceLocation(this.name)) == false)
                 {
                     return false;
                 }
 
+                Block block = Block.REGISTRY.getObject(new ResourceLocation(this.name));
                 String str = this.name + "[" + this.props + "]";
 
                 for (IBlockState state : block.getBlockState().getValidStates())
@@ -230,7 +229,7 @@ public class BlockData
         {
             Pattern patternId        = Pattern.compile("(?<id>[0-9]+)");
             Pattern patternIdMeta    = Pattern.compile("(?<id>[0-9]+)[@:]{1}(?<meta>[0-9]+)");
-            Pattern patternName      = Pattern.compile("(?<name>[a-z0-9_]+:[a-z0-9\\._]+)");
+            Pattern patternName      = Pattern.compile("(?<name>([a-z0-9_]+:)?[a-z0-9\\._]+)");
             Pattern patternNameMeta  = Pattern.compile("(?<name>[a-z0-9_]+:[a-z0-9\\._]+)[@:]{1}(?<meta>[0-9]+)");
             Pattern patternNameProps = Pattern.compile("(?<name>[a-z0-9_]+:[a-z0-9\\._]+)\\[(?<props>[a-z0-9_]+=[a-z0-9_]+(,[a-z0-9_]+=[a-z0-9_]+)*)\\]");
 

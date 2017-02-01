@@ -51,12 +51,15 @@ worldutils.commands.generic.list.add=Added '%s' to the list
 worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the list
 worldutils.commands.generic.list.remove.success=Removed '%s' from the list
 
+worldutils.commands.blockprune.blocknamelist.cleared=Cleared the block name list
+worldutils.commands.blockprune.blocknamelist.print=A list of all blocks on the list has also been printed to the console
+worldutils.commands.blockprune.blockstatelist.add=Added all blockstates from vanilla up to version %s to the list
+worldutils.commands.blockprune.blockstatelist.cleared=Cleared the blockstate list
+worldutils.commands.blockprune.blockstatelist.print=A list of all the blockstates on the list has been printed to the console
 worldutils.commands.blockprune.execute.start=Replacing the selected blocks in the entire world, this may take a while...
-worldutils.commands.blockprune.finished=Replaced a total of %d blocks in %d unloaded chunks and %d blocks in %d loaded chunks, touching %d region files
-worldutils.commands.blockprune.info.removelist.cleared=Remove list cleared
-worldutils.commands.blockprune.info.removelist.print=A list of the blocks to be removed/replaced have also been printed to console
-worldutils.commands.blockprune.info.replacement.print.valid=Replacement block is set to %s
-worldutils.commands.blockprune.info.replacement.print.invalid=Replacement block is set to an INVALID value '%s'
+worldutils.commands.blockprune.execute.finished=Replaced a total of %d blocks in %d unloaded chunks and %d blocks in %d loaded chunks, touching %d region files
+worldutils.commands.blockprune.replacement.print.valid=Replacement block is set to %s
+worldutils.commands.blockprune.replacement.print.invalid=Replacement block is set to an INVALID value '%s'
 
 worldutils.commands.entities.readall.done=Read all entities from the world save files
 worldutils.commands.entities.removeall.done=Removed a total of %d entities
