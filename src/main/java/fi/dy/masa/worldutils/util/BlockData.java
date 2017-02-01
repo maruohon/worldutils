@@ -237,7 +237,7 @@ public class BlockData
             Matcher matcherId = patternId.matcher(str);
             if (matcherId.matches())
             {
-                System.out.printf("Type.ID - id: %d\n", Integer.parseInt(matcherId.group("id")));
+                //System.out.printf("Type.ID - id: %d\n", Integer.parseInt(matcherId.group("id")));
                 return new BlockData(Integer.parseInt(matcherId.group("id")));
             }
 
@@ -245,15 +245,15 @@ public class BlockData
             if (matcherIdMeta.matches())
             {
                 // id@meta
-                System.out.printf("Type.ID_META - id: %d, meta: %d\n",
-                        Integer.parseInt(matcherIdMeta.group("id")), Integer.parseInt(matcherIdMeta.group("meta")));
+                //System.out.printf("Type.ID_META - id: %d, meta: %d\n",
+                //        Integer.parseInt(matcherIdMeta.group("id")), Integer.parseInt(matcherIdMeta.group("meta")));
                 return new BlockData(Integer.parseInt(matcherIdMeta.group("id")), Integer.parseInt(matcherIdMeta.group("meta")));
             }
 
             Matcher matcherName = patternName.matcher(str);
             if (matcherName.matches())
             {
-                System.out.printf("Type.NAME - name: %s\n", matcherName.group("name"));
+                //System.out.printf("Type.NAME - name: %s\n", matcherName.group("name"));
                 return new BlockData(matcherName.group("name"));
             }
 
@@ -261,8 +261,8 @@ public class BlockData
             if (matcherNameMeta.matches())
             {
                 // name@meta
-                System.out.printf("Type.NAME_META - name: %s, meta: %d\n",
-                        matcherNameMeta.group("name"), Integer.parseInt(matcherNameMeta.group("meta")));
+                //System.out.printf("Type.NAME_META - name: %s, meta: %d\n",
+                //        matcherNameMeta.group("name"), Integer.parseInt(matcherNameMeta.group("meta")));
                 return new BlockData(matcherNameMeta.group("name"), Integer.parseInt(matcherNameMeta.group("meta")));
             }
 
@@ -293,7 +293,7 @@ public class BlockData
 
                 Collections.sort(props); // the properties need to be in alphabetical order
 
-                System.out.printf("Type.NAME_PROPS - name: %s, props: %s (propStr: %s)\n", name, String.join(",", props), propStr);
+                //System.out.printf("Type.NAME_PROPS - name: %s, props: %s (propStr: %s)\n", name, String.join(",", props), propStr);
                 return new BlockData(name, String.join(",", props));
             }
         }
