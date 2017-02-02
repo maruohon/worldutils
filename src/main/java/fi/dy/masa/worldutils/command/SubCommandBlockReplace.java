@@ -31,10 +31,8 @@ public class SubCommandBlockReplace extends SubCommand
 
         this.subSubCommands.add("blocknamelist");
         this.subSubCommands.add("blockstatelist");
-        this.subSubCommands.add("execute-immediate-all-chunks");
-        this.subSubCommands.add("execute-immediate-unloaded-chunks");
-        this.subSubCommands.add("execute-scheduled-all-chunks");
-        this.subSubCommands.add("execute-scheduled-unloaded-chunks");
+        this.subSubCommands.add("execute-all-chunks");
+        this.subSubCommands.add("execute-unloaded-chunks");
         this.subSubCommands.add("replacement");
     }
 
@@ -55,10 +53,8 @@ public class SubCommandBlockReplace extends SubCommand
     {
         this.prinHelpBlocklist(sender);
         this.printHelpReplacement(sender);
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-immediate-all-chunks <keep-listed | replace-listed> [dimension id]"));
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-immediate-unloaded-chunks <keep-listed | replace-listed> [dimension id]"));
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-scheduled-all-chunks <keep-listed | replace-listed> [dimension id]"));
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-scheduled-unloaded-chunks <keep-listed | replace-listed> [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-all-chunks <keep-listed | replace-listed> [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-unloaded-chunks <keep-listed | replace-listed> [dimension id]"));
     }
 
     private void prinHelpBlocklist(ICommandSender sender)
@@ -120,8 +116,7 @@ public class SubCommandBlockReplace extends SubCommand
                 return CommandBase.getListOfStringsMatchingLastWord(args, "add-all-vanilla", "clear", "list");
             }
         }
-        else if ((cmd.equals("execute-immediate-all-chunks") || cmd.equals("execute-immediate-unloaded-chunks") ||
-                  cmd.equals("execute-scheduled-all-chunks") || cmd.equals("execute-scheduled-unloaded-chunks")) && args.length == 1)
+        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length == 1)
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, "keep-listed", "replace-listed");
         }
@@ -274,25 +269,17 @@ public class SubCommandBlockReplace extends SubCommand
                 this.printHelpReplacement(sender);
             }
         }
-        else if ((cmd.equals("execute-immediate-all-chunks") || cmd.equals("execute-immediate-unloaded-chunks")) &&
+        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-unloaded-chunks")) &&
                 args.length >= 1 && args.length <= 2 &&
                 (args[0].equals("keep-listed") || args[0].equals("replace-listed")))
         {
             this.sendMessage(sender, "worldutils.commands.blockprune.execute.start");
             int dimension = this.getDimension(cmd, CommandWorldUtils.dropFirstStrings(args, 1), sender);
+            boolean keepListedBlocks = args[0].equals("keep-listed");
+            boolean unloadedChunks = cmd.equals("execute-all-chunks");
 
             BlockTools.instance().replaceBlocks(dimension, replacement, blockNames, blockStates,
-                    args[0].equals("keep-listed"), cmd.equals("execute-immediate-all-chunks"), false, sender);
-        }
-        else if ((cmd.equals("execute-scheduled-all-chunks") || cmd.equals("execute-scheduled-unloaded-chunks")) &&
-                args.length >= 1 && args.length <= 2 &&
-                (args[0].equals("keep-listed") || args[0].equals("replace-listed")))
-        {
-            this.sendMessage(sender, "worldutils.commands.blockprune.execute.start");
-            int dimension = this.getDimension(cmd, CommandWorldUtils.dropFirstStrings(args, 1), sender);
-
-            BlockTools.instance().replaceBlocks(dimension, replacement, blockNames, blockStates,
-                    args[0].equals("keep-listed"), cmd.equals("execute-scheduled-all-chunks"), true, sender);
+                    keepListedBlocks, unloadedChunks, sender);
         }
         else
         {

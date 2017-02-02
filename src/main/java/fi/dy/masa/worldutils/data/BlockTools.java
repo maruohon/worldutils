@@ -41,7 +41,7 @@ public class BlockTools
     }
 
     public void replaceBlocks(int dimension, String replacement, List<String> blockNames, List<IBlockState> blockStates,
-            boolean keepListedBlocks, boolean loadedChunks, boolean scheduled, ICommandSender sender)
+            boolean keepListedBlocks, boolean loadedChunks, ICommandSender sender)
     {
         File regionDir = FileUtils.getRegionDirectory(dimension);
 
@@ -50,15 +50,7 @@ public class BlockTools
             BlockReplacer replacer = new BlockReplacer(replacement, keepListedBlocks, loadedChunks);
             replacer.addBlocksFromBlockStates(blockStates);
             replacer.addBlocksFromStrings(blockNames);
-
-            if (scheduled)
-            {
-                TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
-            }
-            else
-            {
-                FileUtils.worldDataProcessor(dimension, replacer, sender, false);
-            }
+            TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
         }
     }
 
