@@ -59,12 +59,11 @@ public class SubCommandBlockReplace extends SubCommand
 
     private void prinHelpBlocklist(ICommandSender sender)
     {
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block | id>[@meta] ... Ex: minecraft:ice minecraft:wool@5"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block[prop1=val1,prop2=val2]> ... Ex: minecraft:stone[variant=granite]"));
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove <block | id>[@meta] ... Ex: minecraft:ice minecraft:wool@5"));
-        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove <block[prop1=val1,prop2=val2]> ... Ex: minecraft:stone[variant=granite]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove stringonthelist1 stringonthelist2 ..."));
 
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blockstatelist add-all-vanilla <version> (where version = 1.5 ... 1.10)"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blockstatelist clear"));

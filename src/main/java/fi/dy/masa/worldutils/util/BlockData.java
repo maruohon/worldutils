@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.block.Block;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.ResourceLocation;
 import fi.dy.masa.worldutils.WorldUtils;
@@ -19,7 +21,7 @@ public class BlockData
     private int blockStateId;
     private int[] blockStateIds = new int[0];
     private String name = "";
-    private String props = "";
+    private List<Pair<String, String>> props = new ArrayList<Pair<String, String>>();
 
     public BlockData(int id)
     {
@@ -51,11 +53,11 @@ public class BlockData
         this.setNumericValues();
     }
 
-    public BlockData(String name, String props)
+    public BlockData(String name, List<Pair<String, String>> props)
     {
         this.type = DataType.NAME_PROPS;
         this.name = name;
-        this.props = props;
+        this.props.addAll(props);
         this.setNumericValues();
     }
 
@@ -117,17 +119,18 @@ public class BlockData
                 }
 
                 Block block = Block.REGISTRY.getObject(new ResourceLocation(this.name));
-                String str = this.name + "[" + this.props + "]";
 
-                for (IBlockState state : block.getBlockState().getValidStates())
+                for (Pair<String, String> pair : this.props)
                 {
-                    if (state.toString().equals(str))
+                    IProperty<?> prop = block.getBlockState().getProperty(pair.getLeft());
+
+                    if (prop == null || prop.parseValue(pair.getRight()).isPresent() == false)
                     {
-                        return true;
+                        return false;
                     }
                 }
 
-                return false;
+                return true;
         }
 
         return false;
@@ -149,18 +152,22 @@ public class BlockData
 
                 case NAME_PROPS:
                     Block block = Block.REGISTRY.getObject(new ResourceLocation(this.name));
-                    String str = this.name + "[" + this.props + "]";
+                    IBlockState state = block.getDefaultState();
 
-                    for (IBlockState state : block.getBlockState().getValidStates())
+                    for (Pair<String, String> pair : this.props)
                     {
-                        if (state.toString().equals(str))
+                        IProperty<?> prop = block.getBlockState().getProperty(pair.getLeft());
+
+                        if (prop != null)
                         {
-                            int stateId = Block.getStateId(state);
-                            this.id = stateId & 0xFFF;
-                            this.meta = (stateId >> 12) & 0xF;
-                            break;
+                            state = setPropertyValueFromString(state, prop, pair.getRight());
                         }
                     }
+
+                    int stateId = Block.getStateId(state);
+                    this.id = stateId & 0xFFF;
+                    this.meta = (stateId >> 12) & 0xF;
+
                     break;
 
                 default:
@@ -199,23 +206,27 @@ public class BlockData
     {
         if (this.type == DataType.ID)
         {
-            return "BlockData:{type=" + this.type + ",id=" + this.id + "}";
+            return "BlockData:{ type=" + this.type + ", id=" + this.id + " }";
         }
         else if (this.type == DataType.ID_META)
         {
-            return "BlockData:{type=" + this.type + ",id=" + this.id + ",meta=" + this.meta + "}";
+            return "BlockData:{ type=" + this.type + ", id=" + this.id + ", meta=" + this.meta + " }";
         }
         else if (this.type == DataType.NAME)
         {
-            return "BlockData:{type=" + this.type + ",name=" + this.name + ",id=" + this.id + "}";
+            return "BlockData:{ type=" + this.type + ", name=" + this.name + ", id=" + this.id + " }";
         }
         else if (this.type == DataType.NAME_META)
         {
-            return "BlockData:{type=" + this.type + ",name=" + this.name + ",meta=" + this.meta + ",id=" + this.id + "}";
+            return "BlockData:{ type=" + this.type + ", name=" + this.name + ", meta=" + this.meta + ", id=" + this.id + " }";
         }
         else if (this.type == DataType.NAME_PROPS)
         {
-            return "BlockData:{type=" + this.type + ",name=" + this.name + ",props=[" + this.props + "],id=" + this.id + ",meta=" + this.meta + "}";
+            StringBuilder propStr = new StringBuilder(128);
+            for (Pair<String, String> pair : this.props) { propStr.append(pair.getLeft()).append("=").append(pair.getRight()).append(","); }
+            if (propStr.length() > 0) { propStr.deleteCharAt(propStr.length() - 1); }
+            return "BlockData:{ type=" + this.type + ", name=" + this.name +
+                    ", props=[" + propStr.toString() + "], id=" + this.id + ", meta=" + this.meta + " }";
         }
         else
         {
@@ -271,10 +282,9 @@ public class BlockData
                 // name[props]
                 String name = matcherNameProps.group("name");
                 String propStr = matcherNameProps.group("props");
-                //String propStr = str.substring(str.indexOf("[") + 1, str.length() - 1);
                 String[] propParts = propStr.split(",");
-                Pattern patternProp = Pattern.compile("([a-zA-Z0-9\\._-]+)=([a-zA-Z0-9\\._-]+)");
-                List<String> props = new ArrayList<String>();
+                Pattern patternProp = Pattern.compile("(?<prop>[a-zA-Z0-9\\._-]+)=(?<value>[a-zA-Z0-9\\._-]+)");
+                List<Pair<String, String>> props = new ArrayList<Pair<String, String>>();
 
                 for (int i = 0; i < propParts.length; i++)
                 {
@@ -282,7 +292,7 @@ public class BlockData
 
                     if (matcherProp.matches())
                     {
-                        props.add(propParts[i]);
+                        props.add(Pair.of(matcherProp.group("prop"), matcherProp.group("value")));
                     }
                     else
                     {
@@ -293,7 +303,7 @@ public class BlockData
                 Collections.sort(props); // the properties need to be in alphabetical order
 
                 //System.out.printf("Type.NAME_PROPS - name: %s, props: %s (propStr: %s)\n", name, String.join(",", props), propStr);
-                return new BlockData(name, String.join(",", props));
+                return new BlockData(name, props);
             }
         }
         catch (PatternSyntaxException e)
@@ -306,6 +316,11 @@ public class BlockData
         }
 
         return null;
+    }
+
+    public static <T extends Comparable<T>> IBlockState setPropertyValueFromString(IBlockState state, IProperty<T> prop, String valueStr)
+    {
+        return state.withProperty(prop, prop.parseValue(valueStr).get());
     }
 
     public enum DataType
