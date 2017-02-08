@@ -14,6 +14,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
+import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
+import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.BlockUtils;
 import fi.dy.masa.worldutils.util.VanillaBlocks;
@@ -34,6 +36,7 @@ public class SubCommandBlockReplace extends SubCommand
         this.subSubCommands.add("execute-all-chunks");
         this.subSubCommands.add("execute-unloaded-chunks");
         this.subSubCommands.add("replacement");
+        this.subSubCommands.add("stoptask");
     }
 
     @Override
@@ -51,20 +54,25 @@ public class SubCommandBlockReplace extends SubCommand
     @Override
     public void printFullHelp(ICommandSender sender, String[] args)
     {
-        this.prinHelpBlocklist(sender);
+        this.printHelpBlockNameList(sender);
+        this.printHelpBlockStateList(sender);
         this.printHelpReplacement(sender);
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-all-chunks <keep-listed | replace-listed> [dimension id]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-unloaded-chunks <keep-listed | replace-listed> [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " stoptask"));
     }
 
-    private void prinHelpBlocklist(ICommandSender sender)
+    private void printHelpBlockNameList(ICommandSender sender)
     {
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block | id>[@meta] ... Ex: minecraft:ice minecraft:wool@5"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block[prop1=val1,prop2=val2]> ... Ex: minecraft:stone[variant=granite]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove stringonthelist1 stringonthelist2 ..."));
+    }
 
+    private void printHelpBlockStateList(ICommandSender sender)
+    {
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blockstatelist add-all-vanilla <version> (where version = 1.5 ... 1.10)"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blockstatelist clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blockstatelist list"));
@@ -160,94 +168,11 @@ public class SubCommandBlockReplace extends SubCommand
 
         if (cmd.equals("blocknamelist") && args.length >= 1)
         {
-            cmd = args[0];
-            args = CommandWorldUtils.dropFirstStrings(args, 1);
-
-            if (cmd.equals("clear") && args.length == 0)
-            {
-                blockNames.clear();
-                this.sendMessage(sender, "worldutils.commands.blockprune.blocknamelist.cleared");
-            }
-            else if (cmd.equals("list") && args.length == 0)
-            {
-                WorldUtils.logger.info("----------------------------------");
-                WorldUtils.logger.info("  Blocks on the name list:");
-                WorldUtils.logger.info("----------------------------------");
-
-                for (String str : blockNames)
-                {
-                    WorldUtils.logger.info(str);
-                    sender.sendMessage(new TextComponentString(str));
-                }
-
-                WorldUtils.logger.info("-------------- END ---------------");
-                this.sendMessage(sender, "worldutils.commands.blockprune.blocknamelist.print");
-            }
-            else if (cmd.equals("add") && args.length > 0)
-            {
-                for (int i = 0; i < args.length; i++)
-                {
-                    blockNames.add(args[i]);
-                    this.sendMessage(sender, "worldutils.commands.generic.list.add", args[i]);
-                }
-            }
-            else if (cmd.equals("remove") && args.length > 0)
-            {
-                for (int i = 0; i < args.length; i++)
-                {
-                    if (blockNames.remove(args[i]))
-                    {
-                        this.sendMessage(sender, "worldutils.commands.generic.list.remove.success", args[i]);
-                    }
-                    else
-                    {
-                        this.sendMessage(sender, "worldutils.commands.generic.list.remove.failure", args[i]);
-                    }
-                }
-            }
-            else
-            {
-                this.prinHelpBlocklist(sender);
-            }
+            this.executeBlockNameList(args, sender);
         }
         else if (cmd.equals("blockstatelist") && args.length >= 1)
         {
-            cmd = args[0];
-            args = CommandWorldUtils.dropFirstStrings(args, 1);
-
-            if (cmd.equals("add-all-vanilla") && args.length > 0)
-            {
-                VanillaVersion version = VanillaVersion.fromVersion(args[0]);
-
-                if (version == null)
-                {
-                    throwCommand("worldutils.commands.error.invalidgameversion", args[0]);
-                }
-
-                blockStates.addAll(VanillaBlocks.getSerializableVanillaBlockStatesInVersion(version));
-
-                this.sendMessage(sender, "worldutils.commands.blockprune.blockstatelist.add", args[0]);
-            }
-            else if (cmd.equals("clear") && args.length == 0)
-            {
-                blockStates.clear();
-                this.sendMessage(sender, "worldutils.commands.blockprune.blockstatelist.cleared");
-            }
-            else if (cmd.equals("list") && args.length == 0)
-            {
-                WorldUtils.logger.info("----------------------------------");
-                WorldUtils.logger.info("  Blocks on the IBlockState list:");
-                WorldUtils.logger.info("----------------------------------");
-
-                for (IBlockState state : blockStates)
-                {
-                    WorldUtils.logger.info(state);
-                }
-
-                WorldUtils.logger.info("-------------- END ---------------");
-
-                this.sendMessage(sender, "worldutils.commands.blockprune.blockstatelist.print");
-            }
+            this.executeBlockStateList(args, sender);
         }
         else if (cmd.equals("replacement") && args.length >= 1)
         {
@@ -256,12 +181,12 @@ public class SubCommandBlockReplace extends SubCommand
 
             if (cmd.equals("print") && args.length == 0)
             {
-                this.replacementPrint(replacement, sender);
+                this.blockDataPrint(replacement, sender);
             }
             else if (cmd.equals("set") && args.length == 1)
             {
                 replacement = args[0];
-                this.replacementPrint(replacement, sender);
+                this.blockDataPrint(replacement, sender);
             }
             else
             {
@@ -272,7 +197,7 @@ public class SubCommandBlockReplace extends SubCommand
                 args.length >= 1 && args.length <= 2 &&
                 (args[0].equals("keep-listed") || args[0].equals("replace-listed")))
         {
-            this.sendMessage(sender, "worldutils.commands.blockprune.execute.start");
+            this.sendMessage(sender, "worldutils.commands.blockreplace.execute.start");
             int dimension = this.getDimension(cmd, CommandWorldUtils.dropFirstStrings(args, 1), sender);
             boolean keepListedBlocks = args[0].equals("keep-listed");
             boolean unloadedChunks = cmd.equals("execute-all-chunks");
@@ -280,23 +205,131 @@ public class SubCommandBlockReplace extends SubCommand
             BlockTools.instance().replaceBlocks(dimension, replacement, blockNames, blockStates,
                     keepListedBlocks, unloadedChunks, sender);
         }
+        else if (cmd.equals("stoptask"))
+        {
+            if (TaskScheduler.getInstance().removeTask(TaskWorldProcessor.class))
+            {
+                this.sendMessage(sender, "worldutils.commands.info.taskstopped");
+            }
+            else
+            {
+                throwCommand("worldutils.commands.error.notaskfound");
+            }
+        }
         else
         {
             this.printFullHelp(sender, args);
         }
     }
 
-    private void replacementPrint(String replacement, ICommandSender sender) throws CommandException
+    private void executeBlockNameList(String[] args, ICommandSender sender)
     {
-        BlockData type = BlockData.parseBlockTypeFromString(replacement);
+        String cmd = args[0];
+        args = CommandWorldUtils.dropFirstStrings(args, 1);
 
-        if (type != null && type.isValid())
+        if (cmd.equals("clear") && args.length == 0)
         {
-            this.sendMessage(sender, "worldutils.commands.blockprune.replacement.print.valid", type.toString());
+            blockNames.clear();
+            this.sendMessage(sender, "worldutils.commands.blockreplace.blocknamelist.cleared");
+        }
+        else if (cmd.equals("list") && args.length == 0)
+        {
+            WorldUtils.logger.info("----------------------------------");
+            WorldUtils.logger.info("  Blocks on the name list:");
+            WorldUtils.logger.info("----------------------------------");
+
+            for (String str : blockNames)
+            {
+                WorldUtils.logger.info(str);
+                sender.sendMessage(new TextComponentString(str));
+            }
+
+            WorldUtils.logger.info("-------------- END ---------------");
+            this.sendMessage(sender, "worldutils.commands.blockreplace.blocknamelist.print");
+        }
+        else if (cmd.equals("add") && args.length > 0)
+        {
+            for (int i = 0; i < args.length; i++)
+            {
+                blockNames.add(args[i]);
+                this.sendMessage(sender, "worldutils.commands.generic.list.add", args[i]);
+            }
+        }
+        else if (cmd.equals("remove") && args.length > 0)
+        {
+            for (int i = 0; i < args.length; i++)
+            {
+                if (blockNames.remove(args[i]))
+                {
+                    this.sendMessage(sender, "worldutils.commands.generic.list.remove.success", args[i]);
+                }
+                else
+                {
+                    this.sendMessage(sender, "worldutils.commands.generic.list.remove.failure", args[i]);
+                }
+            }
         }
         else
         {
-            throwCommand("worldutils.commands.blockprune.replacement.print.invalid", replacement);
+            this.printHelpBlockNameList(sender);
+        }
+    }
+
+    private void executeBlockStateList(String[] args, ICommandSender sender) throws CommandException
+    {
+        String cmd = args[0];
+        args = CommandWorldUtils.dropFirstStrings(args, 1);
+
+        if (cmd.equals("add-all-vanilla") && args.length > 0)
+        {
+            VanillaVersion version = VanillaVersion.fromVersion(args[0]);
+
+            if (version == null)
+            {
+                throwCommand("worldutils.commands.error.invalidgameversion", args[0]);
+            }
+
+            blockStates.addAll(VanillaBlocks.getSerializableVanillaBlockStatesInVersion(version));
+
+            this.sendMessage(sender, "worldutils.commands.blockreplace.blockstatelist.add", args[0]);
+        }
+        else if (cmd.equals("clear") && args.length == 0)
+        {
+            blockStates.clear();
+            this.sendMessage(sender, "worldutils.commands.blockreplace.blockstatelist.cleared");
+        }
+        else if (cmd.equals("list") && args.length == 0)
+        {
+            WorldUtils.logger.info("----------------------------------");
+            WorldUtils.logger.info("  Blocks on the IBlockState list:");
+            WorldUtils.logger.info("----------------------------------");
+
+            for (IBlockState state : blockStates)
+            {
+                WorldUtils.logger.info(state);
+            }
+
+            WorldUtils.logger.info("-------------- END ---------------");
+
+            this.sendMessage(sender, "worldutils.commands.blockreplace.blockstatelist.print");
+        }
+        else
+        {
+            this.printHelpBlockStateList(sender);
+        }
+    }
+
+    private void blockDataPrint(String blockStr, ICommandSender sender) throws CommandException
+    {
+        BlockData type = BlockData.parseBlockTypeFromString(blockStr);
+
+        if (type != null && type.isValid())
+        {
+            this.sendMessage(sender, "worldutils.commands.blockreplace.block.print.valid", type.toString());
+        }
+        else
+        {
+            throwCommand("worldutils.commands.blockreplace.block.print.invalid", blockStr);
         }
     }
 

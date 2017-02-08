@@ -75,8 +75,9 @@ public class TaskScheduler
         return false;
     }
 
-    public void removeTask(Class <? extends ITask> clazz)
+    public boolean removeTask(Class <? extends ITask> clazz)
     {
+        boolean removed = false;
         Iterator<ITask> taskIter = this.tasks.iterator();
         Iterator<Timer> timerIter = this.timers.iterator();
 
@@ -90,8 +91,11 @@ public class TaskScheduler
                 task.stop();
                 taskIter.remove();
                 timerIter.remove();
+                removed = true;
             }
         }
+
+        return removed;
     }
 
     public void clearTasks()

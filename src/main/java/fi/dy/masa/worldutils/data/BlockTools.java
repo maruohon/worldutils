@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -14,9 +15,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.gen.ChunkProviderServer;
@@ -48,7 +50,7 @@ public class BlockTools
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
-            BlockReplacer replacer = new BlockReplacer(replacement, keepListedBlocks, loadedChunks);
+            BlockReplacerSet replacer = new BlockReplacerSet(replacement, keepListedBlocks, loadedChunks);
             replacer.addBlocksFromBlockStates(blockStates);
             replacer.addBlocksFromStrings(blockNames);
 
@@ -61,41 +63,47 @@ public class BlockTools
         }
     }
 
-    private class BlockReplacer implements IWorldDataHandler
+    public void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs, boolean loadedChunks, ICommandSender sender)
     {
-        private ChunkProviderServer provider;
-        private final boolean keepListedBlocks;
-        private final boolean loadedChunks;
-        private int regionCount;
-        private int chunkCountUnloaded;
-        private int chunkCountLoaded;
-        private int replaceCountUnloaded;
-        private int replaceCountLoaded;
-        private final boolean[] blocksToReplaceLookup = new boolean[1 << 16];
-        private final BlockData replacementBlockData;
-        private final IBlockState replacementBlockState;
-        private final int replacementBlockStateId;
-        private boolean validState;
+        File regionDir = FileUtils.getRegionDirectory(dimension);
 
-        private BlockReplacer(String replacement, boolean keepListedBlocks, boolean loadedChunks)
+        if (regionDir.exists() && regionDir.isDirectory())
         {
+            BlockReplacerPairs replacer = new BlockReplacerPairs(loadedChunks);
+            replacer.addBlockPairs(blockPairs);
+            TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+        }
+    }
+
+    private class BlockReplacerSet extends BlockReplacerBase
+    {
+        protected final boolean keepListedBlocks;
+        protected final BlockData replacementBlockData;
+
+        private BlockReplacerSet(String replacement, boolean keepListedBlocks, boolean loadedChunks)
+        {
+            super(loadedChunks);
+
+            Arrays.fill(this.blocksToReplaceLookup, keepListedBlocks);
             this.keepListedBlocks = keepListedBlocks;
-            this.loadedChunks = loadedChunks;
             this.replacementBlockData = BlockData.parseBlockTypeFromString(replacement);
 
-            if (this.replacementBlockData != null)
+            if (this.replacementBlockData != null && this.replacementBlockData.isValid())
             {
-                this.replacementBlockStateId = this.replacementBlockData.getBlockStateId();
-                this.replacementBlockState = Block.getStateById(this.replacementBlockStateId);
+                int id = this.replacementBlockData.getBlockStateId();
+                IBlockState state = Block.getStateById(id);
+                Arrays.fill(this.replacementBlockStateIds, id);
+                Arrays.fill(this.replacementBlockStates, state);
             }
             else
             {
                 WorldUtils.logger.warn("Failed to parse block from string '{}'", replacement);
-                this.replacementBlockState = Blocks.AIR.getDefaultState();
-                this.replacementBlockStateId = Block.getStateId(this.replacementBlockState);
-            }
 
-            Arrays.fill(this.blocksToReplaceLookup, this.keepListedBlocks);
+                IBlockState state = Blocks.AIR.getDefaultState();
+                int id = Block.getStateId(state);
+                Arrays.fill(this.replacementBlockStateIds, id);
+                Arrays.fill(this.replacementBlockStates, state);
+            }
         }
 
         public void addBlocksFromBlockStates(List<IBlockState> blockStates)
@@ -107,7 +115,9 @@ public class BlockTools
                 this.blocksToReplaceLookup[Block.getStateId(state)] = replace;
             }
 
-            this.validState = this.validState || (this.replacementBlockData != null && blockStates.isEmpty() == false);
+            this.validState |= this.replacementBlockData != null &&
+                               this.replacementBlockData.isValid() &&
+                               blockStates.isEmpty() == false;
         }
 
         public void addBlocksFromStrings(List<String> blockEntries)
@@ -119,7 +129,7 @@ public class BlockTools
             {
                 BlockData data = BlockData.parseBlockTypeFromString(str);
 
-                if (data != null)
+                if (data != null && data.isValid())
                 {
                     hasData = true;
 
@@ -134,7 +144,65 @@ public class BlockTools
                 }
             }
 
-            this.validState = this.validState || (this.replacementBlockData != null && hasData);
+            this.validState |= this.replacementBlockData != null &&
+                               this.replacementBlockData.isValid() && hasData;
+        }
+    }
+
+    private class BlockReplacerPairs extends BlockReplacerBase
+    {
+        protected BlockReplacerPairs(boolean loadedChunks)
+        {
+            super(loadedChunks);
+
+            Arrays.fill(this.blocksToReplaceLookup, false);
+        }
+
+        public void addBlockPairs(List<Pair<String, String>> blockPairs)
+        {
+            boolean addedData = false;
+
+            for (Pair<String, String> pair : blockPairs)
+            {
+                BlockData dataFrom = BlockData.parseBlockTypeFromString(pair.getLeft());
+                BlockData dataTo   = BlockData.parseBlockTypeFromString(pair.getRight());
+
+                if (dataFrom != null && dataFrom.isValid() && dataTo != null && dataTo.isValid())
+                {
+                    int idFrom = dataFrom.getBlockStateId();
+                    int idTo = dataTo.getBlockStateId();
+                    this.blocksToReplaceLookup[idFrom] = true;
+                    this.replacementBlockStateIds[idFrom] = idTo;
+                    this.replacementBlockStates[idFrom] = Block.getStateById(idTo);
+                    addedData = true;
+                }
+                else
+                {
+                    WorldUtils.logger.warn("Failed to parse block from string '{}' or '{}'", pair.getLeft(), pair.getRight());
+                }
+            }
+
+            this.validState |= addedData;
+        }
+    }
+
+    private abstract class BlockReplacerBase implements IWorldDataHandler
+    {
+        protected ChunkProviderServer provider;
+        protected final boolean loadedChunks;
+        protected int regionCount;
+        protected int chunkCountUnloaded;
+        protected int chunkCountLoaded;
+        protected int replaceCountUnloaded;
+        protected int replaceCountLoaded;
+        protected final boolean[] blocksToReplaceLookup = new boolean[1 << 16];
+        protected final IBlockState[] replacementBlockStates = new IBlockState[1 << 16];
+        protected final int[] replacementBlockStateIds = new int[1 << 16];
+        protected boolean validState;
+
+        protected BlockReplacerBase(boolean loadedChunks)
+        {
+            this.loadedChunks = loadedChunks;
         }
 
         @Override
@@ -210,6 +278,8 @@ public class BlockTools
                 else
                 {
                     count = this.processUnloadedChunk(region, chunkNBT, chunkX, chunkZ);
+                    this.replaceCountUnloaded += count;
+                    this.chunkCountUnloaded++;
                 }
             }
 
@@ -232,19 +302,18 @@ public class BlockTools
                 byte[] blockArray = sectionTag.getByteArray("Blocks");
                 int[] blockStateIds = new int[4096];
                 NibbleArray metaNibble = new NibbleArray(sectionTag.getByteArray("Data"));
-                boolean needsAdd = false;
 
                 if (sectionTag.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY))
                 {
-                    NibbleArray nibbleArray = new NibbleArray(sectionTag.getByteArray("Add"));
+                    NibbleArray addNibble = new NibbleArray(sectionTag.getByteArray("Add"));
 
                     for (int i = 0; i < 4096; i++)
                     {
-                        int id = (((metaNibble.getFromIndex(i) & 0xF) << 12) | ((nibbleArray.getFromIndex(i) & 0xF) << 8) | blockArray[i] & 0xFF) & 0xFFFF;
+                        int id = (((metaNibble.getFromIndex(i) & 0xF) << 12) | ((addNibble.getFromIndex(i) & 0xF) << 8) | blockArray[i] & 0xFF) & 0xFFFF;
 
                         if (this.blocksToReplaceLookup[id])
                         {
-                            blockStateIds[i] = this.replacementBlockStateId;
+                            blockStateIds[i] = this.replacementBlockStateIds[id];
                             replacedPositions[sectionStart + i] = true;
                             count++;
                         }
@@ -252,12 +321,10 @@ public class BlockTools
                         {
                             blockStateIds[i] = id;
                         }
-
-                        needsAdd |= (blockStateIds[i] & 0xF00) != 0;
                     }
                 }
                 // These are completely separate cases so that they are possibly a little bit faster
-                // because the don't do Add array checking on each iteration
+                // because they don't do the Add array checking on each iteration
                 else
                 {
                     for (int i = 0; i < 4096; i++)
@@ -266,7 +333,7 @@ public class BlockTools
 
                         if (this.blocksToReplaceLookup[id])
                         {
-                            blockStateIds[i] = this.replacementBlockStateId;
+                            blockStateIds[i] = this.replacementBlockStateIds[id];
                             replacedPositions[sectionStart + i] = true;
                             count++;
                         }
@@ -274,44 +341,31 @@ public class BlockTools
                         {
                             blockStateIds[i] = id;
                         }
-
-                        needsAdd |= (blockStateIds[i] & 0xF00) != 0;
                     }
                 }
 
-                // Replaced something, remove the corresponding TileEntities and TileTicks
-                // and then write the data back to the chunk NBT
+                // Write the block data back to the chunk NBT
                 if (count != countLast) // sectionDirty
                 {
+                    boolean needsAdd = false;
                     byte[] metaArray = new byte[2048];
+                    byte[] addArray = new byte[2048];
+
+                    for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
+                    {
+                        blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
+                        blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
+                        metaArray[i]       = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
+                        addArray[i]        = (byte) (((blockStateIds[bi] >>  8) & 0x0F) | ((blockStateIds[bi + 1] >> 4) & 0xF0));
+                        needsAdd |= addArray[i] != 0;
+                    }
+
+                    sectionTag.setByteArray("Blocks", blockArray);
+                    sectionTag.setByteArray("Data", metaArray);
 
                     if (needsAdd)
                     {
-                        byte[] addArray = new byte[2048];
-
-                        for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
-                        {
-                            blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
-                            blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
-                            metaArray[i] = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
-                            addArray[i]  = (byte) (((blockStateIds[bi] >>  8) & 0x0F) | ((blockStateIds[bi + 1] >> 4) & 0xF0));
-                        }
-
-                        sectionTag.setByteArray("Blocks", blockArray);
-                        sectionTag.setByteArray("Data",   metaArray);
-                        sectionTag.setByteArray("Add",    addArray);
-                    }
-                    else
-                    {
-                        for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
-                        {
-                            blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
-                            blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
-                            metaArray[i] = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
-                        }
-
-                        sectionTag.setByteArray("Blocks", blockArray);
-                        sectionTag.setByteArray("Data",   metaArray);
+                        sectionTag.setByteArray("Add", addArray);
                     }
 
                     chunkDirty = true;
@@ -319,6 +373,7 @@ public class BlockTools
                 }
             }
 
+            // Replaced something, remove the corresponding TileEntities and TileTicks
             if (chunkDirty)
             {
                 this.removeTileEntitiesAndTileTicks(level, replacedPositions);
@@ -346,9 +401,6 @@ public class BlockTools
                     e.printStackTrace();
                 }
             }
-
-            this.chunkCountUnloaded++;
-            this.replaceCountUnloaded += count;
 
             return count;
         }
@@ -391,9 +443,11 @@ public class BlockTools
             }
         }
 
-        private int processLoadedChunk(int chunkX, int chunkZ)
+        protected int processLoadedChunk(int chunkX, int chunkZ)
         {
             Chunk chunk = this.provider.getLoadedChunk(chunkX, chunkZ);
+            World world = chunk.getWorld();
+            MutableBlockPos pos = new MutableBlockPos(0, 0, 0);
             int maxY = chunk.getTopFilledSegment() + 15;
             int minX = chunkX << 4;
             int minZ = chunkZ << 4;
@@ -407,9 +461,12 @@ public class BlockTools
                 {
                     for (int x = minX; x <= maxX; x++)
                     {
-                        if (this.blocksToReplaceLookup[Block.getStateId(chunk.getBlockState(x, y, z))])
+                        pos.setPos(x, y, z);
+                        int id = Block.getStateId(world.getBlockState(pos));
+
+                        if (this.blocksToReplaceLookup[id])
                         {
-                            chunk.setBlockState(new BlockPos(x, y, z), this.replacementBlockState);
+                            world.setBlockState(pos, this.replacementBlockStates[id], 2);
                             count++;
                         }
                     }
@@ -425,7 +482,7 @@ public class BlockTools
             WorldUtils.logger.info("Replaced a total of {} blocks in {} unloaded chunks and {} blocks in {} loaded chunks, touching {} region files",
                     this.replaceCountUnloaded, this.chunkCountUnloaded, this.replaceCountLoaded, this.chunkCountLoaded, this.regionCount);
 
-            sender.sendMessage(new TextComponentTranslation("worldutils.commands.blockprune.execute.finished",
+            sender.sendMessage(new TextComponentTranslation("worldutils.commands.blockreplace.execute.finished",
                     Integer.valueOf(this.replaceCountUnloaded), Integer.valueOf(this.chunkCountUnloaded),
                     Integer.valueOf(this.replaceCountLoaded), Integer.valueOf(this.chunkCountLoaded),
                     Integer.valueOf(this.regionCount)));
