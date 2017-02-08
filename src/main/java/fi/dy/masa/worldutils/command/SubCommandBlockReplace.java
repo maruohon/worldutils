@@ -14,6 +14,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
+import fi.dy.masa.worldutils.data.BlockTools.LoadedType;
 import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.BlockData;
@@ -34,6 +35,7 @@ public class SubCommandBlockReplace extends SubCommand
         this.subSubCommands.add("blocknamelist");
         this.subSubCommands.add("blockstatelist");
         this.subSubCommands.add("execute-all-chunks");
+        this.subSubCommands.add("execute-loaded-chunks");
         this.subSubCommands.add("execute-unloaded-chunks");
         this.subSubCommands.add("replacement");
         this.subSubCommands.add("stoptask");
@@ -58,6 +60,7 @@ public class SubCommandBlockReplace extends SubCommand
         this.printHelpBlockStateList(sender);
         this.printHelpReplacement(sender);
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-all-chunks <keep-listed | replace-listed> [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-loaded-chunks <keep-listed | replace-listed> [dimension id]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-unloaded-chunks <keep-listed | replace-listed> [dimension id]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " stoptask"));
     }
@@ -123,7 +126,7 @@ public class SubCommandBlockReplace extends SubCommand
                 return CommandBase.getListOfStringsMatchingLastWord(args, "add-all-vanilla", "clear", "list");
             }
         }
-        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length == 1)
+        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-loaded-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length == 1)
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, "keep-listed", "replace-listed");
         }
@@ -193,17 +196,19 @@ public class SubCommandBlockReplace extends SubCommand
                 this.printHelpReplacement(sender);
             }
         }
-        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-unloaded-chunks")) &&
+        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-loaded-chunks") || cmd.equals("execute-unloaded-chunks")) &&
                 args.length >= 1 && args.length <= 2 &&
                 (args[0].equals("keep-listed") || args[0].equals("replace-listed")))
         {
             this.sendMessage(sender, "worldutils.commands.blockreplace.execute.start");
             int dimension = this.getDimension(cmd, CommandWorldUtils.dropFirstStrings(args, 1), sender);
             boolean keepListedBlocks = args[0].equals("keep-listed");
-            boolean unloadedChunks = cmd.equals("execute-all-chunks");
+            LoadedType loaded = LoadedType.UNLOADED;
 
-            BlockTools.instance().replaceBlocks(dimension, replacement, blockNames, blockStates,
-                    keepListedBlocks, unloadedChunks, sender);
+            if (cmd.equals("execute-all-chunks")) { loaded = LoadedType.ALL; }
+            else if (cmd.equals("execute-loaded-chunks")) { loaded = LoadedType.LOADED; }
+
+            BlockTools.instance().replaceBlocks(dimension, replacement, blockNames, blockStates, keepListedBlocks, loaded, sender);
         }
         else if (cmd.equals("stoptask"))
         {

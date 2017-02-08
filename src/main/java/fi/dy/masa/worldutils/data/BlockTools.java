@@ -44,13 +44,13 @@ public class BlockTools
     }
 
     public void replaceBlocks(int dimension, String replacement, List<String> blockNames, List<IBlockState> blockStates,
-            boolean keepListedBlocks, boolean loadedChunks, ICommandSender sender)
+            boolean keepListedBlocks, LoadedType loaded, ICommandSender sender)
     {
         File regionDir = FileUtils.getRegionDirectory(dimension);
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
-            BlockReplacerSet replacer = new BlockReplacerSet(replacement, keepListedBlocks, loadedChunks);
+            BlockReplacerSet replacer = new BlockReplacerSet(replacement, keepListedBlocks, loaded);
             replacer.addBlocksFromBlockStates(blockStates);
             replacer.addBlocksFromStrings(blockNames);
 
@@ -63,13 +63,13 @@ public class BlockTools
         }
     }
 
-    public void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs, boolean loadedChunks, ICommandSender sender)
+    public void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs, LoadedType loaded, ICommandSender sender)
     {
         File regionDir = FileUtils.getRegionDirectory(dimension);
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
-            BlockReplacerPairs replacer = new BlockReplacerPairs(loadedChunks);
+            BlockReplacerPairs replacer = new BlockReplacerPairs(loaded);
             replacer.addBlockPairs(blockPairs);
             TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
         }
@@ -80,9 +80,9 @@ public class BlockTools
         protected final boolean keepListedBlocks;
         protected final BlockData replacementBlockData;
 
-        private BlockReplacerSet(String replacement, boolean keepListedBlocks, boolean loadedChunks)
+        private BlockReplacerSet(String replacement, boolean keepListedBlocks, LoadedType loaded)
         {
-            super(loadedChunks);
+            super(loaded);
 
             Arrays.fill(this.blocksToReplaceLookup, keepListedBlocks);
             this.keepListedBlocks = keepListedBlocks;
@@ -151,9 +151,9 @@ public class BlockTools
 
     private class BlockReplacerPairs extends BlockReplacerBase
     {
-        protected BlockReplacerPairs(boolean loadedChunks)
+        protected BlockReplacerPairs(LoadedType loaded)
         {
-            super(loadedChunks);
+            super(loaded);
 
             Arrays.fill(this.blocksToReplaceLookup, false);
         }
@@ -189,7 +189,7 @@ public class BlockTools
     private abstract class BlockReplacerBase implements IWorldDataHandler
     {
         protected ChunkProviderServer provider;
-        protected final boolean loadedChunks;
+        protected final LoadedType loadedChunks;
         protected int regionCount;
         protected int chunkCountUnloaded;
         protected int chunkCountLoaded;
@@ -200,9 +200,9 @@ public class BlockTools
         protected final int[] replacementBlockStateIds = new int[1 << 16];
         protected boolean validState;
 
-        protected BlockReplacerBase(boolean loadedChunks)
+        protected BlockReplacerBase(LoadedType loaded)
         {
-            this.loadedChunks = loadedChunks;
+            this.loadedChunks = loaded;
         }
 
         @Override
@@ -268,14 +268,14 @@ public class BlockTools
                 // This needs to use absolute Chunk coordinates
                 if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
                 {
-                    if (this.loadedChunks)
+                    if (this.loadedChunks == LoadedType.ALL || this.loadedChunks == LoadedType.LOADED)
                     {
                         count = this.processLoadedChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
                         this.replaceCountLoaded += count;
                         this.chunkCountLoaded++;
                     }
                 }
-                else
+                else if (this.loadedChunks == LoadedType.ALL || this.loadedChunks == LoadedType.UNLOADED)
                 {
                     count = this.processUnloadedChunk(region, chunkNBT, chunkX, chunkZ);
                     this.replaceCountUnloaded += count;
@@ -487,5 +487,12 @@ public class BlockTools
                     Integer.valueOf(this.replaceCountLoaded), Integer.valueOf(this.chunkCountLoaded),
                     Integer.valueOf(this.regionCount)));
         }
+    }
+
+    public enum LoadedType
+    {
+        ALL,
+        UNLOADED,
+        LOADED;
     }
 }

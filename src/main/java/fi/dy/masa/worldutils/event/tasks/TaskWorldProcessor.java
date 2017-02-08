@@ -3,7 +3,7 @@ package fi.dy.masa.worldutils.event.tasks;
 import java.io.File;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.IWorldDataHandler;
 import fi.dy.masa.worldutils.event.TickHandler;
@@ -58,14 +58,12 @@ public class TaskWorldProcessor implements ITask
     @Override
     public boolean execute()
     {
-        WorldServer world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(this.dimension);
+        WorldServer world = DimensionManager.getWorld(this.dimension);
 
-        if (world == null)
+        if (world != null)
         {
-            return true;
+            this.worldHandler.setChunkProvider(world.getChunkProvider());
         }
-
-        this.worldHandler.setChunkProvider(world.getChunkProvider());
 
         if (this.state == State.REGION)
         {

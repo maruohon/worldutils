@@ -12,6 +12,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
+import fi.dy.masa.worldutils.data.BlockTools.LoadedType;
 import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.BlockData;
@@ -28,6 +29,7 @@ public class SubCommandBlockReplacePairs extends SubCommand
         this.subSubCommands.add("add");
         this.subSubCommands.add("clear");
         this.subSubCommands.add("execute-all-chunks");
+        this.subSubCommands.add("execute-loaded-chunks");
         this.subSubCommands.add("execute-unloaded-chunks");
         this.subSubCommands.add("list");
         this.subSubCommands.add("remove");
@@ -53,6 +55,7 @@ public class SubCommandBlockReplacePairs extends SubCommand
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " add <block1[prop1=val1,prop2=val2]> <block2[prop1=val1,prop2=val2]> Ex: minecraft:stone[variant=granite]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-all-chunks [dimension id]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-loaded-chunks [dimension id]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " execute-unloaded-chunks [dimension id]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " list"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " remove block1 block2 (you must give both the 'from' and 'to' block specifiers)"));
@@ -158,13 +161,16 @@ public class SubCommandBlockReplacePairs extends SubCommand
 
             this.sendMessage(sender, "worldutils.commands.blockreplace.blockpairs.list.remove.failure", args[0], args[1]);
         }
-        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length <= 1)
+        else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-loaded-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length <= 1)
         {
             this.sendMessage(sender, "worldutils.commands.blockreplace.execute.start");
             int dimension = this.getDimension(cmd, CommandWorldUtils.dropFirstStrings(args, 1), sender);
-            boolean unloadedChunks = cmd.equals("execute-all-chunks");
+            LoadedType loaded = LoadedType.UNLOADED;
 
-            BlockTools.instance().replaceBlocksInPairs(dimension, blockPairs, unloadedChunks, sender);
+            if (cmd.equals("execute-all-chunks")) { loaded = LoadedType.ALL; }
+            else if (cmd.equals("execute-loaded-chunks")) { loaded = LoadedType.LOADED; }
+
+            BlockTools.instance().replaceBlocksInPairs(dimension, blockPairs, loaded, sender);
         }
         else if (cmd.equals("stoptask"))
         {
