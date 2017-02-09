@@ -1,8 +1,10 @@
 package fi.dy.masa.worldutils.util;
 
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -219,8 +221,8 @@ public class FileUtils
     public static File dumpDataToFile(String fileNameBase, List<String> lines)
     {
         File outFile = null;
-
         File cfgDir = new File(WorldUtils.configDirPath);
+
         if (cfgDir.exists() == false)
         {
             try
@@ -229,8 +231,7 @@ public class FileUtils
             }
             catch (Exception e)
             {
-                WorldUtils.logger.error("dumpDataToFile(): Failed to create the configuration directory.");
-                e.printStackTrace();
+                WorldUtils.logger.error("dumpDataToFile(): Failed to create the configuration directory.", e);
                 return null;
             }
 
@@ -241,7 +242,7 @@ public class FileUtils
         outFile = new File(cfgDir, fileName);
         int postFix = 1;
 
-        while (outFile.exists() == true)
+        while (outFile.exists())
         {
             fileName = fileNameBaseWithDate + "_" + postFix + ".txt";
             outFile = new File(cfgDir, fileName);
@@ -254,22 +255,25 @@ public class FileUtils
         }
         catch (IOException e)
         {
-            WorldUtils.logger.error("dumpDataToFile(): Failed to create data dump file '" + fileName + "'");
-            e.printStackTrace();
+            WorldUtils.logger.error("dumpDataToFile(): Failed to create data dump file '" + fileName + "'", e);
             return null;
         }
 
         try
         {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+
             for (int i = 0; i < lines.size(); ++i)
             {
-                org.apache.commons.io.FileUtils.writeStringToFile(outFile, lines.get(i) + System.getProperty("line.separator"), true);
+                writer.write(lines.get(i));
+                writer.newLine();
             }
+
+            writer.close();
         }
         catch (IOException e)
         {
-            WorldUtils.logger.error("dumpDataToFile(): Exception while writing data dump to file '" + fileName + "'");
-            e.printStackTrace();
+            WorldUtils.logger.error("dumpDataToFile(): Exception while writing data dump to file '" + fileName + "'", e);
         }
 
         return outFile;
