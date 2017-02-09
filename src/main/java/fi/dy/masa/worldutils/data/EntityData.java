@@ -6,11 +6,11 @@ import net.minecraft.util.math.Vec3d;
 
 public class EntityData implements Comparable<EntityData>
 {
-    public final int dimension;
-    public final String id;
-    public final Vec3d pos;
-    public final ChunkPos chunkPos;
-    public final UUID uuid;
+    private final int dimension;
+    private final String id;
+    private final Vec3d pos;
+    private final ChunkPos chunkPos;
+    private final UUID uuid;
 
     public EntityData(int dimension, String id, Vec3d pos, ChunkPos chunkPos, UUID uuid)
     {
@@ -21,14 +21,39 @@ public class EntityData implements Comparable<EntityData>
         this.uuid = uuid;
     }
 
+    public int getDimension()
+    {
+        return this.dimension;
+    }
+
+    public String getId()
+    {
+        return this.id;
+    }
+
+    public Vec3d getPosition()
+    {
+        return this.pos;
+    }
+
+    public ChunkPos getChunkPosition()
+    {
+        return this.chunkPos;
+    }
+
+    public UUID getUUID()
+    {
+        return this.uuid;
+    }
+
     @Override
     public int compareTo(EntityData other)
     {
-        int idComp = this.id.compareTo(other.id);
+        int idComp = this.getId().compareTo(other.getId());
 
         if (idComp == 0)
         {
-            return this.uuid.toString().compareTo(other.uuid.toString());
+            return this.getUUID().toString().compareTo(other.getUUID().toString());
         }
 
         return idComp;
@@ -41,37 +66,105 @@ public class EntityData implements Comparable<EntityData>
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+        result = prime * result + ((this.getId() == null) ? 0 : this.getId().hashCode());
+        result = prime * result + ((this.getUUID() == null) ? 0 : this.getUUID().hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
+        if (this == obj) { return true; }
+        if (obj == null) { return false; }
+        if (getClass() != obj.getClass()) { return false; }
+
         EntityData other = (EntityData) obj;
-        if (id == null)
+        if (this.getId() == null)
         {
-            if (other.id != null)
-                return false;
+            if (other.getId() != null) { return false; }
         }
-        else if (!id.equals(other.id))
-            return false;
-        if (uuid == null)
+        else if (! this.getId().equals(other.getId())) { return false; }
+
+        if (this.getUUID() == null)
         {
-            if (other.uuid != null)
-                return false;
+            if (other.getUUID() != null) { return false; }
         }
-        else if (!uuid.equals(other.uuid))
-            return false;
+        else if (! this.getUUID().equals(other.getUUID())) { return false; }
+
         return true;
     }
 
+    public static class MutableEntityData
+    {
+        protected int dimension;
+        protected String id;
+        protected Vec3d pos;
+        protected ChunkPos chunkPos;
+        protected UUID uuid;
 
+        public MutableEntityData()
+        {
+        }
+
+        public MutableEntityData(String id, UUID uuid)
+        {
+            this.id = id;
+            this.uuid = uuid;
+        }
+
+        public int getDimension()
+        {
+            return this.dimension;
+        }
+
+        public String getId()
+        {
+            return this.id;
+        }
+
+        public Vec3d getPosiiton()
+        {
+            return this.pos;
+        }
+
+        public ChunkPos getChunkPosition()
+        {
+            return this.chunkPos;
+        }
+
+        public UUID getUUID()
+        {
+            return this.uuid;
+        }
+
+        public MutableEntityData setDimension(int dimension)
+        {
+            this.dimension = dimension;
+            return this;
+        }
+
+        public MutableEntityData setId(String id)
+        {
+            this.id = id;
+            return this;
+        }
+
+        public MutableEntityData setPosiiton(Vec3d pos)
+        {
+            this.pos = pos;
+            return this;
+        }
+
+        public MutableEntityData setChunkPosition(ChunkPos pos)
+        {
+            this.chunkPos = pos;
+            return this;
+        }
+
+        public MutableEntityData setUUID(UUID uuid)
+        {
+            this.uuid = uuid;
+            return this;
+        }
+    }
 }

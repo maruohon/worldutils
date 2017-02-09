@@ -200,7 +200,7 @@ public class SubCommandBlockReplace extends SubCommand
                 args.length >= 1 && args.length <= 2 &&
                 (args[0].equals("keep-listed") || args[0].equals("replace-listed")))
         {
-            if (TaskScheduler.getInstance().hasTask(TaskWorldProcessor.class))
+            if (TaskScheduler.getInstance().hasTasks())
             {
                 throwCommand("worldutils.commands.error.taskalreadyrunning");
             }

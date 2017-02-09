@@ -69,8 +69,8 @@ worldutils.commands.blockreplace.blockstatelist.print=A list of all the blocksta
 worldutils.commands.blockreplace.execute.start=Replacing the selected blocks in the entire world, this may take a while...
 worldutils.commands.blockreplace.execute.finished=Replaced a total of %d blocks in %d unloaded chunks and %d blocks in %d loaded chunks, touching %d region files
 
-worldutils.commands.entities.readall.done=Read all entities from the world save files
-worldutils.commands.entities.removeall.done=Removed a total of %d entities
+worldutils.commands.entities.readall.start=Reading all entities from the world save files, this may take a while...
+worldutils.commands.entities.removeallduplicates.start=Removing all duplicate entities in the entire world, this may take a while...
 
 worldutils.commands.printspawn.print=The world spawn is at x: %d, y: %d, z: %d
 

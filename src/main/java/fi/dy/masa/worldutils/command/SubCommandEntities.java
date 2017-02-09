@@ -7,6 +7,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.worldutils.data.EntityTools;
+import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.util.FileUtils;
 
 public class SubCommandEntities extends SubCommand
@@ -83,17 +84,25 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("read-all"))
         {
+            if (TaskScheduler.getInstance().hasTasks())
+            {
+                throwCommand("worldutils.commands.error.taskalreadyrunning");
+            }
+
+            this.sendMessage(sender, "worldutils.commands.entities.readall.start");
             int dimension = this.getDimension(cmd, args, sender);
             EntityTools.instance().readEntities(dimension, sender);
-
-            this.sendMessage(sender, "worldutils.commands.entities.readall.done");
         }
         else if (cmd.equals("remove-duplicate-uuids"))
         {
-            int dimension = this.getDimension(cmd, args, sender);
-            int count = EntityTools.instance().removeAllDuplicateEntities(dimension, false, sender);
+            if (TaskScheduler.getInstance().hasTasks())
+            {
+                throwCommand("worldutils.commands.error.taskalreadyrunning");
+            }
 
-            this.sendMessage(sender, "worldutils.commands.entities.removeall.done", Integer.valueOf(count));
+            this.sendMessage(sender, "worldutils.commands.entities.removeallduplicates.start");
+            int dimension = this.getDimension(cmd, args, sender);
+            EntityTools.instance().removeAllDuplicateEntities(dimension, sender);
         }
         else
         {

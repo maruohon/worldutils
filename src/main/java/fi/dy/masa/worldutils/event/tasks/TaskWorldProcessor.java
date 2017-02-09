@@ -23,6 +23,7 @@ public class TaskWorldProcessor implements ITask
     private int chunkIndex = 0;
     private int regionCount = 1;
     private int chunkCount = 0;
+    private int tickCount = 0;
 
     public TaskWorldProcessor(int dimension, IWorldDataHandler handler, ICommandSender sender)
     {
@@ -59,10 +60,15 @@ public class TaskWorldProcessor implements ITask
     public boolean execute()
     {
         WorldServer world = DimensionManager.getWorld(this.dimension);
+        this.tickCount++;
 
         if (world != null)
         {
             this.worldHandler.setChunkProvider(world.getChunkProvider());
+        }
+        else
+        {
+            this.worldHandler.setChunkProvider(null);
         }
 
         if (this.state == State.REGION)
@@ -111,11 +117,6 @@ public class TaskWorldProcessor implements ITask
                 }
 
                 this.chunkIndex++;
-
-                if ((this.chunkIndex & 0x1FF) == 0)
-                {
-                    WorldUtils.logger.info("TaskWorldProcessor progress: Handled {} chunks in {} region files...", this.chunkCount, this.regionCount);
-                }
             }
 
             if (this.chunkIndex >= 1024)
@@ -128,6 +129,12 @@ public class TaskWorldProcessor implements ITask
             }
         }
 
+        // Status message every 5 seconds
+        if ((this.tickCount % 100) == 0)
+        {
+            WorldUtils.logger.info("TaskWorldProcessor progress: Handled {} chunks in {} region files...", this.chunkCount, this.regionCount);
+        }
+
         return false;
     }
 
@@ -137,6 +144,12 @@ public class TaskWorldProcessor implements ITask
 
         if ((timeCurrent - TickHandler.instance().getTickStartTime()) >= 48L)
         {
+            // Status message every 5 seconds
+            if ((this.tickCount % 100) == 0)
+            {
+                WorldUtils.logger.info("TaskWorldProcessor progress: Handled {} chunks in {} region files...", this.chunkCount, this.regionCount);
+            }
+
             return true;
         }
 

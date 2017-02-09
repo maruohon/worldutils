@@ -59,7 +59,7 @@ public class BlockTools
                 replacer.addBlocksFromBlockStates(Lists.newArrayList(Blocks.AIR.getDefaultState()));
             }
 
-            TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
         }
     }
 
@@ -71,7 +71,7 @@ public class BlockTools
         {
             BlockReplacerPairs replacer = new BlockReplacerPairs(loaded);
             replacer.addBlockPairs(blockPairs);
-            TaskScheduler.getInstance().addTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
         }
     }
 

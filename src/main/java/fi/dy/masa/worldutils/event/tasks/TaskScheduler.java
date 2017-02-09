@@ -3,17 +3,17 @@ package fi.dy.masa.worldutils.event.tasks;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class TaskScheduler
 {
-    protected static TaskScheduler instance;
-    protected List<ITask> tasks;
-    protected List<Timer> timers;
+    private static TaskScheduler instance;
+    private List<ITask> tasks = new ArrayList<ITask>();
+    private List<Timer> timers = new ArrayList<Timer>();
+    private List<Pair<ITask, Integer>> tasksToAdd = new ArrayList<Pair<ITask, Integer>>();
 
-    protected TaskScheduler()
+    private TaskScheduler()
     {
-        this.tasks = new ArrayList<ITask>();
-        this.timers = new ArrayList<Timer>();
     }
 
     public static TaskScheduler getInstance()
@@ -24,6 +24,11 @@ public class TaskScheduler
         }
 
         return instance;
+    }
+
+    public void scheduleTask(ITask task, int interval)
+    {
+        this.tasksToAdd.add(Pair.of(task, interval));
     }
 
     public void runTasks()
@@ -52,14 +57,27 @@ public class TaskScheduler
                 timerIter.remove();
             }
         }
+
+        this.addNewTasks();
     }
 
-    public void addTask(ITask task, int interval)
+    private void addNewTasks()
     {
-        task.init();
+        for (Pair<ITask, Integer> pair : this.tasksToAdd)
+        {
+            ITask task = pair.getLeft();
+            task.init();
 
-        this.tasks.add(task);
-        this.timers.add(new Timer(interval));
+            this.tasks.add(task);
+            this.timers.add(new Timer(pair.getRight()));
+        }
+
+        this.tasksToAdd.clear();
+    }
+
+    public boolean hasTasks()
+    {
+        return this.tasks.isEmpty() == false || this.tasksToAdd.isEmpty() == false;
     }
 
     public boolean hasTask(Class <? extends ITask> clazz)
@@ -102,7 +120,7 @@ public class TaskScheduler
     {
     }
 
-    public static class Timer
+    private static class Timer
     {
         public int interval;
         public int counter;

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,8 +21,13 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.event.TickHandler;
+import fi.dy.masa.worldutils.event.tasks.ITask;
+import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
+import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
+import fi.dy.masa.worldutils.util.PositionUtils;
 
 public class EntityTools
 {
@@ -31,13 +37,23 @@ public class EntityTools
     private class EntityDataReader implements IWorldDataHandler
     {
         private ChunkProviderServer provider;
+        private final int dimension;
         private int regionCount;
         private int chunkCount;
         private int entityCount;
+        private final boolean removeDuplicates;
         private List<EntityData> entities = new ArrayList<EntityData>();
 
         public EntityDataReader()
         {
+            this.dimension = 0;
+            this.removeDuplicates = false;
+        }
+
+        public EntityDataReader(int dimension, boolean removeDuplicates)
+        {
+            this.dimension = dimension;
+            this.removeDuplicates = removeDuplicates;
         }
 
         public List<EntityData> getEntities()
@@ -139,21 +155,92 @@ public class EntityTools
                         this.provider.getLoadedChunkCount());
 
                 sender.sendMessage(new TextComponentString(chatOutput));
-                WorldUtils.logger.warn(chatOutput);
+                WorldUtils.logger.info(chatOutput);
+            }
+
+            if (this.removeDuplicates)
+            {
+                List<EntityData> dupes = getDuplicateEntitiesExcludingFirst(this.getEntities(), true);
+                EntityDuplicateRemover remover = new EntityDuplicateRemover(this.dimension, dupes);
+                TaskScheduler.getInstance().scheduleTask(remover, 1);
             }
         }
-        
     }
 
-    private class EntityDuplicateRemover implements IChunkDataHandler
+    public class EntityDuplicateRemover implements IChunkDataHandler, ITask
     {
-        private final Region region;
-        private final List<EntityData> toRemove;
+        private final File worldDir;
+        private final int dimension;
+        private final Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion;
+        private Iterator<Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>>> regionIter;
+        private Iterator<Map.Entry<ChunkPos, List<EntityData>>> chunkIter;
+        private Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry;
+        private List<EntityData> toRemoveCurrentChunk;
+        private Region region;
+        private int entityCount;
+        private int regionCount;
+        private int chunkCount;
+        private int tickCount;
 
-        public EntityDuplicateRemover(Region region, List<EntityData> toRemove)
+        public EntityDuplicateRemover(int dimension, List<EntityData> dupes)
         {
-            this.region = region;
-            this.toRemove = toRemove;
+            this.dimension = dimension;
+            this.worldDir = FileUtils.getWorldSaveLocation(dimension);
+            this.entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
+            this.regionIter = this.entitiesByRegion.entrySet().iterator();
+        }
+
+        @Override
+        public void init()
+        {
+        }
+
+        @Override
+        public boolean canExecute()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean execute()
+        {
+            this.tickCount++;
+
+            while (true)
+            {
+                if (this.checkTickTime())
+                {
+                    return false;
+                }
+
+                if (this.chunkIter == null || this.chunkIter.hasNext() == false)
+                {
+                    if (this.regionIter.hasNext() == false)
+                    {
+                        return true;
+                    }
+
+                    this.regionEntry = this.regionIter.next();
+                    this.region = Region.fromRegionCoords(this.worldDir, this.regionEntry.getKey());
+                    this.chunkIter = this.regionEntry.getValue().entrySet().iterator();
+                    this.regionCount++;
+                }
+
+                if (this.chunkIter.hasNext())
+                {
+                    Map.Entry<ChunkPos, List<EntityData>> chunkEntry = this.chunkIter.next();
+                    this.toRemoveCurrentChunk = chunkEntry.getValue();
+                    this.entityCount += FileUtils.handleChunkInRegion(this.region, chunkEntry.getKey(), this, false);
+                    this.chunkCount++;
+                }
+            }
+        }
+
+        @Override
+        public void stop()
+        {
+            WorldUtils.logger.info("DIM {}: Removed a total of {} duplicate entities from {} chunks in {} regions",
+                    this.dimension, this.entityCount, this.chunkCount, this.regionCount);
         }
 
         @Override
@@ -166,15 +253,21 @@ public class EntityTools
             {
                 NBTTagList list = level.getTagList("Entities", Constants.NBT.TAG_COMPOUND);
 
-                for (EntityData entry : this.toRemove)
+                // This has to happen with nested loops and not a "this.toRemoveCurrentChunk.contains()",
+                // otherwise we would/could also remove the one that is supposed to be kept.
+                // In other words, the toRemove list is specifically created for each chunk
+                // and contains exactly what to remove.
+                for (EntityData data : this.toRemoveCurrentChunk)
                 {
-                    for (int i = 0; i < list.tagCount(); i++)
+                    int size = list.tagCount();
+
+                    for (int i = 0; i < size; i++)
                     {
                         NBTTagCompound entity = list.getCompoundTagAt(i);
 
-                        if (entity.getLong("UUIDMost") == entry.uuid.getMostSignificantBits() &&
-                            entity.getLong("UUIDLeast") == entry.uuid.getLeastSignificantBits() &&
-                            entity.getString("id").equals(entry.id))
+                        if (entity.getLong("UUIDMost") == data.getUUID().getMostSignificantBits() &&
+                            entity.getLong("UUIDLeast") == data.getUUID().getLeastSignificantBits() &&
+                            entity.getString("id").equals(data.getId()))
                         {
                             if (simulate == false)
                             {
@@ -188,10 +281,40 @@ public class EntityTools
                 }
             }
 
-            WorldUtils.logger.info("In region {}, chunk {}, {} - removed {} duplicate entities",
+            WorldUtils.logger.info("In region {}, chunk [{}, {}] - removed {} duplicate entities",
                     this.region.getName(), chunkPos.chunkXPos, chunkPos.chunkZPos, entityCount);
 
             return entityCount;
+        }
+
+        private Map<ChunkPos, Map<ChunkPos, List<EntityData>>> sortEntitiesByRegionAndChunk(List<EntityData> listIn)
+        {
+            Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = new HashMap <ChunkPos, Map<ChunkPos, List<EntityData>>>();
+
+            for (EntityData entry : listIn)
+            {
+                PositionUtils.addDataForChunkInLists(entitiesByRegion, entry.getChunkPosition(), entry);
+            }
+
+            return entitiesByRegion;
+        }
+
+        private boolean checkTickTime()
+        {
+            long timeCurrent = System.currentTimeMillis();
+
+            if ((timeCurrent - TickHandler.instance().getTickStartTime()) >= 48L)
+            {
+                // Status message every 5 seconds
+                if ((this.tickCount % 100) == 0)
+                {
+                    WorldUtils.logger.info("EntityDuplicateRemover progress: Handled {} chunks in {} region files...", this.chunkCount, this.regionCount);
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -204,85 +327,25 @@ public class EntityTools
         return INSTANCE;
     }
 
-    private Map<ChunkPos, List<EntityData>> getMapForChunks(Map<ChunkPos, Map<ChunkPos, List<EntityData>>> mapRegions, ChunkPos regionPos)
-    {
-        Map<ChunkPos, List<EntityData>> mapChunks = mapRegions.get(regionPos);
-
-        if (mapChunks == null)
-        {
-            mapChunks = new HashMap<ChunkPos, List<EntityData>>();
-            mapRegions.put(regionPos, mapChunks);
-        }
-
-        return mapChunks;
-    }
-
-    private List<EntityData> getListForEntitiesInChunk(Map<ChunkPos, List<EntityData>> mapChunks, ChunkPos chunkPos)
-    {
-        List<EntityData> list = mapChunks.get(chunkPos);
-
-        if (list == null)
-        {
-            list = new ArrayList<EntityData>();
-            mapChunks.put(chunkPos, list);
-        }
-
-        return list;
-    }
-
-    private Map<ChunkPos, Map<ChunkPos, List<EntityData>>> sortEntitiesByRegionAndChunk(List<EntityData> listIn)
-    {
-        Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = new HashMap <ChunkPos, Map<ChunkPos, List<EntityData>>>();
-
-        for (EntityData entry : listIn)
-        {
-            ChunkPos regionPos = new ChunkPos(entry.chunkPos.chunkXPos >> 5, entry.chunkPos.chunkZPos >> 5);
-            this.getListForEntitiesInChunk(this.getMapForChunks(entitiesByRegion, regionPos), entry.chunkPos).add(entry);
-        }
-
-        return entitiesByRegion;
-    }
-
     public void readEntities(int dimension, ICommandSender sender)
     {
         this.entityDataReader.init();
-        FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender, false);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.entityDataReader, sender), 1);
     }
 
-    public int removeAllDuplicateEntities(int dimension, boolean simulate, ICommandSender sender)
+    public void removeAllDuplicateEntities(int dimension, ICommandSender sender)
     {
-        File worldDir = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldDir, "region");
-        int removedTotal = 0;
-        Region region = null;
+        File regionDir = FileUtils.getRegionDirectory(dimension);
 
         if (regionDir.exists() && regionDir.isDirectory())
         {
-            this.entityDataReader.init();
-            FileUtils.worldDataProcessor(dimension, this.entityDataReader, sender, false);
-
-            List<EntityData> dupes = this.getDuplicateEntriesExcludingFirst(this.entityDataReader.getEntities(), true);
-            Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
-
-            for (Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry : entitiesByRegion.entrySet())
-            {
-                ChunkPos regionPos = regionEntry.getKey();
-                region = Region.fromRegionCoords(worldDir, regionPos);
-
-                for (Map.Entry<ChunkPos, List<EntityData>> chunkEntry : regionEntry.getValue().entrySet())
-                {
-                    List<EntityData> toRemove = chunkEntry.getValue();
-                    EntityDuplicateRemover entityDuplicateRemover = new EntityDuplicateRemover(region, toRemove);
-
-                    removedTotal += FileUtils.handleChunkInRegion(region, chunkEntry.getKey(), entityDuplicateRemover, simulate);
-                }
-            }
+            EntityDataReader reader = new EntityDataReader(dimension, true);
+            reader.init();
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
         }
-
-        return removedTotal;
     }
 
-    private List<EntityData> getDuplicateEntriesIncludingFirst(List<EntityData> dataIn, boolean sortFirst)
+    private static List<EntityData> getDuplicateEntitiesIncludingFirst(List<EntityData> dataIn, boolean sortFirst)
     {
         List<EntityData> list = new ArrayList<EntityData>();
 
@@ -304,7 +367,7 @@ public class EntityTools
         {
             EntityData next = dataIn.get(i);
 
-            if (next.uuid.equals(current.uuid))
+            if (next.getUUID().equals(current.getUUID()))
             {
                 if (dupe == false)
                 {
@@ -325,7 +388,7 @@ public class EntityTools
         return list;
     }
 
-    private List<EntityData> getDuplicateEntriesExcludingFirst(List<EntityData> dataIn, boolean sortFirst)
+    private static List<EntityData> getDuplicateEntitiesExcludingFirst(List<EntityData> dataIn, boolean sortFirst)
     {
         List<EntityData> list = new ArrayList<EntityData>();
 
@@ -346,7 +409,7 @@ public class EntityTools
         {
             EntityData next = dataIn.get(i);
 
-            if (next.uuid.equals(current.uuid))
+            if (next.getUUID().equals(current.getUUID()))
             {
                 list.add(next);
             }
@@ -363,11 +426,11 @@ public class EntityTools
 
         if (includeFirst)
         {
-            dupes = this.getDuplicateEntriesIncludingFirst(this.entityDataReader.getEntities(), sortFirst);
+            dupes = getDuplicateEntitiesIncludingFirst(this.entityDataReader.getEntities(), sortFirst);
         }
         else
         {
-            dupes = this.getDuplicateEntriesExcludingFirst(this.entityDataReader.getEntities(), sortFirst);
+            dupes = getDuplicateEntitiesExcludingFirst(this.entityDataReader.getEntities(), sortFirst);
         }
 
         return this.getFormattedOutputLines(dupes, sortFirst);
@@ -391,7 +454,7 @@ public class EntityTools
 
         for (EntityData entry : dataIn)
         {
-            int len = entry.id.length();
+            int len = entry.getId().length();
 
             if (len > longestId)
             {
@@ -405,9 +468,9 @@ public class EntityTools
         {
             String str = this.getFormattedOutput(entry, format);
 
-            if (entry.uuid.getLeastSignificantBits() == 0 && entry.uuid.getMostSignificantBits() == 0)
+            if (entry.getUUID().getLeastSignificantBits() == 0 && entry.getUUID().getMostSignificantBits() == 0)
             {
-                WorldUtils.logger.warn("Entity: {} UUID: most = 0, least = 0 => {}", entry.id, entry.uuid.toString());
+                WorldUtils.logger.warn("Entity: {} UUID: most = 0, least = 0 => {}", entry.getId(), entry.getUUID().toString());
             }
 
             lines.add(str);
@@ -418,7 +481,9 @@ public class EntityTools
 
     private String getFormattedOutput(EntityData data, String format)
     {
-        return String.format(format, data.uuid.toString(), data.id, data.dimension, data.pos.xCoord, data.pos.yCoord, data.pos.zCoord,
-                data.chunkPos.chunkXPos, data.chunkPos.chunkZPos, data.chunkPos.chunkXPos >> 5, data.chunkPos.chunkZPos >> 5);
+        return String.format(format, data.getUUID().toString(), data.getId(), data.getDimension(),
+                data.getPosition().xCoord, data.getPosition().yCoord, data.getPosition().zCoord,
+                data.getChunkPosition().chunkXPos, data.getChunkPosition().chunkZPos,
+                data.getChunkPosition().chunkXPos >> 5, data.getChunkPosition().chunkZPos >> 5);
     }
 }

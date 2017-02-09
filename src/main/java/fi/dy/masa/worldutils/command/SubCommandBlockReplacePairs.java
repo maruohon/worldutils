@@ -163,7 +163,7 @@ public class SubCommandBlockReplacePairs extends SubCommand
         }
         else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-loaded-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length <= 1)
         {
-            if (TaskScheduler.getInstance().hasTask(TaskWorldProcessor.class))
+            if (TaskScheduler.getInstance().hasTasks())
             {
                 throwCommand("worldutils.commands.error.taskalreadyrunning");
             }
