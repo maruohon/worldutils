@@ -398,9 +398,10 @@ public class TileTickTools
                         for (int i = 0; i < size; i++)
                         {
                             NBTTagCompound tag = list.getCompoundTagAt(i);
-                            String name = tag.hasKey("i", Constants.NBT.TAG_STRING) ? tag.getString("i") : String.valueOf(tag.getInteger("i"));
 
-                            if (Block.REGISTRY.getObject(new ResourceLocation(name)) == Blocks.AIR)
+                            if ((tag.hasKey("i", Constants.NBT.TAG_STRING) &&
+                                 Block.REGISTRY.getObject(new ResourceLocation(tag.getString("i"))) == Blocks.AIR) ||
+                                (tag.hasKey("i", Constants.NBT.TAG_INT) && Block.getBlockById(tag.getInteger("i")) == Blocks.AIR))
                             {
                                 if (simulate == false)
                                 {
