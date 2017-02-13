@@ -2,20 +2,17 @@ package fi.dy.masa.worldutils.data;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
-import com.google.common.collect.ImmutableSet;
 import net.minecraft.block.Block;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -26,73 +23,98 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldutils.WorldUtils;
-import fi.dy.masa.worldutils.util.FileUtils;
+import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
+import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
 
 public class TileTickTools
 {
     private static final TileTickTools INSTANCE = new TileTickTools();
     private final TileTickReader tileTickReader = new TileTickReader();
-    private final Set<String> namesToRemove = new HashSet<String>();
+    private final Set<String> toRemoveMods = new HashSet<String>();
+    private final Set<String> toRemoveNames = new HashSet<String>();
 
-    public static enum RemoveType
+    public static enum Operation
     {
-        ALL,
-        BY_MOD,
-        BY_NAME;
+        READ,
+        FIND_INVALID,
+        REMOVE_INVALID,
+        REMOVE_BY_MOD,
+        REMOVE_BY_NAME,
+        REMOVE_ALL;
+    }
+
+    private TileTickTools()
+    {
+    }
+
+    public static TileTickTools instance()
+    {
+        return INSTANCE;
     }
 
     private class TileTickReader implements IWorldDataHandler
     {
         protected ChunkProviderServer provider;
+        protected List<TileTickData> tileTicks = new ArrayList<TileTickData>();
+        protected List<TileTickData> invalidTicks = new ArrayList<TileTickData>();
+        protected Set<String> foundIds = new HashSet<String>();
+        protected Operation operation = Operation.READ;
         protected int regionCount;
         protected int chunkCount;
         protected int processedCount;
-        protected List<TileTickData> tileTicks = new ArrayList<TileTickData>();
-        protected List<TileTickData> invalidTicks = new ArrayList<TileTickData>();
-        protected Set<String> missingIds = new HashSet<String>();
+        protected boolean running;
 
         public List<TileTickData> getAllTileTicks()
         {
-            return this.tileTicks;
-        }
+            if (this.running)
+            {
+                return Collections.emptyList();
+            }
 
-        public Set<String> getMissingIdsSet()
-        {
-            return this.missingIds;
+            return this.tileTicks;
         }
 
         public List<TileTickData> getInvalidTicksList()
         {
+            if (this.running)
+            {
+                return Collections.emptyList();
+            }
+
             return this.invalidTicks;
         }
 
-        public void findInvalid()
+        private void findAllInvalid()
         {
-            Set<ResourceLocation> existingBlocks = Block.REGISTRY.getKeys();
-            this.missingIds.clear();
             this.invalidTicks.clear();
 
             for (TileTickData data : this.tileTicks)
             {
                 // The ResourceLocation should only be null if the data was saved with an integer ID
                 // and the block wasn't found.
-                if (data.resource == null || existingBlocks.contains(data.resource) == false)
+                if (data.resource == null || Block.REGISTRY.getObject(data.resource) == Blocks.AIR)
                 {
                     this.invalidTicks.add(data);
-                    this.missingIds.add(data.blockId);
                 }
             }
         }
 
+        public void setOperation(Operation operation)
+        {
+            this.operation = operation;
+        }
+
         @Override
-        public void init()
+        public void init(int dimension)
         {
             this.tileTicks.clear();
 
             this.regionCount = 0;
             this.chunkCount = 0;
             this.processedCount = 0;
+            this.operation = Operation.READ;
+            this.running = true;
         }
 
         @Override
@@ -105,7 +127,6 @@ public class TileTickTools
         public int processRegion(Region region, boolean simulate)
         {
             this.regionCount++;
-
             return 0;
         }
 
@@ -151,6 +172,7 @@ public class TileTickTools
                         Pair<ResourceLocation, String> pair = getBlockIdentifiers(tag, "i");
 
                         this.tileTicks.add(new TileTickData(chunkPos, new BlockPos(x, y, z), pair.getLeft(), pair.getRight(), delay, priority));
+                        this.foundIds.add(pair.getRight());
                         count++;
                     }
 
@@ -171,6 +193,8 @@ public class TileTickTools
         @Override
         public void finish(ICommandSender sender, boolean simulate)
         {
+            this.running = false;
+
             WorldUtils.logger.info("Read a total of {} tile ticks from {} chunks in {} region files",
                     this.processedCount, this.chunkCount, this.regionCount);
             sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.reader.info",
@@ -179,113 +203,53 @@ public class TileTickTools
             if (this.provider != null && this.provider.getLoadedChunkCount() > 0)
             {
                 int loaded = this.provider.getLoadedChunkCount();
-                WorldUtils.logger.warn("There were {} chunks currently loaded, the tile tick list does not include data from those chunks!", loaded);
+                WorldUtils.logger.info("There were {} chunks currently loaded, the tile tick list does not include data from those chunks!", loaded);
                 sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.reader.loaded", Integer.valueOf(loaded)));
             }
+
+            if (this.operation == Operation.FIND_INVALID)
+            {
+                this.findAllInvalid();
+                WorldUtils.logger.info("Found {} invalid scheduled tile ticks in the world", this.invalidTicks.size());
+                sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.readingandfindinginvalid.complete", this.invalidTicks.size()));
+            }
         }
-        
     }
 
-    private class TileTickRemover extends TileTickReader implements IChunkDataHandler
+    private class TileTickRemoverAll implements IWorldDataHandler
     {
-        private final Region region;
-        private final RemoveType type;
-        private final Set<String> toRemove;
+        protected ChunkProviderServer provider;
+        protected int regionCount;
+        protected int chunkCount;
+        protected int processedCount;
 
-        public TileTickRemover()
+        @Override
+        public void init(int dimension)
         {
-            this.region = null;
-            this.type = RemoveType.ALL;
-            this.toRemove = new HashSet<String>();
-        }
-
-        public TileTickRemover(Region region, RemoveType type, Set<String> toRemove)
-        {
-            this.region = region;
-            this.type = type;
-            this.toRemove = toRemove;
         }
 
         @Override
-        public int processChunkData(ChunkPos chunkPos, NBTTagCompound chunkNBT, boolean simulate)
+        public void setChunkProvider(ChunkProviderServer provider)
         {
-            int count = 0;
-            NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+            this.provider = provider;
+        }
 
-            if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
-            {
-                NBTTagList list = level.getTagList("TileTicks", Constants.NBT.TAG_COMPOUND);
-
-                if (this.type == RemoveType.ALL)
-                {
-                    count += list.tagCount();
-
-                    if (simulate == false)
-                    {
-                        level.setTag("TileTicks", new NBTTagList());
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < list.tagCount(); i++)
-                    {
-                        NBTTagCompound tag = list.getCompoundTagAt(i);
-
-                        if (this.type == RemoveType.BY_MOD)
-                        {
-                            Pair<ResourceLocation, String> pair = getBlockIdentifiers(tag, "i");
-                            ResourceLocation rl = pair.getLeft();
-
-                            if (rl != null && this.toRemove.contains(rl.getResourceDomain()))
-                            {
-                                if (simulate == false)
-                                {
-                                    list.removeTag(i);
-                                    i--;
-                                }
-
-                                count++;
-                            }
-                        }
-                        else if (this.type == RemoveType.BY_NAME)
-                        {
-                            String name = tag.hasKey("i", Constants.NBT.TAG_STRING) ? tag.getString("i") : String.valueOf(tag.getInteger("i"));
-
-                            if (this.toRemove.contains(name))
-                            {
-                                if (simulate == false)
-                                {
-                                    list.removeTag(i);
-                                    i--;
-                                }
-
-                                count++;
-                            }
-                        }
-                    }
-                }
-            }
-
-            WorldUtils.logger.info("In region {}, chunk {}, {} - removed {} tile ticks",
-                    this.region.getName() != null ? this.region.getName() : "null", chunkPos.chunkXPos, chunkPos.chunkZPos, count);
-
-            return count;
+        @Override
+        public int processRegion(Region region, boolean simulate)
+        {
+            this.regionCount++;
+            return 0;
         }
 
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
-            if (this.type != RemoveType.ALL)
-            {
-                return 0;
-            }
-
             int count = 0;
             DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
             if (data == null)
             {
-                WorldUtils.logger.warn("TileTickRemover#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
+                WorldUtils.logger.warn("TileTickRemoverAll#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
                         chunkX, chunkZ, region.getName());
                 return 0;
             }
@@ -341,19 +305,127 @@ public class TileTickTools
             if (this.provider != null && this.provider.getLoadedChunkCount() > 0)
             {
                 int loaded = this.provider.getLoadedChunkCount();
-                WorldUtils.logger.warn("There were {} chunks currently loaded, the tile ticks were NOT removed from those chunks", loaded);
+                WorldUtils.logger.info("There were {} chunks currently loaded, the tile ticks were NOT removed from those chunks", loaded);
                 sender.sendMessage(new TextComponentTranslation("worldutils.commands.tileticks.remover.loaded", Integer.valueOf(loaded)));
             }
         }
     }
 
-    private TileTickTools()
+    private class TileTickRemoverByModOrName extends TileTickRemoverAll
     {
-    }
+        private final Operation operation;
+        private final Set<String> toRemove;
 
-    public static TileTickTools instance()
-    {
-        return INSTANCE;
+        public TileTickRemoverByModOrName(Operation operation, Set<String> toRemove)
+        {
+            this.operation = operation;
+            this.toRemove = toRemove;
+        }
+
+        @Override
+        public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
+        {
+            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+            int count = 0;
+
+            if (data == null)
+            {
+                WorldUtils.logger.warn("TileTickRemoverByModOrName#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
+                        chunkX, chunkZ, region.getName());
+                return 0;
+            }
+
+            try
+            {
+                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+                NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+
+                if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
+                {
+                    NBTTagList list = level.getTagList("TileTicks", Constants.NBT.TAG_COMPOUND);
+                    int size = list.tagCount();
+
+                    if (this.operation == Operation.REMOVE_BY_MOD)
+                    {
+                        for (int i = 0; i < size; i++)
+                        {
+                            NBTTagCompound tag = list.getCompoundTagAt(i);
+                            Pair<ResourceLocation, String> pair = getBlockIdentifiers(tag, "i");
+                            ResourceLocation rl = pair.getLeft();
+
+                            if (rl != null && this.toRemove.contains(rl.getResourceDomain()))
+                            {
+                                if (simulate == false)
+                                {
+                                    list.removeTag(i);
+                                    i--;
+                                    size--;
+                                }
+
+                                count++;
+                            }
+                        }
+                    }
+                    else if (this.operation == Operation.REMOVE_BY_NAME)
+                    {
+                        for (int i = 0; i < size; i++)
+                        {
+                            NBTTagCompound tag = list.getCompoundTagAt(i);
+                            String name = tag.hasKey("i", Constants.NBT.TAG_STRING) ? tag.getString("i") : String.valueOf(tag.getInteger("i"));
+
+                            if (this.toRemove.contains(name))
+                            {
+                                if (simulate == false)
+                                {
+                                    list.removeTag(i);
+                                    i--;
+                                    size--;
+                                }
+
+                                count++;
+                            }
+                        }
+                    }
+                    else if (this.operation == Operation.REMOVE_INVALID)
+                    {
+                        for (int i = 0; i < size; i++)
+                        {
+                            NBTTagCompound tag = list.getCompoundTagAt(i);
+                            String name = tag.hasKey("i", Constants.NBT.TAG_STRING) ? tag.getString("i") : String.valueOf(tag.getInteger("i"));
+
+                            if (Block.REGISTRY.getObject(new ResourceLocation(name)) == Blocks.AIR)
+                            {
+                                if (simulate == false)
+                                {
+                                    list.removeTag(i);
+                                    i--;
+                                    size--;
+                                }
+
+                                count++;
+                            }
+                        }
+                    }
+
+                    if (simulate == false && count > 0)
+                    {
+                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                        CompressedStreamTools.write(chunkNBT, dataOut);
+                        dataOut.close();
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            this.chunkCount++;
+            this.processedCount += count;
+
+            return count;
+        }
     }
 
     private static Pair<ResourceLocation, String> getBlockIdentifiers(NBTTagCompound tag, String name)
@@ -388,162 +460,72 @@ public class TileTickTools
         return Pair.of(new ResourceLocation(name), name);
     }
 
-    private List<TileTickData> getTileTicksToRemove(List<TileTickData> dataIn, RemoveType type, Set<String> toRemove)
+    private Set<String> getRemoveSet(Operation operation)
     {
-        List<TileTickData> list = new ArrayList<TileTickData>();
-
-        if (type == RemoveType.ALL)
+        if (operation == Operation.REMOVE_BY_MOD)
         {
-            return dataIn;
+            return this.toRemoveMods;
+        }
+        else if (operation == Operation.REMOVE_BY_NAME)
+        {
+            return this.toRemoveNames;
         }
 
-        for (TileTickData entry : dataIn)
+        return Collections.emptySet();
+    }
+
+    public void resetFilters(Operation operation)
+    {
+        this.getRemoveSet(operation).clear();
+    }
+
+    public void addFilter(String name, Operation operation)
+    {
+        this.getRemoveSet(operation).add(name);
+    }
+
+    public void removeFilter(String name, Operation operation)
+    {
+        this.getRemoveSet(operation).remove(name);
+    }
+
+    public Set<String> getFilters(Operation operation)
+    {
+        return this.getRemoveSet(operation);
+    }
+
+    public void startTask(int dimension, Operation operation, boolean forceRescan, ICommandSender sender)
+    {
+        if (operation == Operation.READ || operation == Operation.FIND_INVALID)
         {
-            if (type == RemoveType.BY_NAME && toRemove.contains(entry.blockId))
+            if (operation == Operation.READ || forceRescan || this.tileTickReader.getAllTileTicks().size() == 0)
             {
-                list.add(entry);
-            }
-            else if (type == RemoveType.BY_MOD && entry.resource != null && toRemove.contains(entry.resource.getResourceDomain()))
-            {
-                list.add(entry);
-            }
-        }
-
-        return list;
-    }
-
-    private Set<ChunkPos> getSetForChunks(Map<ChunkPos, Set<ChunkPos>> mapRegions, ChunkPos regionPos)
-    {
-        Set<ChunkPos> setChunks = mapRegions.get(regionPos);
-
-        if (setChunks == null)
-        {
-            setChunks = new HashSet<ChunkPos>();
-            mapRegions.put(regionPos, setChunks);
-        }
-
-        return setChunks;
-    }
-
-    private Map<ChunkPos, Set<ChunkPos>> sortTileTicksByRegionAndChunk(List<TileTickData> listIn)
-    {
-        Map<ChunkPos, Set<ChunkPos>> tileTicksByRegion = new HashMap<ChunkPos, Set<ChunkPos>>();
-
-        for (TileTickData entry : listIn)
-        {
-            ChunkPos regionPos = new ChunkPos(entry.chunkPos.chunkXPos >> 5, entry.chunkPos.chunkZPos >> 5);
-            this.getSetForChunks(tileTicksByRegion, regionPos).add(entry.chunkPos);
-        }
-
-        return tileTicksByRegion;
-    }
-
-    public void resetFilters()
-    {
-        this.namesToRemove.clear();
-    }
-
-    public void addFilter(String name)
-    {
-        this.namesToRemove.add(name);
-    }
-
-    public void removeFilter(String name)
-    {
-        this.namesToRemove.remove(name);
-    }
-
-    public ImmutableSet<String> getFilters()
-    {
-        return ImmutableSet.copyOf(this.namesToRemove);
-    }
-
-    public int readTileTicks(int dimension, ICommandSender sender)
-    {
-        this.tileTickReader.init();
-        FileUtils.worldDataProcessor(dimension, this.tileTickReader, sender, false);
-
-        return this.tileTickReader.getAllTileTicks().size();
-    }
-
-    public int findInvalid(int dimension, boolean forceRescan, ICommandSender sender)
-    {
-        if (forceRescan || this.tileTickReader.getAllTileTicks().size() == 0)
-        {
-            this.readTileTicks(dimension, sender);
-        }
-
-        this.tileTickReader.findInvalid();
-
-        return this.tileTickReader.getInvalidTicksList().size();
-    }
-
-    public int removeInvalid(int dimension, boolean forceRescan, ICommandSender sender)
-    {
-        if (forceRescan || this.tileTickReader.getMissingIdsSet().size() == 0)
-        {
-            this.findInvalid(dimension, forceRescan, sender);
-        }
-
-        Set<String> toRemove = this.tileTickReader.getMissingIdsSet();
-        return this.removeTileTicks(dimension, RemoveType.BY_NAME, toRemove, false, sender);
-    }
-
-    public int removeTileTicks(int dimension, RemoveType type, boolean simulate, ICommandSender sender)
-    {
-        if (type == RemoveType.ALL)
-        {
-            return this.removeTileTicks(dimension, type, this.namesToRemove, simulate, sender);
-        }
-
-        if (this.tileTickReader.getAllTileTicks().size() == 0)
-        {
-            this.readTileTicks(dimension, sender);
-        }
-
-        return this.removeTileTicks(dimension, type, this.namesToRemove, simulate, sender);
-    }
-
-    private int removeTileTicks(int dimension, RemoveType type, Set<String> namesToRemove, boolean simulate, ICommandSender sender)
-    {
-        File worldDir = FileUtils.getWorldSaveLocation(dimension);
-        File regionDir = new File(worldDir, "region");
-        int removedTotal = 0;
-        Region region = null;
-
-        if (regionDir.exists() && regionDir.isDirectory())
-        {
-            if (type == RemoveType.ALL)
-            {
-                FileUtils.worldDataProcessor(dimension, new TileTickRemover(), sender, false);
-            }
-            else if (namesToRemove != null)
-            {
-                List<TileTickData> toRemove = this.getTileTicksToRemove(this.tileTickReader.getAllTileTicks(), type, namesToRemove);
-                for (TileTickData data : toRemove)
-                {
-                    WorldUtils.logger.info("toRemove: {} @ {}", data.resource, data.chunkPos);
-                }
-
-                Map<ChunkPos, Set<ChunkPos>> tileTicksByRegion = this.sortTileTicksByRegionAndChunk(toRemove);
-
-                for (Map.Entry<ChunkPos, Set<ChunkPos>> regionEntry : tileTicksByRegion.entrySet())
-                {
-                    ChunkPos regionPos = regionEntry.getKey();
-                    region = Region.fromRegionCoords(worldDir, regionPos);
-                    WorldUtils.logger.info("in region: r.{}.{}.mca", regionPos.chunkXPos, regionPos.chunkZPos);
-
-                    for (ChunkPos chunkPos : regionEntry.getValue())
-                    {
-                        TileTickRemover tileTickRemover = new TileTickRemover(region, type, namesToRemove);
-                        removedTotal += FileUtils.handleChunkInRegion(region, chunkPos, tileTickRemover, simulate);
-                        WorldUtils.logger.info("in chunk: {},{} removed in total: {}", chunkPos.chunkXPos, chunkPos.chunkZPos, removedTotal);
-                    }
-                }
+                this.tileTickReader.init(dimension);
+                this.tileTickReader.setOperation(operation);
+                TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.tileTickReader, sender), 1);
             }
         }
-
-        return removedTotal;
+        else if (operation == Operation.REMOVE_ALL)
+        {
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, new TileTickRemoverAll(), sender), 1);
+        }
+        else if (operation == Operation.REMOVE_BY_MOD)
+        {
+            Set<String> toRemove = TileTickTools.this.getRemoveSet(operation);
+            TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_BY_MOD, toRemove);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+        }
+        else if (operation == Operation.REMOVE_BY_NAME)
+        {
+            Set<String> toRemove = TileTickTools.this.getRemoveSet(operation);
+            TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_BY_NAME, toRemove);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+        }
+        else if (operation == Operation.REMOVE_INVALID)
+        {
+            TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_INVALID, Collections.emptySet());
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+        }
     }
 
     public List<String> getAllTileTicksOutput(boolean sortFirst)

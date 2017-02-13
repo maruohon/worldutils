@@ -10,7 +10,7 @@ public interface IWorldDataHandler
     /**
      * Called before processing world data begins.
      */
-    public void init();
+    public void init(int dimension);
 
     /**
      * Sets the chunk provider for the world being processed.

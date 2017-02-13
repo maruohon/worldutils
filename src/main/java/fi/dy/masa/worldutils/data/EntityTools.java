@@ -62,7 +62,7 @@ public class EntityTools
         }
 
         @Override
-        public void init()
+        public void init(int dimension)
         {
             this.entities.clear();
 
@@ -329,7 +329,7 @@ public class EntityTools
 
     public void readEntities(int dimension, ICommandSender sender)
     {
-        this.entityDataReader.init();
+        this.entityDataReader.init(dimension);
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.entityDataReader, sender), 1);
     }
 
@@ -340,7 +340,7 @@ public class EntityTools
         if (regionDir.exists() && regionDir.isDirectory())
         {
             EntityDataReader reader = new EntityDataReader(dimension, true);
-            reader.init();
+            reader.init(dimension);
             TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
         }
     }

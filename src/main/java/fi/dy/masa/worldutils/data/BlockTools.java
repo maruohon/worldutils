@@ -206,7 +206,7 @@ public class BlockTools
         }
 
         @Override
-        public void init()
+        public void init(int dimension)
         {
             this.regionCount = 0;
             this.chunkCountUnloaded = 0;
