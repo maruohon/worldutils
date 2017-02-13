@@ -343,6 +343,12 @@ public class TileTickTools
 
                 if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
                 {
+                    // This needs to use absolute Chunk coordinates
+                    if (this.provider != null && this.provider.chunkExists(level.getInteger("xPos"), level.getInteger("zPos")))
+                    {
+                        return 0;
+                    }
+
                     NBTTagList list = level.getTagList("TileTicks", Constants.NBT.TAG_COMPOUND);
                     int size = list.tagCount();
 
