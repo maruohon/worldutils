@@ -55,6 +55,8 @@ worldutils.commands.generic.list.clear=List cleared
 worldutils.commands.generic.list.print=The list has also been printed to the console
 worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the list
 worldutils.commands.generic.list.remove.success=Removed '%s' from the list
+worldutils.commands.generic.output.to.console=Output written to the console
+worldutils.commands.generic.output.to.file=Output written to file '%s'
 
 worldutils.commands.blockreplace.block.print.valid=Block is set to %s
 worldutils.commands.blockreplace.block.print.invalid=Block is set to an INVALID value '%s'

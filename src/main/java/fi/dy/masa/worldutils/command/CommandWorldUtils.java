@@ -23,6 +23,7 @@ public class CommandWorldUtils extends CommandBase
     {
         this.registerSubCommand(new SubCommandBlockReplace(this));
         this.registerSubCommand(new SubCommandBlockReplacePairs(this));
+        this.registerSubCommand(new SubCommandDump(this));
         this.registerSubCommand(new SubCommandEntities(this));
         this.registerSubCommand(new SubCommandPrintSpawn(this));
         this.registerSubCommand(new SubCommandTileTicks(this));
@@ -84,7 +85,7 @@ public class CommandWorldUtils extends CommandBase
 
         if (this.subCommands.containsKey(cmd))
         {
-            this.subCommands.get(cmd).execute(server, sender, dropFirstStrings(args, 1));;
+            this.subCommands.get(cmd).execute(server, sender, dropFirstStrings(args, 1));
         }
         else if (cmd.equals("help"))
         {

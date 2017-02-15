@@ -33,13 +33,13 @@ import fi.dy.masa.worldutils.item.base.ItemWorldUtils;
 import fi.dy.masa.worldutils.network.MessageChunkChanges;
 import fi.dy.masa.worldutils.network.PacketHandler;
 import fi.dy.masa.worldutils.reference.HotKeys;
-import fi.dy.masa.worldutils.reference.ReferenceNames;
 import fi.dy.masa.worldutils.reference.HotKeys.EnumKey;
+import fi.dy.masa.worldutils.reference.ReferenceNames;
 import fi.dy.masa.worldutils.util.ChunkUtils;
+import fi.dy.masa.worldutils.util.ChunkUtils.ChangeType;
 import fi.dy.masa.worldutils.util.EntityUtils;
 import fi.dy.masa.worldutils.util.NBTUtils;
 import fi.dy.masa.worldutils.util.PositionUtils;
-import fi.dy.masa.worldutils.util.ChunkUtils.ChangeType;
 
 public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
 {
