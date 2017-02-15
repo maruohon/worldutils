@@ -202,7 +202,7 @@ public class SubCommandTileTicks extends SubCommand
             else if (args.length == 1 && args[0].equals("clear-list"))
             {
                 TileTickTools.instance().resetFilters(operation);
-                this.sendMessage(sender, "worldutils.commands.tileticks.list.clear");
+                this.sendMessage(sender, "worldutils.commands.generic.list.clear");
             }
             else if (args.length >= 1 && args.length <= 2 && args[0].equals("execute"))
             {

@@ -1,16 +1,20 @@
 package fi.dy.masa.worldutils.data;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -318,6 +322,254 @@ public class EntityTools
         }
     }
 
+    public class EntityRemover implements IWorldDataHandler
+    {
+        private final Set<String> toRemove = new HashSet<String>();
+        private ChunkProviderServer provider;
+        private int regionCount;
+        private int chunkCount;
+        private int entityCount;
+        private final String tagName;
+
+        public EntityRemover(List<String> toRemove, EntityRenamer.Type type)
+        {
+            this.toRemove.addAll(toRemove);
+            this.tagName = type == EntityRenamer.Type.TILE_ENTITIES ? "TileEntities" : "Entities";
+        }
+
+        @Override
+        public void init(int dimension)
+        {
+            this.regionCount = 0;
+            this.chunkCount = 0;
+            this.entityCount = 0;
+        }
+
+        @Override
+        public void setChunkProvider(@Nullable ChunkProviderServer provider)
+        {
+            this.provider = provider;
+        }
+
+        @Override
+        public int processRegion(Region region, boolean simulate)
+        {
+            this.regionCount++;
+            return 0;
+        }
+
+        @Override
+        public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
+        {
+            int count = 0;
+            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+
+            if (data == null)
+            {
+                WorldUtils.logger.warn("Failed to read chunk data for chunk ({}, {}) from file '{}'", chunkX, chunkZ, region.getName());
+                return 0;
+            }
+
+            try
+            {
+                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+                NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+
+                if (level.hasKey(this.tagName, Constants.NBT.TAG_LIST))
+                {
+                    ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    {
+                        return 0;
+                    }
+
+                    NBTTagList list = level.getTagList(this.tagName, Constants.NBT.TAG_COMPOUND);
+
+                    for (int i = 0; i < list.tagCount(); i++)
+                    {
+                        NBTTagCompound entity = list.getCompoundTagAt(i);
+
+                        if (this.toRemove.contains(entity.getString("id")))
+                        {
+                            if (simulate == false)
+                            {
+                                list.removeTag(i);
+                                i--;
+                            }
+
+                            count++;
+                        }
+                    }
+
+                    if (simulate == false && count > 0)
+                    {
+                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                        CompressedStreamTools.write(chunkNBT, dataOut);
+                        dataOut.close();
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            this.chunkCount++;
+            this.entityCount += count;
+
+            return count;
+        }
+
+        @Override
+        public void finish(ICommandSender sender, boolean simulate)
+        {
+            String chatOutput = String.format("Removed a total of %d %s from %d chunks in %d region files",
+                    this.entityCount, this.tagName, this.chunkCount, this.regionCount);
+
+            sender.sendMessage(new TextComponentString(chatOutput));
+            WorldUtils.logger.info(chatOutput);
+
+            if (this.provider != null)
+            {
+                chatOutput = String.format("There were %d chunks currently loaded, the %s in those chunks were not removed!!",
+                        this.provider.getLoadedChunkCount(), this.tagName);
+
+                sender.sendMessage(new TextComponentString(chatOutput));
+                WorldUtils.logger.info(chatOutput);
+            }
+        }
+    }
+
+    public static class EntityRenamer implements IWorldDataHandler
+    {
+        private final Map<String, String> renamePairs = new HashMap<String, String>();
+        private ChunkProviderServer provider;
+        private int regionCount;
+        private int chunkCount;
+        private int entityCount;
+        private final String tagName;
+
+        public static enum Type
+        {
+            ENTITIES,
+            TILE_ENTITIES;
+        }
+
+        public EntityRenamer(List<Pair<String, String>> renamePairs, Type type)
+        {
+            for (Pair<String, String> pair : renamePairs)
+            {
+                this.renamePairs.put(pair.getLeft(), pair.getRight());
+            }
+
+            this.tagName = type == Type.TILE_ENTITIES ? "TileEntities" : "Entities";
+        }
+
+        @Override
+        public void init(int dimension)
+        {
+            this.regionCount = 0;
+            this.chunkCount = 0;
+            this.entityCount = 0;
+        }
+
+        @Override
+        public void setChunkProvider(@Nullable ChunkProviderServer provider)
+        {
+            this.provider = provider;
+        }
+
+        @Override
+        public int processRegion(Region region, boolean simulate)
+        {
+            this.regionCount++;
+            return 0;
+        }
+
+        @Override
+        public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
+        {
+            int count = 0;
+            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+
+            if (data == null)
+            {
+                WorldUtils.logger.warn("Failed to read chunk data for chunk ({}, {}) from file '{}'", chunkX, chunkZ, region.getName());
+                return 0;
+            }
+
+            try
+            {
+                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+                NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+
+                if (level.hasKey(this.tagName, Constants.NBT.TAG_LIST))
+                {
+                    ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    {
+                        return 0;
+                    }
+
+                    NBTTagList list = level.getTagList(this.tagName, Constants.NBT.TAG_COMPOUND);
+
+                    for (int i = 0; i < list.tagCount(); i++)
+                    {
+                        NBTTagCompound entity = list.getCompoundTagAt(i);
+                        String id = entity.getString("id");
+
+                        if (this.renamePairs.containsKey(id))
+                        {
+                            if (simulate == false)
+                            {
+                                entity.setString("id", this.renamePairs.get(id));
+                            }
+
+                            count++;
+                        }
+                    }
+
+                    if (simulate == false && count > 0)
+                    {
+                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                        CompressedStreamTools.write(chunkNBT, dataOut);
+                        dataOut.close();
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            this.chunkCount++;
+            this.entityCount += count;
+
+            return count;
+        }
+
+        @Override
+        public void finish(ICommandSender sender, boolean simulate)
+        {
+            String chatOutput = String.format("Renamed a total of %d %s in %d chunks in %d region files",
+                    this.entityCount, this.tagName, this.chunkCount, this.regionCount);
+
+            sender.sendMessage(new TextComponentString(chatOutput));
+            WorldUtils.logger.info(chatOutput);
+
+            if (this.provider != null)
+            {
+                chatOutput = String.format("There were %d chunks currently loaded, the %s in those chunks were not renamed!!",
+                        this.provider.getLoadedChunkCount(), this.tagName);
+
+                sender.sendMessage(new TextComponentString(chatOutput));
+                WorldUtils.logger.info(chatOutput);
+            }
+        }
+    }
+
     private EntityTools()
     {
     }
@@ -343,6 +595,20 @@ public class EntityTools
             reader.init(dimension);
             TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
         }
+    }
+
+    public void removeEntities(int dimension, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender)
+    {
+        EntityRemover remover = new EntityRemover(toRemove, type);
+        remover.init(dimension);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+    }
+
+    public void renameEntities(int dimension, List<Pair<String, String>> renamePairs, EntityRenamer.Type type, ICommandSender sender)
+    {
+        EntityRenamer renamer = new EntityRenamer(renamePairs, type);
+        renamer.init(dimension);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, renamer, sender), 1);
     }
 
     private static List<EntityData> getDuplicateEntitiesIncludingFirst(List<EntityData> dataIn, boolean sortFirst)

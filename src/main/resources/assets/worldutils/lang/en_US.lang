@@ -51,13 +51,14 @@ worldutils.commands.info.outputtofile=Output written to file '%s'
 worldutils.commands.info.taskstopped=Stopped and removed the running task
 
 worldutils.commands.generic.list.add=Added '%s' to the list
+worldutils.commands.generic.list.clear=List cleared
+worldutils.commands.generic.list.print=The list has also been printed to the console
 worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the list
 worldutils.commands.generic.list.remove.success=Removed '%s' from the list
 
 worldutils.commands.blockreplace.block.print.valid=Block is set to %s
 worldutils.commands.blockreplace.block.print.invalid=Block is set to an INVALID value '%s'
 worldutils.commands.blockreplace.blocknamelist.cleared=Cleared the block name list
-worldutils.commands.blockreplace.blocknamelist.print=A list of all blocks on the list has also been printed to the console
 worldutils.commands.blockreplace.blockpairs.cleared=Block replacement pairs list cleared
 worldutils.commands.blockreplace.blockpairs.list.add.invalid=Invalid block specifier '%s'
 worldutils.commands.blockreplace.blockpairs.list.add.success=Added a replacement '%s' => '%s' to the list
@@ -71,12 +72,15 @@ worldutils.commands.blockreplace.blockstatelist.print=A list of all the blocksta
 worldutils.commands.blockreplace.execute.start=Replacing the selected blocks in the entire world, this may take a while...
 worldutils.commands.blockreplace.execute.finished=Replaced a total of %d blocks in %d unloaded chunks and %d blocks in %d loaded chunks, touching %d region files
 
+worldutils.commands.entities.prepare.from=Prepared '%s' as the 'from' name
+worldutils.commands.entities.prepare.to=Prepared '%s' as the 'to' name
 worldutils.commands.entities.readall.start=Reading all entities from the world save files, this may take a while...
 worldutils.commands.entities.removeallduplicates.start=Removing all duplicate entities in the entire world, this may take a while...
+worldutils.commands.entities.remove.start=Removing all selected entities from the entire world, this may take a while...
+worldutils.commands.entities.rename.start=Renaming all selected entities in the entire world, this may take a while...
 
 worldutils.commands.printspawn.print=The world spawn is at x: %d, y: %d, z: %d
 
-worldutils.commands.tileticks.list.clear=List cleared
 worldutils.commands.tileticks.list.list.empty=Nothing added to the list to be removed
 worldutils.commands.tileticks.list.list.print=Tile ticks will be removed for anything matching '%s'
 worldutils.commands.tileticks.reader.info=Read a total of %d tile ticks from %d chunks in %d region files

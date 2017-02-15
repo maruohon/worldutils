@@ -256,7 +256,7 @@ public class SubCommandBlockReplace extends SubCommand
             }
 
             WorldUtils.logger.info("-------------- END ---------------");
-            this.sendMessage(sender, "worldutils.commands.blockreplace.blocknamelist.print");
+            this.sendMessage(sender, "worldutils.commands.generic.list.print");
         }
         else if (cmd.equals("add") && args.length > 0)
         {
