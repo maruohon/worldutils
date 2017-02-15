@@ -69,6 +69,7 @@ public class SubCommandBlockReplace extends SubCommand
     {
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block | id>[@meta] ... Ex: minecraft:ice minecraft:wool@5"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block[prop1=val1,prop2=val2]> ... Ex: minecraft:stone[variant=granite]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-with-spaces <block> (same as add, but for names that include spaces)"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove stringonthelist1 stringonthelist2 ..."));
@@ -103,7 +104,7 @@ public class SubCommandBlockReplace extends SubCommand
         {
             if (args.length == 1)
             {
-                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "clear", "list", "remove");
+                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "add-with-spaces", "clear", "list", "remove");
             }
             else if (args.length >= 2)
             {
@@ -186,9 +187,9 @@ public class SubCommandBlockReplace extends SubCommand
             {
                 this.blockDataPrint(replacement, sender);
             }
-            else if (cmd.equals("set") && args.length == 1)
+            else if (cmd.equals("set") && args.length >= 1)
             {
-                replacement = args[0];
+                replacement = String.join(" ", args);
                 this.blockDataPrint(replacement, sender);
             }
             else
@@ -264,6 +265,12 @@ public class SubCommandBlockReplace extends SubCommand
                 blockNames.add(args[i]);
                 this.sendMessage(sender, "worldutils.commands.generic.list.add", args[i]);
             }
+        }
+        else if (cmd.equals("add-with-spaces") && args.length > 0)
+        {
+            String str = String.join(" ", args);
+            blockNames.add(str);
+            this.sendMessage(sender, "worldutils.commands.generic.list.add", str);
         }
         else if (cmd.equals("remove") && args.length > 0)
         {

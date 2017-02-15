@@ -61,8 +61,10 @@ worldutils.commands.blockreplace.blocknamelist.print=A list of all blocks on the
 worldutils.commands.blockreplace.blockpairs.cleared=Block replacement pairs list cleared
 worldutils.commands.blockreplace.blockpairs.list.add.invalid=Invalid block specifier '%s'
 worldutils.commands.blockreplace.blockpairs.list.add.success=Added a replacement '%s' => '%s' to the list
-worldutils.commands.blockreplace.blockpairs.list.remove.failure=Error: Block pair '%s' => '%s' was not found on the list
+worldutils.commands.blockreplace.blockpairs.list.remove.failure=Error: Block '%s' was not found on the list
 worldutils.commands.blockreplace.blockpairs.list.remove.success=Removed the block pair '%s' => '%s' from the list
+worldutils.commands.blockreplace.blockpairs.prepare.from=Prepared block name '%s' as the 'from' block
+worldutils.commands.blockreplace.blockpairs.prepare.to=Prepared block name '%s' as the 'to' block
 worldutils.commands.blockreplace.blockstatelist.add=Added all blockstates from vanilla up to version %s to the list
 worldutils.commands.blockreplace.blockstatelist.cleared=Cleared the blockstate list
 worldutils.commands.blockreplace.blockstatelist.print=A list of all the blockstates on the list has been printed to the console

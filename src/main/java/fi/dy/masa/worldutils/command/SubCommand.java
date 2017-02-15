@@ -10,6 +10,7 @@ import net.minecraft.server.MinecraftServer;
 
 public abstract class SubCommand implements ISubCommand
 {
+    public static final String EMPTY_STRING = "";
     protected final CommandWorldUtils baseCommand;
     protected final ArrayList<String> subSubCommands = new ArrayList<String>();
 

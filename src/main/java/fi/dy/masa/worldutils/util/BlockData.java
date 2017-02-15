@@ -240,9 +240,9 @@ public class BlockData
         {
             Pattern patternId        = Pattern.compile("(?<id>[0-9]+)");
             Pattern patternIdMeta    = Pattern.compile("(?<id>[0-9]+)[@:]{1}(?<meta>[0-9]+)");
-            Pattern patternName      = Pattern.compile("(?<name>([a-z0-9_]+:)?[a-z0-9\\._]+)");
-            Pattern patternNameMeta  = Pattern.compile("(?<name>[a-z0-9_]+:[a-z0-9\\._]+)[@:]{1}(?<meta>[0-9]+)");
-            Pattern patternNameProps = Pattern.compile("(?<name>[a-z0-9_]+:[a-z0-9\\._]+)\\[(?<props>[a-z0-9_]+=[a-z0-9_]+(,[a-z0-9_]+=[a-z0-9_]+)*)\\]");
+            Pattern patternName      = Pattern.compile("(?<name>([a-z0-9_]+:)?[a-z0-9\\._ ]+)");
+            Pattern patternNameMeta  = Pattern.compile("(?<name>([a-z0-9_]+:)?[a-z0-9\\._ ]+)[@:]{1}(?<meta>[0-9]+)");
+            Pattern patternNameProps = Pattern.compile("(?<name>([a-z0-9_]+:)?[a-z0-9\\._ ]+)\\[(?<props>[a-z0-9_]+=[a-z0-9_]+(,[a-z0-9_]+=[a-z0-9_]+)*)\\]");
 
             Matcher matcherId = patternId.matcher(str);
             if (matcherId.matches())
