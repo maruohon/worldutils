@@ -60,6 +60,7 @@ worldutils.commands.generic.output.to.file=Output written to file '%s'
 
 worldutils.commands.blockreplace.block.print.valid=Block is set to %s
 worldutils.commands.blockreplace.block.print.invalid=Block is set to an INVALID value '%s'
+worldutils.commands.blockreplace.blocknamelist.mod.add=Added all block names from the mod '%s' to the list
 worldutils.commands.blockreplace.blocknamelist.cleared=Cleared the block name list
 worldutils.commands.blockreplace.blockpairs.cleared=Block replacement pairs list cleared
 worldutils.commands.blockreplace.blockpairs.list.add.invalid=Invalid block specifier '%s'

@@ -69,6 +69,7 @@ public class SubCommandBlockReplace extends SubCommand
     {
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block | id>[@meta] ... Ex: minecraft:ice minecraft:wool@5"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block[prop1=val1,prop2=val2]> ... Ex: minecraft:stone[variant=granite]"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-all-from-mod <modId> [modId] ..."));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-with-spaces <block> (same as add, but for names that include spaces)"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
@@ -104,7 +105,7 @@ public class SubCommandBlockReplace extends SubCommand
         {
             if (args.length == 1)
             {
-                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "add-with-spaces", "clear", "list", "remove");
+                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "add-with-spaces", "add-all-from-mod", "clear", "list", "remove");
             }
             else if (args.length >= 2)
             {
@@ -271,6 +272,14 @@ public class SubCommandBlockReplace extends SubCommand
             String str = String.join(" ", args);
             blockNames.add(str);
             this.sendMessage(sender, "worldutils.commands.generic.list.add", str);
+        }
+        else if (cmd.equals("add-all-from-mod") && args.length > 0)
+        {
+            for (int i = 0; i < args.length; i++)
+            {
+                blockNames.addAll(BlockUtils.getAllBlockNamesInMod(args[i]));
+                this.sendMessage(sender, "worldutils.commands.blockreplace.blocknamelist.mod.add", args[i]);
+            }
         }
         else if (cmd.equals("remove") && args.length > 0)
         {
