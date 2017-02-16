@@ -20,8 +20,9 @@ public class Configs
     public static boolean disableChunkWand;
     public static String chunkSwappingIgnoreWorld;
     public static int colorChangedChunks;
-    public static int colorImportedBiomes;
-    public static int colorChangedChunksAndImportedBiomes;
+    public static int colorBiomesImported;
+    public static int colorBiomesSet;
+    public static int colorChangedChunksAndChangedBiomes;
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
@@ -61,13 +62,17 @@ public class Configs
         prop.setComment("Overlay color for chunks that have been changed to a different version (default: 0xFD9500 = 16618752)");
         colorChangedChunks = getColor(prop.getString(), 0xFD9500);
 
-        prop = conf.get(category, "colorImportedBiomes", "0x00FFF6");
+        prop = conf.get(category, "colorBiomesImported", "0x00FFF6");
         prop.setComment("Overlay color for chunks that have had their biomes imported (default: 0x00FFF6 = 65526)");
-        colorImportedBiomes = getColor(prop.getString(), 0x00FFF6);
+        colorBiomesImported = getColor(prop.getString(), 0x00FFF6);
+
+        prop = conf.get(category, "colorBiomesSet", "0x0033F6");
+        prop.setComment("Overlay color for chunks that have had their biomes manually set");
+        colorBiomesSet = getColor(prop.getString(), 0x0033F6);
 
         prop = conf.get(category, "colorChangedChunksAndImportedBiomes", "0xFF22FF");
         prop.setComment("Overlay color for chunks that have had their biomes imported (default: 0xFF22FF = 16720639)");
-        colorChangedChunksAndImportedBiomes = getColor(prop.getString(), 0xFF22FF);
+        colorChangedChunksAndChangedBiomes = getColor(prop.getString(), 0xFF22FF);
 
         if (conf.hasChanged() == true)
         {

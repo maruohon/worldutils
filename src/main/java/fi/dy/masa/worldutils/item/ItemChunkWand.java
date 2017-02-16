@@ -2,6 +2,7 @@ package fi.dy.masa.worldutils.item;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,12 +23,15 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.item.base.IKeyBound;
 import fi.dy.masa.worldutils.item.base.ItemWorldUtils;
 import fi.dy.masa.worldutils.network.MessageChunkChanges;
@@ -290,23 +294,37 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         return NBTUtils.getCompoundTag(stack, WRAPPER_TAG_NAME, true).getString("WorldName");
     }
 
+    public String getBiomeName(ItemStack stack)
+    {
+        return NBTUtils.getCompoundTag(stack, WRAPPER_TAG_NAME, true).getString("BiomeName");
+    }
+
+    public int getBiomeIndex(ItemStack stack)
+    {
+        return NBTUtils.getCompoundTag(stack, WRAPPER_TAG_NAME, true).getByte("BiomeIndex");
+    }
+
     private EnumActionResult useWand(ItemStack stack, World world, EntityPlayer player)
     {
         Mode mode = Mode.getMode(stack);
 
-        if (mode == Mode.LOAD)
+        if (mode == Mode.CHUNK_SWAP)
         {
-            return this.useWandLoadChunks(stack, world, player);
+            return this.useWandChunkSwap(stack, world, player);
         }
-        else if (mode == Mode.BIOMES)
+        else if (mode == Mode.BIOME_IMPORT)
         {
-            return this.useWandLoadBiomes(stack, world, player);
+            return this.useWandBiomeImport(stack, world, player);
+        }
+        else if (mode == Mode.BIOME_SET)
+        {
+            return this.useWandBiomeSet(stack, world, player);
         }
 
         return EnumActionResult.PASS;
     }
 
-    private EnumActionResult useWandLoadChunks(ItemStack stack, World world, EntityPlayer player)
+    private EnumActionResult useWandChunkSwap(ItemStack stack, World world, EntityPlayer player)
     {
         Collection<ChunkPos> locations = this.getCurrentAndStoredSelections(stack);
         String worldName = this.getWorldName(stack);
@@ -321,7 +339,7 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         return EnumActionResult.SUCCESS;
     }
 
-    private EnumActionResult useWandLoadBiomes(ItemStack stack, World world, EntityPlayer player)
+    private EnumActionResult useWandBiomeImport(ItemStack stack, World world, EntityPlayer player)
     {
         Collection<ChunkPos> locations = this.getCurrentAndStoredSelections(stack);
         String worldName = this.getWorldName(stack);
@@ -336,6 +354,72 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         return EnumActionResult.SUCCESS;
     }
 
+    private EnumActionResult useWandBiomeSet(ItemStack stack, World world, EntityPlayer player)
+    {
+        Collection<ChunkPos> locations = this.getCurrentAndStoredSelections(stack);
+        Biome biome = ForgeRegistries.BIOMES.getValue(new ResourceLocation(this.getBiomeName(stack)));
+
+        for (ChunkPos pos : locations)
+        {
+            ChunkUtils.instance().setBiome(world, pos, biome, player.getName());
+        }
+
+        PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(ChangeType.BIOME_SET, locations, ""), (EntityPlayerMP) player);
+
+        return EnumActionResult.SUCCESS;
+    }
+
+    private void changeSelectedBiome(ItemStack stack, boolean reverse)
+    {
+        ResourceLocation selected = new ResourceLocation(this.getBiomeName(stack));
+        List<ResourceLocation> biomes = new ArrayList<ResourceLocation>();
+        List<Integer> biomeIds = new ArrayList<Integer>();
+
+        for (Map.Entry<ResourceLocation, Biome> entry : ForgeRegistries.BIOMES.getEntries())
+        {
+            biomeIds.add(Biome.getIdForBiome(ForgeRegistries.BIOMES.getValue(entry.getKey())));
+        }
+
+        Collections.sort(biomeIds);
+        int index = -1;
+        int i = 0;
+
+        for (Integer id : biomeIds)
+        {
+            ResourceLocation rl = ForgeRegistries.BIOMES.getKey(Biome.getBiome(id));
+            biomes.add(rl);
+
+            if (rl.equals(selected))
+            {
+                index = i;
+            }
+
+            i++;
+        }
+
+        if (index == -1)
+        {
+            index = 0;
+        }
+        else
+        {
+            index += reverse ? -1 : 1;
+
+            if (index < 0)
+            {
+                index = biomes.size() - 1;
+            }
+            else if (index >= biomes.size())
+            {
+                index = 0;
+            }
+        }
+
+        NBTUtils.getCompoundTag(stack, WRAPPER_TAG_NAME, true).setString("BiomeName", biomes.get(index).toString());
+        NBTUtils.getCompoundTag(stack, WRAPPER_TAG_NAME, true).setByte("BiomeId", (byte) biomeIds.get(index).intValue());
+        NBTUtils.getCompoundTag(stack, WRAPPER_TAG_NAME, true).setByte("BiomeIndex", (byte) index);
+    }
+
     @Override
     public void doKeyBindingAction(EntityPlayer player, ItemStack stack, int key)
     {
@@ -344,6 +428,8 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
             this.onItemLeftClick(stack, player.getEntityWorld(), player);
             return;
         }
+
+        Mode mode = Mode.getMode(stack);
 
         // Alt + Shift + Scroll: Move the start position
         if (EnumKey.SCROLL.matches(key, HotKeys.MOD_SHIFT_ALT))
@@ -358,8 +444,15 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         // Alt + Scroll: Change world selection
         else if (EnumKey.SCROLL.matches(key, HotKeys.MOD_ALT))
         {
-            this.setNumTargets(stack, player.getEntityWorld());
-            this.changeTargetSelection(stack, player.getEntityWorld(), EnumKey.keypressActionIsReversed(key));
+            if (mode == Mode.BIOME_SET)
+            {
+                this.changeSelectedBiome(stack, EnumKey.keypressActionIsReversed(key));
+            }
+            else
+            {
+                this.setNumTargets(stack, player.getEntityWorld());
+                this.changeTargetSelection(stack, player.getEntityWorld(), EnumKey.keypressActionIsReversed(key));
+            }
         }
         // Ctrl + Scroll: Cycle the mode
         else if (EnumKey.SCROLL.matches(key, HotKeys.MOD_CTRL))
@@ -399,8 +492,9 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
 
     public static enum Mode
     {
-        LOAD        ("load",    "worldutils.tooltip.item.chunkwand.load",       true),
-        BIOMES      ("biomes",  "worldutils.tooltip.item.chunkwand.biomes",     true);
+        CHUNK_SWAP      ("chunk_swap",      "worldutils.tooltip.item.chunkwand.chunkswap",      true),
+        BIOME_IMPORT    ("biome_import",    "worldutils.tooltip.item.chunkwand.biomeimport",    true),
+        BIOME_SET       ("biome_set",       "worldutils.tooltip.item.chunkwand.biomeset",       true);
 
         private final String name;
         private final String unlocName;

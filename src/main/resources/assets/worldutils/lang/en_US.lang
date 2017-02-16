@@ -24,11 +24,13 @@ item.worldutils_chunkwand.tooltips=!!! WARNING !!! Admin-only tool!|lf DO NOT US
 ###################################
 # Item labels/tooltips etc:
 ###################################
-worldutils.tooltip.item.chunkwand.biomes=Import biomes
-worldutils.tooltip.item.chunkwand.load=Change chunks
+worldutils.tooltip.item.chunkwand.biome=Biome
+worldutils.tooltip.item.chunkwand.biomeimport=Import biomes
+worldutils.tooltip.item.chunkwand.biomeset=Set biome
+worldutils.tooltip.item.chunkwand.chunkswap=Change chunks
 worldutils.tooltip.item.chunkwand.preview=Preview chunks
 worldutils.tooltip.item.chunkwand.select=Select chunks
-worldutils.tooltip.item.chunkwand.target=Target world
+worldutils.tooltip.item.chunkwand.targetworld=Target world
 
 worldutils.tooltip.item.holdshift=Hold §e§oShift§7 for more
 worldutils.tooltip.item.holdshiftfordescription=Hold §e§oShift§7 for description

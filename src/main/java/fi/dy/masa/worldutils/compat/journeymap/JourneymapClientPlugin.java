@@ -66,18 +66,24 @@ public class JourneymapClientPlugin implements IClientPlugin
         this.api.removeAll(Reference.MOD_ID);
 
         Set<ChunkPos> chunksChanged = ChunkChangeTracker.instance().getChangedChunksForType(ChangeType.CHUNK_CHANGE);
-        Set<ChunkPos> chunksBiomes = ChunkChangeTracker.instance().getChangedChunksForType(ChangeType.BIOME_IMPORT);
-        int colorChanged = Configs.colorChangedChunks;
-        int colorBiomes = Configs.colorImportedBiomes;
-        int colorBoth = Configs.colorChangedChunksAndImportedBiomes;
+        Set<ChunkPos> chunksBiomesImported = ChunkChangeTracker.instance().getChangedChunksForType(ChangeType.BIOME_IMPORT);
+        Set<ChunkPos> chunksBiomesSet = ChunkChangeTracker.instance().getChangedChunksForType(ChangeType.BIOME_SET);
+        int colorChanged =          Configs.colorChangedChunks;
+        int colorBiomesImported =   Configs.colorBiomesImported;
+        int colorBiomesSet =        Configs.colorBiomesSet;
+        int colorBoth = Configs.colorChangedChunksAndChangedBiomes;
 
         ShapeProperties shapeChanged = new ShapeProperties()
                 .setStrokeWidth(1.5f).setFillOpacity(0.2f)
                 .setFillColor(colorChanged).setStrokeColor(colorChanged);
 
-        ShapeProperties shapeBiomes = new ShapeProperties()
+        ShapeProperties shapeBiomesImported = new ShapeProperties()
                 .setStrokeWidth(1.5f).setFillOpacity(0.2f)
-                .setFillColor(colorBiomes).setStrokeColor(colorBiomes);
+                .setFillColor(colorBiomesImported).setStrokeColor(colorBiomesImported);
+
+        ShapeProperties shapeBiomesSet = new ShapeProperties()
+                .setStrokeWidth(1.5f).setFillOpacity(0.2f)
+                .setFillColor(colorBiomesSet).setStrokeColor(colorBiomesSet);
 
         ShapeProperties shapeBoth = new ShapeProperties()
                 .setStrokeWidth(1.5f).setFillOpacity(0.2f)
@@ -85,7 +91,7 @@ public class JourneymapClientPlugin implements IClientPlugin
 
         for (ChunkPos chunk : chunksChanged)
         {
-            if (chunksBiomes.contains(chunk))
+            if (chunksBiomesImported.contains(chunk) || chunksBiomesSet.contains(chunk))
             {
                 this.api.show(this.createPolygon(dimension, chunk, shapeBoth));
             }
@@ -95,14 +101,21 @@ public class JourneymapClientPlugin implements IClientPlugin
             }
         }
 
-        for (ChunkPos chunk : chunksBiomes)
+        for (ChunkPos chunk : chunksBiomesImported)
         {
             if (chunksChanged.contains(chunk) == false)
             {
-                this.api.show(this.createPolygon(dimension, chunk, shapeBiomes));
+                this.api.show(this.createPolygon(dimension, chunk, shapeBiomesImported));
             }
         }
 
+        for (ChunkPos chunk : chunksBiomesSet)
+        {
+            if (chunksChanged.contains(chunk) == false)
+            {
+                this.api.show(this.createPolygon(dimension, chunk, shapeBiomesSet));
+            }
+        }
     }
 
     private PolygonOverlay createPolygon(int dimension, ChunkPos pos, ShapeProperties shape)

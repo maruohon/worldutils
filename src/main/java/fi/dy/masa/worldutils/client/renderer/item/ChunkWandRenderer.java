@@ -11,15 +11,19 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.item.ItemChunkWand;
 import fi.dy.masa.worldutils.item.ItemChunkWand.Corner;
 import fi.dy.masa.worldutils.item.ItemChunkWand.Mode;
 import fi.dy.masa.worldutils.setup.WorldUtilsItems;
+import fi.dy.masa.worldutils.util.NBTUtils;
 
 public class ChunkWandRenderer
 {
@@ -170,12 +174,26 @@ public class ChunkWandRenderer
         String preGreen = TextFormatting.GREEN.toString();
         String rst = TextFormatting.RESET.toString() + TextFormatting.WHITE.toString();
         String preIta = TextFormatting.ITALIC.toString();
-        int index = wand.getTargetSelection(stack);
-        int max = wand.getNumTargets(stack);
+        String str;
 
-        String str = I18n.format("worldutils.tooltip.item.chunkwand.target");
-        String name = wand.getWorldName(stack);
-        lines.add(String.format("%s [%s%d/%d%s]: %s%s%s", str, preGreen, (index + 1), max, rst, preIta, name, rst));
+        if (mode == Mode.BIOME_SET)
+        {
+            int index = wand.getBiomeIndex(stack);
+            int id = NBTUtils.getCompoundTag(stack, ItemChunkWand.WRAPPER_TAG_NAME, true).getByte("BiomeId") & 0xFF;
+            str = I18n.format("worldutils.tooltip.item.chunkwand.biome");
+            Biome biome = ForgeRegistries.BIOMES.getValue(new ResourceLocation(wand.getBiomeName(stack)));
+            String name = biome != null ? biome.getBiomeName() : "N/A";
+            lines.add(String.format("%s [%s%d/%d%s]: (ID: %d) %s%s%s", str, preGreen, (index + 1),
+                    ForgeRegistries.BIOMES.getEntries().size(), rst, id, preIta, name, rst));
+        }
+        else
+        {
+            int index = wand.getTargetSelection(stack);
+            int max = wand.getNumTargets(stack);
+            str = I18n.format("worldutils.tooltip.item.chunkwand.targetworld");
+            String name = wand.getWorldName(stack);
+            lines.add(String.format("%s [%s%d/%d%s]: %s%s%s", str, preGreen, (index + 1), max, rst, preIta, name, rst));
+        }
 
         String modeName = mode.getDisplayName();
         str = I18n.format("worldutils.tooltip.item.mode");

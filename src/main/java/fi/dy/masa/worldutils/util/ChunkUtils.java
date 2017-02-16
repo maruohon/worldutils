@@ -33,6 +33,7 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.chunk.storage.RegionFileCache;
@@ -47,13 +48,18 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindFieldExcep
 import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 import fi.dy.masa.worldutils.WorldUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import scala.actors.threadpool.Arrays;
 
 public class ChunkUtils
 {
+    public static final String TAG_CHANGED_CHUNKS = "chunks_changed";
+    public static final String TAG_BIOMES_IMPORTED = "biomes_imported";
+    public static final String TAG_BIOMES_SET = "biomes_set";
     private static final ChunkUtils INSTANCE = new ChunkUtils();
     private final Map<File, AnvilChunkLoader> chunkLoaders = new HashMap<File, AnvilChunkLoader>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> changedChunks  = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> importedBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
+    private final TIntObjectHashMap<Map<String, Map<Long, String>>> setBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private boolean dirty;
 
     public static class ChunkChanges
@@ -103,7 +109,8 @@ public class ChunkUtils
     public static enum ChangeType
     {
         CHUNK_CHANGE,
-        BIOME_IMPORT;
+        BIOME_IMPORT,
+        BIOME_SET;
 
         public static ChangeType fromId(int id)
         {
@@ -453,9 +460,13 @@ public class ChunkUtils
         {
             mainMap = this.getChangeMap(this.changedChunks, world);
         }
-        else
+        else if (type == ChangeType.BIOME_IMPORT)
         {
             mainMap = this.getChangeMap(this.importedBiomes, world);
+        }
+        else
+        {
+            mainMap = this.getChangeMap(this.setBiomes, world);
         }
 
         Map<Long, String> map = mainMap.get(user);
@@ -473,6 +484,13 @@ public class ChunkUtils
         if (type == ChangeType.CHUNK_CHANGE)
         {
             map = this.getChangeMap(this.importedBiomes, world).get(user);
+
+            if (map != null)
+            {
+                map.remove(posLong);
+            }
+
+            map = this.getChangeMap(this.setBiomes, world).get(user);
 
             if (map != null)
             {
@@ -517,8 +535,9 @@ public class ChunkUtils
                 if (file.exists() && file.isFile())
                 {
                     NBTTagCompound nbt = CompressedStreamTools.readCompressed(new FileInputStream(file));
-                    this.readFromNBT(this.getChangeMap(this.changedChunks, world), nbt, "changes");
-                    this.readFromNBT(this.getChangeMap(this.importedBiomes, world), nbt, "biomes");
+                    this.readFromNBT(this.getChangeMap(this.changedChunks, world), nbt, TAG_CHANGED_CHUNKS);
+                    this.readFromNBT(this.getChangeMap(this.importedBiomes, world), nbt, TAG_BIOMES_IMPORTED);
+                    this.readFromNBT(this.getChangeMap(this.setBiomes, world), nbt, TAG_BIOMES_SET);
                 }
             }
         }
@@ -603,8 +622,9 @@ public class ChunkUtils
     {
         NBTTagCompound nbt = new NBTTagCompound();
         final int dim = world.provider.getDimension();
-        this.writeToNBT(this.getChangeMap(this.changedChunks, world), dim, user, nbt, "changes");
-        this.writeToNBT(this.getChangeMap(this.importedBiomes, world), dim, user, nbt, "biomes");
+        this.writeToNBT(this.getChangeMap(this.changedChunks, world), dim, user, nbt, TAG_CHANGED_CHUNKS);
+        this.writeToNBT(this.getChangeMap(this.importedBiomes, world), dim, user, nbt, TAG_BIOMES_IMPORTED);
+        this.writeToNBT(this.getChangeMap(this.setBiomes, world), dim, user, nbt, TAG_BIOMES_SET);
 
         return nbt;
     }
@@ -709,6 +729,24 @@ public class ChunkUtils
                 WorldUtils.logger.warn("Failed to read chunk data for chunk ({}, {})", pos.chunkXPos, pos.chunkZPos);
             }
         }
+    }
+
+    public void setBiome(World worldIn, ChunkPos pos, Biome biome, String user)
+    {
+        if ((worldIn instanceof WorldServer) == false || biome == null)
+        {
+            return;
+        }
+
+        WorldServer world = (WorldServer) worldIn;
+        Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.chunkXPos, pos.chunkZPos);
+        byte[] biomes = new byte[256];
+
+        Arrays.fill(biomes, (byte) Biome.getIdForBiome(biome));
+        chunkCurrent.setBiomeArray(biomes);
+        chunkCurrent.setChunkModified();
+        this.sendChunkToWatchers(world, chunkCurrent);
+        this.addChangedChunkLocation(world, pos, ChangeType.BIOME_SET, "", user);
     }
 
     public void loadChunkFromAlternateWorld(World worldIn, ChunkPos pos, String worldName, String user)

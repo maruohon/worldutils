@@ -8,6 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.util.Constants;
+import fi.dy.masa.worldutils.util.ChunkUtils;
 import fi.dy.masa.worldutils.util.ChunkUtils.ChangeType;
 
 public class ChunkChangeTracker
@@ -15,6 +16,7 @@ public class ChunkChangeTracker
     private static final ChunkChangeTracker INSTANCE = new ChunkChangeTracker();
     private final Set<ChunkPos> changedChunks = new HashSet<ChunkPos>();
     private final Set<ChunkPos> importedBiomes = new HashSet<ChunkPos>();
+    private final Set<ChunkPos> setBiomes = new HashSet<ChunkPos>();
     private String ignoredWorld = "";
     private boolean newChanges;
 
@@ -45,7 +47,18 @@ public class ChunkChangeTracker
     {
         this.newChanges = false;
 
-        return type == ChangeType.CHUNK_CHANGE ? this.changedChunks : this.importedBiomes;
+        if (type == ChangeType.CHUNK_CHANGE)
+        {
+            return this.changedChunks;
+        }
+        else if (type == ChangeType.BIOME_IMPORT)
+        {
+            return this.importedBiomes;
+        }
+        else
+        {
+            return this.setBiomes;
+        }
     }
 
     private void readChangesFromNBT(Set<ChunkPos> setIn, NBTTagCompound nbt, String tagName)
@@ -77,9 +90,11 @@ public class ChunkChangeTracker
 
         this.changedChunks.clear();
         this.importedBiomes.clear();
+        this.setBiomes.clear();
 
-        this.readChangesFromNBT(this.changedChunks, nbt, "changes");
-        this.readChangesFromNBT(this.importedBiomes, nbt, "biomes");
+        this.readChangesFromNBT(this.changedChunks,  nbt, ChunkUtils.TAG_CHANGED_CHUNKS);
+        this.readChangesFromNBT(this.importedBiomes, nbt, ChunkUtils.TAG_BIOMES_IMPORTED);
+        this.readChangesFromNBT(this.setBiomes,      nbt, ChunkUtils.TAG_BIOMES_SET);
 
         this.newChanges = true;
     }
@@ -103,6 +118,7 @@ public class ChunkChangeTracker
             if (type == ChangeType.CHUNK_CHANGE)
             {
                 this.importedBiomes.remove(pos);
+                this.setBiomes.remove(pos);
             }
         }
 
