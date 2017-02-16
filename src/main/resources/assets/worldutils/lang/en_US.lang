@@ -38,6 +38,7 @@ worldutils.tooltip.item.mode=Mode
  # Commands:
 ###################################
 worldutils.commands.error.dimensionnotloaded=Dimension %d is currently not loaded!
+worldutils.commands.error.filenotfound=File '%s' was not found
 worldutils.commands.error.invalidgameversion=Invalid game version '%s'!
 worldutils.commands.error.notaskfound=No running task found
 worldutils.commands.error.taskalreadyrunning=There is a task already running
@@ -83,6 +84,10 @@ worldutils.commands.entities.remove.start=Removing all selected entities from th
 worldutils.commands.entities.rename.start=Renaming all selected entities in the entire world, this may take a while...
 
 worldutils.commands.printspawn.print=The world spawn is at x: %d, y: %d, z: %d
+
+worldutils.commands.registrycleanup.error.filenotfound=The file '%s' was not found inside the config/worldutils/ directory
+worldutils.commands.registrycleanup.error.tagsnotfound=Some of the expected compound tags were not found in the level.dat file
+worldutils.commands.registrycleanup.info.complete=Removed %d missing or dummied block entries from the registry in '%s'
 
 worldutils.commands.tileticks.list.list.empty=Nothing added to the list to be removed
 worldutils.commands.tileticks.list.list.print=Tile ticks will be removed for anything matching '%s'
