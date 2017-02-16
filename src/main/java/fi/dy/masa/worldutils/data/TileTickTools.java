@@ -530,7 +530,7 @@ public class TileTickTools
         }
         else if (operation == Operation.REMOVE_INVALID)
         {
-            TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_INVALID, Collections.emptySet());
+            TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_INVALID, Collections.<String>emptySet());
             TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
         }
     }
