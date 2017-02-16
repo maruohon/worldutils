@@ -87,6 +87,11 @@ public class FileUtils
             return this.regionName;
         }
 
+        public String getFileName()
+        {
+            return this.regionFile.getAbsolutePath();
+        }
+
         public RegionFile getRegionFile()
         {
             return this.region;

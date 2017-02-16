@@ -242,8 +242,8 @@ public class BlockTools
 
             if (dataIn == null)
             {
-                WorldUtils.logger.warn("BlockReplacer#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getName());
+                WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
+                        chunkX, chunkZ, region.getFileName());
                 return 0;
             }
 
@@ -254,13 +254,13 @@ public class BlockTools
             }
             catch (IOException e)
             {
-                WorldUtils.logger.warn("BlockReplacer#processChunk(): Failed to read chunk data for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getName(), e);
+                WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
+                        chunkX, chunkZ, region.getFileName(), e);
 
                 return 0;
             }
 
-            if (chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
+            if (chunkNBT != null && chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
             {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
                 ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
@@ -386,8 +386,8 @@ public class BlockTools
 
                 if (dataOut == null)
                 {
-                    WorldUtils.logger.warn("BlockReplacer#processChunk(): Failed to write chunk data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getName());
+                    WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to get chunk data output stream for chunk ({}, {}) in file '{}'",
+                            chunkX, chunkZ, region.getFileName());
                     return 0;
                 }
 
@@ -398,7 +398,8 @@ public class BlockTools
                 }
                 catch (IOException e)
                 {
-                    e.printStackTrace();
+                    WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to write chunk data for chunk ({}, {}) in file '{}'",
+                            chunkX, chunkZ, region.getFileName(), e);
                 }
             }
 
