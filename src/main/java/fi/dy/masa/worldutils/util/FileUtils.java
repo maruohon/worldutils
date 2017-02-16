@@ -22,6 +22,7 @@ import net.minecraft.world.chunk.storage.RegionFile;
 import net.minecraft.world.chunk.storage.RegionFileCache;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.IChunkDataHandler;
 import fi.dy.masa.worldutils.data.IWorldDataHandler;
@@ -286,7 +287,7 @@ public class FileUtils
 
     public static File getWorldSaveLocation(int dimension)
     {
-        World world = DimensionManager.getWorld(dimension);
+        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dimension);
         File dir = DimensionManager.getCurrentSaveRootDirectory();
 
         if (world != null && world.provider.getSaveFolder() != null)
@@ -299,6 +300,6 @@ public class FileUtils
 
     public static File getRegionDirectory(int dimension)
     {
-        return new File(FileUtils.getWorldSaveLocation(dimension), "region");
+        return new File(getWorldSaveLocation(dimension), "region");
     }
 }
