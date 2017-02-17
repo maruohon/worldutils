@@ -14,7 +14,6 @@ import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.EntityTools;
 import fi.dy.masa.worldutils.data.EntityTools.EntityRenamer;
-import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.util.FileUtils;
 
 public class SubCommandEntities extends SubCommand
@@ -186,22 +185,12 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("read-all"))
         {
-            if (TaskScheduler.getInstance().hasTasks())
-            {
-                throwCommand("worldutils.commands.error.taskalreadyrunning");
-            }
-
             this.sendMessage(sender, "worldutils.commands.entities.readall.start");
             int dimension = this.getDimension(cmd, args, sender);
             EntityTools.instance().readEntities(dimension, sender);
         }
         else if (cmd.equals("remove-duplicate-uuids"))
         {
-            if (TaskScheduler.getInstance().hasTasks())
-            {
-                throwCommand("worldutils.commands.error.taskalreadyrunning");
-            }
-
             this.sendMessage(sender, "worldutils.commands.entities.removeallduplicates.start");
             int dimension = this.getDimension(cmd, args, sender);
             EntityTools.instance().removeAllDuplicateEntities(dimension, sender);

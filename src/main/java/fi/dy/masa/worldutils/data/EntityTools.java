@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -606,27 +607,27 @@ public class EntityTools
         return INSTANCE;
     }
 
-    public void readEntities(int dimension, ICommandSender sender)
+    public void readEntities(int dimension, ICommandSender sender) throws CommandException
     {
         this.entityDataReader.init(dimension);
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.entityDataReader, sender), 1);
     }
 
-    public void removeAllDuplicateEntities(int dimension, ICommandSender sender)
+    public void removeAllDuplicateEntities(int dimension, ICommandSender sender) throws CommandException
     {
         EntityDataReader reader = new EntityDataReader(dimension, true);
         reader.init(dimension);
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
     }
 
-    public void removeEntities(int dimension, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender)
+    public void removeEntities(int dimension, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender) throws CommandException
     {
         EntityRemover remover = new EntityRemover(toRemove, type);
         remover.init(dimension);
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
     }
 
-    public void renameEntities(int dimension, List<Pair<String, String>> renamePairs, EntityRenamer.Type type, ICommandSender sender)
+    public void renameEntities(int dimension, List<Pair<String, String>> renamePairs, EntityRenamer.Type type, ICommandSender sender) throws CommandException
     {
         EntityRenamer renamer = new EntityRenamer(renamePairs, type);
         renamer.init(dimension);

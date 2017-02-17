@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.block.Block;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -525,7 +526,7 @@ public class TileTickTools
         return this.getRemoveSet(operation);
     }
 
-    public void startTask(int dimension, Operation operation, boolean forceRescan, ICommandSender sender)
+    public void startTask(int dimension, Operation operation, boolean forceRescan, ICommandSender sender) throws CommandException
     {
         if (operation == Operation.READ || operation == Operation.FIND_INVALID)
         {

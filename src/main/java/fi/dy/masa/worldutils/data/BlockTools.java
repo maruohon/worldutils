@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -42,7 +43,7 @@ public class BlockTools
     }
 
     public void replaceBlocks(int dimension, String replacement, List<String> blockNames, List<IBlockState> blockStates,
-            boolean keepListedBlocks, LoadedType loaded, ICommandSender sender)
+            boolean keepListedBlocks, LoadedType loaded, ICommandSender sender) throws CommandException
     {
         BlockReplacerSet replacer = new BlockReplacerSet(replacement, keepListedBlocks, loaded);
         replacer.addBlocksFromBlockStates(blockStates);
@@ -56,7 +57,8 @@ public class BlockTools
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
     }
 
-    public void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs, LoadedType loaded, ICommandSender sender)
+    public void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs,
+            LoadedType loaded, ICommandSender sender) throws CommandException
     {
         BlockReplacerPairs replacer = new BlockReplacerPairs(loaded);
         replacer.addBlockPairs(blockPairs);

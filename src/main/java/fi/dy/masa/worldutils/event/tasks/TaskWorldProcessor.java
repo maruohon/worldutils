@@ -1,11 +1,13 @@
 package fi.dy.masa.worldutils.event.tasks;
 
 import java.io.File;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.command.SubCommand;
 import fi.dy.masa.worldutils.data.IWorldDataHandler;
 import fi.dy.masa.worldutils.event.TickHandler;
 import fi.dy.masa.worldutils.util.FileUtils;
@@ -26,8 +28,13 @@ public class TaskWorldProcessor implements ITask
     private int chunkCount = 0;
     private int tickCount = 0;
 
-    public TaskWorldProcessor(int dimension, IWorldDataHandler handler, ICommandSender sender)
+    public TaskWorldProcessor(int dimension, IWorldDataHandler handler, ICommandSender sender) throws CommandException
     {
+        if (TaskScheduler.getInstance().hasTasks())
+        {
+            SubCommand.throwCommand("worldutils.commands.error.taskalreadyrunning");
+        }
+
         this.dimension = dimension;
         this.worldHandler = handler;
         this.commandSender = sender;
