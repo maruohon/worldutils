@@ -1,10 +1,11 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.10.2-latest": "0.2.0",
-        "1.10.2-recommended": "0.2.0"
+        "1.10.2-latest": "0.2.1",
+        "1.10.2-recommended": "0.2.1"
     },
     "1.10.2": {
+        "0.2.1": "Fix not checking for valid dimension when getting the save directory",
         "0.2.0": "Added blockreplace commands\nAdded entity and tileentity remove and rename commands\nAdded a block registry dump command\nAdded block registry clean-up command\nAdded a task scheduler, all commands now use it instead of running in one go\nAdded a 'Set biome' mode to the Chunk Wand",
         "0.1.0-alpha.3": "Fix the tileticks command failing due to a Forge bug. Fix forgotten mod renaming related localization issues in the Chunk Wand.",
         "0.1.0-alpha.2": "Add 'tileticks find-invalid' and 'tileticks remove-invalid' commands.\nFix getting a wrong region in certain situations.",
