@@ -48,6 +48,10 @@ public class TaskScheduler
                 {
                     finished = task.execute();
                 }
+                else
+                {
+                    finished = true;
+                }
             }
 
             if (finished)

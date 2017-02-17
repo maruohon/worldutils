@@ -41,6 +41,7 @@ worldutils.tooltip.item.mode=Mode
 ###################################
 worldutils.commands.error.dimensionnotloaded=Dimension %d is currently not loaded!
 worldutils.commands.error.filenotfound=File '%s' was not found
+worldutils.commands.error.invaliddimension=Dimension %d could not be loaded or does not exist!
 worldutils.commands.error.invalidgameversion=Invalid game version '%s'!
 worldutils.commands.error.notaskfound=No running task found
 worldutils.commands.error.taskalreadyrunning=There is a task already running

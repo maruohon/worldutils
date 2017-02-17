@@ -2,7 +2,6 @@ package fi.dy.masa.worldutils.data;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +26,6 @@ import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.BlockData;
-import fi.dy.masa.worldutils.util.FileUtils;
 import fi.dy.masa.worldutils.util.FileUtils.Region;
 
 public class BlockTools
@@ -46,33 +44,23 @@ public class BlockTools
     public void replaceBlocks(int dimension, String replacement, List<String> blockNames, List<IBlockState> blockStates,
             boolean keepListedBlocks, LoadedType loaded, ICommandSender sender)
     {
-        File regionDir = FileUtils.getRegionDirectory(dimension);
+        BlockReplacerSet replacer = new BlockReplacerSet(replacement, keepListedBlocks, loaded);
+        replacer.addBlocksFromBlockStates(blockStates);
+        replacer.addBlocksFromStrings(blockNames);
 
-        if (regionDir.exists() && regionDir.isDirectory())
+        if (keepListedBlocks)
         {
-            BlockReplacerSet replacer = new BlockReplacerSet(replacement, keepListedBlocks, loaded);
-            replacer.addBlocksFromBlockStates(blockStates);
-            replacer.addBlocksFromStrings(blockNames);
-
-            if (keepListedBlocks)
-            {
-                replacer.addBlocksFromBlockStates(Lists.newArrayList(Blocks.AIR.getDefaultState()));
-            }
-
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+            replacer.addBlocksFromBlockStates(Lists.newArrayList(Blocks.AIR.getDefaultState()));
         }
+
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
     }
 
     public void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs, LoadedType loaded, ICommandSender sender)
     {
-        File regionDir = FileUtils.getRegionDirectory(dimension);
-
-        if (regionDir.exists() && regionDir.isDirectory())
-        {
-            BlockReplacerPairs replacer = new BlockReplacerPairs(loaded);
-            replacer.addBlockPairs(blockPairs);
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
-        }
+        BlockReplacerPairs replacer = new BlockReplacerPairs(loaded);
+        replacer.addBlockPairs(blockPairs);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
     }
 
     private class BlockReplacerSet extends BlockReplacerBase

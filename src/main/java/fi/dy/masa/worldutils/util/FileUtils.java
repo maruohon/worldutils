@@ -13,10 +13,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import javax.annotation.Nullable;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.RegionFile;
 import net.minecraft.world.chunk.storage.RegionFileCache;
@@ -140,7 +142,7 @@ public class FileUtils
 
         File regionDir = getRegionDirectory(dimension);
 
-        if (regionDir.exists() && regionDir.isDirectory())
+        if (regionDir != null && regionDir.exists() && regionDir.isDirectory())
         {
             worldDataHandler.setChunkProvider(provider);
 
@@ -148,9 +150,14 @@ public class FileUtils
             {
                 regionProcessor(regionFile, worldDataHandler, simulate);
             }
-        }
 
-        worldDataHandler.finish(sender, simulate);
+            worldDataHandler.finish(sender, simulate);
+        }
+        else
+        {
+            WorldUtils.logger.warn("Dimension {} could not be loaded or does not exist!", dimension);
+            sender.sendMessage(new TextComponentTranslation("worldutils.commands.error.invaliddimension", Integer.valueOf(dimension)));
+        }
     }
 
     private static void regionProcessor(File regionFile, IWorldDataHandler worldDataHandler, boolean simulate)
@@ -285,21 +292,37 @@ public class FileUtils
         return outFile;
     }
 
+    @Nullable
     public static File getWorldSaveLocation(int dimension)
     {
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dimension);
         File dir = DimensionManager.getCurrentSaveRootDirectory();
+        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dimension);
 
-        if (world != null && world.provider.getSaveFolder() != null)
+        if (world != null)
         {
-            dir = new File(dir, world.provider.getSaveFolder());
+            if (world.provider.getSaveFolder() != null)
+            {
+                return new File(dir, world.provider.getSaveFolder());
+            }
+            else if (world.provider.getDimension() == 0)
+            {
+                return dir;
+            }
         }
 
-        return dir;
+        return null;
     }
 
+    @Nullable
     public static File getRegionDirectory(int dimension)
     {
-        return new File(getWorldSaveLocation(dimension), "region");
+        File worldDir = getWorldSaveLocation(dimension);
+
+        if (worldDir != null)
+        {
+            return new File(worldDir, "region");
+        }
+
+        return null;
     }
 }

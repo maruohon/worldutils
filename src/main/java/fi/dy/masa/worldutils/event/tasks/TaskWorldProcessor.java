@@ -2,6 +2,7 @@ package fi.dy.masa.worldutils.event.tasks;
 
 import java.io.File;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.worldutils.WorldUtils;
@@ -33,13 +34,15 @@ public class TaskWorldProcessor implements ITask
 
         File regionDir = FileUtils.getRegionDirectory(dimension);
 
-        if (regionDir.exists() && regionDir.isDirectory())
+        if (regionDir != null && regionDir.exists() && regionDir.isDirectory())
         {
             this.regionFiles = regionDir.listFiles(FileUtils.ANVIL_REGION_FILE_FILTER);
         }
         else
         {
             this.regionFiles = null;
+            WorldUtils.logger.warn("Dimension {} could not be loaded or does not exist!", dimension);
+            sender.sendMessage(new TextComponentTranslation("worldutils.commands.error.invaliddimension", Integer.valueOf(dimension)));
         }
     }
 

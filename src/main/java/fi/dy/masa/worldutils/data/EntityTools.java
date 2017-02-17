@@ -211,7 +211,7 @@ public class EntityTools
         @Override
         public boolean canExecute()
         {
-            return true;
+            return this.worldDir != null;
         }
 
         @Override
@@ -614,14 +614,9 @@ public class EntityTools
 
     public void removeAllDuplicateEntities(int dimension, ICommandSender sender)
     {
-        File regionDir = FileUtils.getRegionDirectory(dimension);
-
-        if (regionDir.exists() && regionDir.isDirectory())
-        {
-            EntityDataReader reader = new EntityDataReader(dimension, true);
-            reader.init(dimension);
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
-        }
+        EntityDataReader reader = new EntityDataReader(dimension, true);
+        reader.init(dimension);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
     }
 
     public void removeEntities(int dimension, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender)
