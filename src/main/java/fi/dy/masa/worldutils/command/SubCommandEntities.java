@@ -62,8 +62,8 @@ public class SubCommandEntities extends SubCommand
         this.sendMessage(sender, this.getUsageStringCommon() + " remove remove-with-spaces <name with spaces>");
         this.sendMessage(sender, this.getUsageStringCommon() + " remove list");
         this.sendMessage(sender, this.getUsageStringCommon() + " remove clear");
-        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-entities");
-        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-tileentities");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-entities [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-tileentities [dimension id]");
     }
 
     private void printHelpRename(ICommandSender sender)
@@ -76,8 +76,8 @@ public class SubCommandEntities extends SubCommand
         this.sendMessage(sender, this.getUsageStringCommon() + " rename prepare-to <name with spaces>");
         this.sendMessage(sender, this.getUsageStringCommon() + " rename list");
         this.sendMessage(sender, this.getUsageStringCommon() + " rename clear");
-        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-entities");
-        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-tileentities");
+        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-entities [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-tileentities [dimension id]");
     }
 
     @Override
