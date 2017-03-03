@@ -6,9 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,9 +43,6 @@ import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldException;
-import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindFieldException;
-import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 import fi.dy.masa.worldutils.WorldUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -56,11 +52,28 @@ public class ChunkUtils
     public static final String TAG_BIOMES_IMPORTED = "biomes_imported";
     public static final String TAG_BIOMES_SET = "biomes_set";
     private static final ChunkUtils INSTANCE = new ChunkUtils();
+    private static MethodHandle methodHandle_ChunkProviderServer_saveChunkData;
+    private static MethodHandle methodHandle_ChunkProviderServer_saveChunkExtraData;
+    private static Field field_World_tileEntitiesToBeRemoved;
+    private static Field field_World_unloadedEntityList;
+    private static Field field_PlayerChunkMapEntry_chunk;
     private final Map<File, AnvilChunkLoader> chunkLoaders = new HashMap<File, AnvilChunkLoader>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> changedChunks  = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> importedBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private final TIntObjectHashMap<Map<String, Map<Long, String>>> setBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
     private boolean dirty;
+
+    static
+    {
+        methodHandle_ChunkProviderServer_saveChunkData =
+            MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, "saveChunkData", "func_73242_b", Chunk.class);
+        methodHandle_ChunkProviderServer_saveChunkExtraData =
+                MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, "saveChunkExtraData", "func_73243_a", Chunk.class);
+
+        field_World_tileEntitiesToBeRemoved = ReflectionHelper.findField(World.class, "field_147483_b", "tileEntitiesToBeRemoved");
+        field_World_unloadedEntityList = ReflectionHelper.findField(World.class, "field_72997_g", "unloadedEntityList");
+        field_PlayerChunkMapEntry_chunk = ReflectionHelper.findField(PlayerChunkMapEntry.class, "field_187286_f", "chunk");
+    }
 
     public static class ChunkChanges
     {
@@ -262,24 +275,12 @@ public class ChunkUtils
         try
         {
             ChunkProviderServer provider = world.getChunkProvider();
-
-            Method method = ReflectionHelper.findMethod(ChunkProviderServer.class, provider, new String[] { "func_73242_b", "saveChunkData" }, Chunk.class);
-            method.invoke(provider, chunk);
-
-            method = ReflectionHelper.findMethod(ChunkProviderServer.class, provider, new String[] { "func_73243_a", "saveChunkExtraData" }, Chunk.class);
-            method.invoke(provider, chunk);
+            methodHandle_ChunkProviderServer_saveChunkData.invokeExact(provider, chunk);
+            methodHandle_ChunkProviderServer_saveChunkExtraData.invokeExact(provider, chunk);
         }
-        catch (UnableToFindMethodException e)
+        catch (Throwable t)
         {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {}) - UnableToFindMethodException", chunk.xPosition, chunk.zPosition);
-        }
-        catch (InvocationTargetException e)
-        {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {}) - InvocationTargetException", chunk.xPosition, chunk.zPosition);
-        }
-        catch (IllegalAccessException e)
-        {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {}) - IllegalAccessException", chunk.xPosition, chunk.zPosition);
+            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {})", chunk.xPosition, chunk.zPosition, t);
         }
 
         List<Entity> unloadEntities = new ArrayList<Entity>();
@@ -306,23 +307,17 @@ public class ChunkUtils
 
         try
         {
-            Field field = ReflectionHelper.findField(World.class, "field_147483_b", "tileEntitiesToBeRemoved");
             @SuppressWarnings("unchecked")
-            List<TileEntity> toRemove = (List<TileEntity>) field.get(world);
+            List<TileEntity> toRemove = (List<TileEntity>) field_World_tileEntitiesToBeRemoved.get(world);
             toRemove.removeAll(unloadTileEntities);
 
-            field = ReflectionHelper.findField(World.class, "field_72997_g", "unloadedEntityList");
             @SuppressWarnings("unchecked")
-            List<Entity> toRemoveEnt = (List<Entity>) field.get(world);
+            List<Entity> toRemoveEnt = (List<Entity>) field_World_unloadedEntityList.get(world);
             toRemoveEnt.removeAll(unloadEntities);
         }
-        catch (UnableToFindFieldException e)
+        catch (Exception e)
         {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {}) - UnableToFindFieldException", chunk.xPosition, chunk.zPosition);
-        }
-        catch (IllegalAccessException e)
-        {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {}) - IllegalAccessException", chunk.xPosition, chunk.zPosition);
+            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {})", chunk.xPosition, chunk.zPosition, e);
         }
 
         // For some reason getPendingBlockUpdates() checks for "x >= minX && x < maxX" and not x <= maxX...
@@ -412,11 +407,11 @@ public class ChunkUtils
         {
             try
             {
-                ReflectionHelper.setPrivateValue(PlayerChunkMapEntry.class, entry, chunk, "field_187286_f", "chunk");
+                field_PlayerChunkMapEntry_chunk.set(entry, chunk);
             }
-            catch (UnableToAccessFieldException e)
+            catch (Exception e)
             {
-                WorldUtils.logger.warn("Failed to update PlayerChunkMapEntry for chunk ({}, {})", pos.chunkXPos, pos.chunkZPos);
+                WorldUtils.logger.warn("Failed to update PlayerChunkMapEntry for chunk ({}, {})", pos.chunkXPos, pos.chunkZPos, e);
             }
         }
     }
