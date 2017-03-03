@@ -123,14 +123,14 @@ public class ChunkWandRenderer
     public static void renderText(Minecraft mc, int posX, int posY, List<String> lines)
     {
         ScaledResolution scaledResolution = new ScaledResolution(mc);
-        int lineHeight = mc.fontRendererObj.FONT_HEIGHT + 2;
+        FontRenderer fontRenderer = mc.fontRenderer;
+        int lineHeight = fontRenderer.FONT_HEIGHT + 2;
         int y = scaledResolution.getScaledHeight() - (lineHeight * lines.size());
 
         y = y + posY;
         boolean useTextBackground = true;
         boolean useFontShadow = true;
         int textBgColor = 0x80000000;
-        FontRenderer fontRenderer = mc.fontRendererObj;
 
         for (String line : lines)
         {
@@ -155,7 +155,8 @@ public class ChunkWandRenderer
     public void renderHudChunkWand(EntityPlayer player)
     {
         ItemStack stack = player.getHeldItemMainhand();
-        if (stack == null || stack.getItem() != WorldUtilsItems.chunkWand)
+
+        if (stack.isEmpty() || stack.getItem() != WorldUtilsItems.chunkWand)
         {
             return;
         }

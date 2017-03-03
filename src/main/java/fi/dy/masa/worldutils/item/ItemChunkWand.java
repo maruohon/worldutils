@@ -64,22 +64,22 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World world, EntityPlayer player, EnumHand hand)
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
     {
         if (world.isRemote == false)
         {
-            this.setPosition(stack, PositionUtils.getLookedAtChunk(world, player, 256), Corner.END);
+            this.setPosition(player.getHeldItem(hand), PositionUtils.getLookedAtChunk(world, player, 256), Corner.END);
         }
 
-        return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
+        return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }
 
     @Override
-    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
     {
         if (world.isRemote == false)
         {
-            this.setPosition(stack, PositionUtils.getChunkPosFromBlockPos(pos), Corner.END);
+            this.setPosition(player.getHeldItem(hand), PositionUtils.getChunkPosFromBlockPos(pos), Corner.END);
         }
 
         return EnumActionResult.SUCCESS;

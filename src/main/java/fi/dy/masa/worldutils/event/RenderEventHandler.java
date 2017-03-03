@@ -53,7 +53,7 @@ public class RenderEventHandler
     {
         ItemStack stack = EntityUtils.getHeldItemOfType(usingPlayer, WorldUtilsItems.chunkWand);
 
-        if (stack != null && stack.getItem() == WorldUtilsItems.chunkWand)
+        if (stack.isEmpty() == false && stack.getItem() == WorldUtilsItems.chunkWand)
         {
             this.chunkWandRenderer.renderSelectedArea(world, usingPlayer, stack, clientPlayer, partialTicks);
         }

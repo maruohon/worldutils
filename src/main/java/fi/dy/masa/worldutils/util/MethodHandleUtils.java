@@ -24,7 +24,7 @@ public class MethodHandleUtils
 
         try
         {
-            Method method = ReflectionHelper.findMethod(clazz, null, new String[] { methodNameObf, methodName }, paramTypes);
+            Method method = ReflectionHelper.findMethod(clazz, methodName, methodNameObf, paramTypes);
             MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodHandle handle = lookup.unreflect(method);
             method.setAccessible(false);

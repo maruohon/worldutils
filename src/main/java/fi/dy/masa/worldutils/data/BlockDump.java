@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import net.minecraft.block.Block;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -44,15 +45,15 @@ public class BlockDump extends DataDump
         return lines;
     }
 
-    public void addData(Block block, ResourceLocation rl, boolean subTypesKnown, boolean hasSubTypes, @Nullable ItemStack stack)
+    public void addData(Block block, ResourceLocation rl, boolean subTypesKnown, boolean hasSubTypes, @Nonnull ItemStack stack)
     {
         String blockId = String.valueOf(Block.getIdFromBlock(block));
         String modName = ModNameUtils.getModName(rl);
         String registryName = rl.toString();
-        String displayName = stack != null ? stack.getDisplayName() : block.getLocalizedName();
+        String displayName = stack.isEmpty() == false ? stack.getDisplayName() : block.getLocalizedName();
         Item item = Item.getItemFromBlock(block);
-        String itemId = item != null ? String.format("%5d", Item.getIdFromItem(item)) : "-";
-        String itemMeta = (item == null || stack == null) ? "-" : String.format("%5d", stack.getMetadata());
+        String itemId = item != Items.AIR ? String.format("%5d", Item.getIdFromItem(item)) : "-";
+        String itemMeta = stack.isEmpty() ? "-" : String.format("%5d", stack.getMetadata());
         String subTypes = subTypesKnown ? String.valueOf(hasSubTypes) : "?";
         @SuppressWarnings("deprecation")
         String exists = GameData.getBlockRegistry().isDummied(rl) ? "false" : "true";
@@ -68,7 +69,7 @@ public class BlockDump extends DataDump
         while (iter.hasNext())
         {
             Map.Entry<ResourceLocation, Block> entry = iter.next();
-            blockDump.addData(entry.getValue(), entry.getKey(), false, false, null);
+            blockDump.addData(entry.getValue(), entry.getKey(), false, false, ItemStack.EMPTY);
         }
 
         blockDump.addTitle("Mod name", "Registry name", "BlockID", "Subtypes", "Item ID", "Item meta", "Display name", "Exists");

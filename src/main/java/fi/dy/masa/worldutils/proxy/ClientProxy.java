@@ -31,7 +31,7 @@ public class ClientProxy implements IProxy
             case CLIENT:
                 return FMLClientHandler.instance().getClientPlayerEntity();
             case SERVER:
-                return ctx.getServerHandler().playerEntity;
+                return ctx.getServerHandler().player;
             default:
                 WorldUtils.logger.warn("Invalid side in getPlayerFromMessageContext(): " + ctx.side);
                 return null;

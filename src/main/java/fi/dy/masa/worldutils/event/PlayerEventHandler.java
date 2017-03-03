@@ -29,7 +29,8 @@ public class PlayerEventHandler
         EntityPlayer player = event.getEntityPlayer();
         // You can only left click with the main hand, so this is fine here
         ItemStack stack = player.getHeldItemMainhand();
-        if (stack == null)
+
+        if (stack.isEmpty())
         {
             return;
         }
@@ -52,7 +53,7 @@ public class PlayerEventHandler
         {
             ItemStack stack = event.getEntityPlayer().getHeldItemMainhand();
 
-            if (stack != null && stack.getItem() == WorldUtilsItems.chunkWand)
+            if (stack.isEmpty() == false && stack.getItem() == WorldUtilsItems.chunkWand)
             {
                 PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(HotKeys.KEYCODE_CUSTOM_1));
             }

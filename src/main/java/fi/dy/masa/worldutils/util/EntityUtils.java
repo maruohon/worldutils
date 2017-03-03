@@ -21,24 +21,26 @@ public class EntityUtils
 {
     public static boolean isHoldingItem(EntityLivingBase entity, Item item)
     {
-        return getHeldItemOfType(entity, item) != null;
+        return getHeldItemOfType(entity, item).isEmpty() == false;
     }
 
     public static ItemStack getHeldItemOfType(EntityLivingBase entity, Item item)
     {
         ItemStack stack = entity.getHeldItemMainhand();
-        if (stack != null && stack.getItem() == item)
+
+        if (stack.isEmpty() == false && stack.getItem() == item)
         {
             return stack;
         }
 
         stack = entity.getHeldItemOffhand();
-        if (stack != null && stack.getItem() == item)
+
+        if (stack.isEmpty() == false && stack.getItem() == item)
         {
             return stack;
         }
 
-        return null;
+        return ItemStack.EMPTY;
     }
 
     public static boolean isHoldingItemOfType(EntityLivingBase entity, Class<?> clazz)
@@ -49,26 +51,30 @@ public class EntityUtils
     public static ItemStack getHeldItemOfType(EntityLivingBase entity, Class<?> clazz)
     {
         ItemStack stack = entity.getHeldItemMainhand();
-        if (stack != null)
+
+        if (stack.isEmpty() == false)
         {
             Item item = stack.getItem();
-            if (item != null && clazz.isAssignableFrom(item.getClass()) == true)
+
+            if (item != null && clazz.isAssignableFrom(item.getClass()))
             {
                 return stack;
             }
         }
 
         stack = entity.getHeldItemOffhand();
-        if (stack != null)
+
+        if (stack.isEmpty() == false)
         {
             Item item = stack.getItem();
-            if (item != null && clazz.isAssignableFrom(item.getClass()) == true)
+
+            if (item != null && clazz.isAssignableFrom(item.getClass()))
             {
                 return stack;
             }
         }
 
-        return null;
+        return ItemStack.EMPTY;
     }
 
     public static EnumFacing getHorizontalLookingDirection(Entity entity)

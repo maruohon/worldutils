@@ -346,12 +346,24 @@ public class VanillaBlocks
 
     public static void addNewVanillaBlockStatesIn_1_11(List<IBlockState> blockStateList)
     {
-        //blockStateList.add(Blocks.OBSERVER.getDefaultState());
+        blockStateList.addAll(Blocks.OBSERVER.getBlockState().getValidStates());
 
-        /*for (EnumDyeColor color : EnumDyeColor.values())
-        {
-            list_1_11.add("minecraft:" + color.getName() + "_shulker_box");
-        }*/
+        blockStateList.addAll(Blocks.WHITE_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.ORANGE_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.MAGENTA_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.LIGHT_BLUE_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.YELLOW_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.LIME_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.PINK_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.GRAY_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.SILVER_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.CYAN_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.PURPLE_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.BLUE_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.BROWN_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.GREEN_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.RED_SHULKER_BOX.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.BLACK_SHULKER_BOX.getBlockState().getValidStates());
     }
 
     /**

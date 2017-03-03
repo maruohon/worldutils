@@ -17,7 +17,7 @@ public class ServerProxy implements IProxy
         switch (ctx.side)
         {
             case SERVER:
-                return ctx.getServerHandler().playerEntity;
+                return ctx.getServerHandler().player;
             default:
                 WorldUtils.logger.warn("Invalid side in getPlayerFromMessageContext(): " + ctx.side);
                 return null;

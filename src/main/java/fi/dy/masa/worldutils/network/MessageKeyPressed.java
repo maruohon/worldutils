@@ -49,7 +49,7 @@ public class MessageKeyPressed implements IMessage
                 return null;
             }
 
-            final EntityPlayerMP sendingPlayer = ctx.getServerHandler().playerEntity;
+            final EntityPlayerMP sendingPlayer = ctx.getServerHandler().player;
             if (sendingPlayer == null)
             {
                 WorldUtils.logger.error("Sending player was null in MessageKeyPressed");
@@ -78,7 +78,7 @@ public class MessageKeyPressed implements IMessage
         {
             ItemStack stack = EntityUtils.getHeldItemOfType(player, IKeyBound.class);
 
-            if (stack != null)
+            if (stack.isEmpty() == false)
             {
                 ((IKeyBound) stack.getItem()).doKeyBindingAction(player, stack, message.keyPressed);
             }
