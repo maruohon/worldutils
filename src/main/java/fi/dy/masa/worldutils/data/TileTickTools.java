@@ -476,7 +476,7 @@ public class TileTickTools
     {
         Block block = Block.getBlockById(id);
 
-        if (block != null)
+        if (block != null && block.getRegistryName() != null)
         {
             ResourceLocation rl = block.getRegistryName();
             return Pair.of(rl, rl.toString());
