@@ -164,7 +164,7 @@ public class ChunkWandRenderer
 
         this.getText(lines, stack, player);
 
-        renderText(this.mc, 4, 0, lines);
+        renderText(this.mc, 4, -12, lines);
     }
 
     private void getText(List<String> lines, ItemStack stack, EntityPlayer player)
@@ -183,8 +183,9 @@ public class ChunkWandRenderer
             str = I18n.format("worldutils.tooltip.item.chunkwand.biome");
             Biome biome = ForgeRegistries.BIOMES.getValue(new ResourceLocation(wand.getBiomeName(stack)));
             String name = biome != null ? biome.getBiomeName() : "N/A";
-            lines.add(String.format("%s [%s%d/%d%s]: (ID: %d) %s%s%s", str, preGreen, (index + 1),
-                    ForgeRegistries.BIOMES.getEntries().size(), rst, id, preIta, name, rst));
+            String regName = biome != null ? biome.getRegistryName().toString() : "N/A";
+            lines.add(String.format("%s [%s%d/%d%s]: (ID: %d) %s%s (%s) %s", str, preGreen, (index + 1),
+                    ForgeRegistries.BIOMES.getEntries().size(), rst, id, preIta, name, regName, rst));
         }
         else
         {
@@ -205,7 +206,7 @@ public class ChunkWandRenderer
 
     private int getMaxY(EntityPlayer player)
     {
-        return MathHelper.clamp(Math.min((int) player.posY - 16, 120), 1, 255);
+        return MathHelper.clamp(Math.min((int) player.posY + 1, 120), 1, 255);
     }
 
     private AxisAlignedBB createEnclosingChunkAABB(ChunkPos posStart, ChunkPos posEnd, EntityPlayer player, float partialTicks)
