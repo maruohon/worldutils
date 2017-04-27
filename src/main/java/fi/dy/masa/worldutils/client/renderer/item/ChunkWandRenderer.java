@@ -186,7 +186,7 @@ public class ChunkWandRenderer
             String name = biome != null ? biome.getBiomeName() : "N/A";
             String regName = biome != null ? biome.getRegistryName().toString() : "N/A";
             lines.add(String.format("%s [%s%d/%d%s]: (ID: %d) %s%s (%s) %s", str, preGreen, (index + 1),
-                    ForgeRegistries.BIOMES.getEntries().size(), rst, id, preIta, name, regName, rst));
+                    ForgeRegistries.BIOMES.getEntries().size(), rst, id, rst, name, regName, rst));
         }
         else
         {
