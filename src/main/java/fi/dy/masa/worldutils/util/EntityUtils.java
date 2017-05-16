@@ -45,7 +45,7 @@ public class EntityUtils
 
     public static boolean isHoldingItemOfType(EntityLivingBase entity, Class<?> clazz)
     {
-        return getHeldItemOfType(entity, clazz) != null;
+        return getHeldItemOfType(entity, clazz).isEmpty() == false;
     }
 
     public static ItemStack getHeldItemOfType(EntityLivingBase entity, Class<?> clazz)
