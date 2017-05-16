@@ -156,7 +156,7 @@ public class ChunkWandRenderer
     {
         ItemStack stack = player.getHeldItemMainhand();
 
-        if (stack.isEmpty() || stack.getItem() != WorldUtilsItems.chunkWand)
+        if (stack.isEmpty() || stack.getItem() != WorldUtilsItems.CHUNK_WAND)
         {
             return;
         }

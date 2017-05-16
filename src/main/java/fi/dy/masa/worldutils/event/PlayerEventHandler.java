@@ -39,7 +39,7 @@ public class PlayerEventHandler
         BlockPos pos = event.getPos();
         EnumFacing face = event.getFace();
 
-        if (stack.getItem() == WorldUtilsItems.chunkWand)
+        if (stack.getItem() == WorldUtilsItems.CHUNK_WAND)
         {
             ((ItemChunkWand) stack.getItem()).onLeftClickBlock(player, world, stack, pos, player.dimension, face);
             event.setCanceled(true);
@@ -53,7 +53,7 @@ public class PlayerEventHandler
         {
             ItemStack stack = event.getEntityPlayer().getHeldItemMainhand();
 
-            if (stack.isEmpty() == false && stack.getItem() == WorldUtilsItems.chunkWand)
+            if (stack.isEmpty() == false && stack.getItem() == WorldUtilsItems.CHUNK_WAND)
             {
                 PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(HotKeys.KEYCODE_CUSTOM_1));
             }

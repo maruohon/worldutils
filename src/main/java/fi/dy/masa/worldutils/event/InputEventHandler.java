@@ -7,6 +7,8 @@ import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import fi.dy.masa.worldutils.item.base.IKeyBound;
 import fi.dy.masa.worldutils.network.MessageKeyPressed;
 import fi.dy.masa.worldutils.network.PacketHandler;
@@ -15,6 +17,7 @@ import fi.dy.masa.worldutils.reference.Keybindings;
 import fi.dy.masa.worldutils.util.EntityUtils;
 import gnu.trove.map.hash.TIntIntHashMap;
 
+@SideOnly(Side.CLIENT)
 public class InputEventHandler
 {
     public static final TIntIntHashMap KEY_CODE_MAPPINGS = new TIntIntHashMap(16);
@@ -48,12 +51,12 @@ public class InputEventHandler
         boolean keyState = Keyboard.getEventKeyState();
 
         // One of our supported modifier keys was pressed or released
-        if (KEY_CODE_MAPPINGS.containsKey(eventKey) == true)
+        if (KEY_CODE_MAPPINGS.containsKey(eventKey))
         {
             int mask = KEY_CODE_MAPPINGS.get(eventKey);
 
             // Key was pressed
-            if (keyState == true)
+            if (keyState)
             {
                 modifierMask |= mask;
 
@@ -72,9 +75,9 @@ public class InputEventHandler
         }
 
         // In-game (no GUI open)
-        if (FMLClientHandler.instance().getClient().inGameHasFocus == true)
+        if (FMLClientHandler.instance().getClient().inGameHasFocus)
         {
-            if (eventKey == Keybindings.keyToggleMode.getKeyCode() && keyState == true)
+            if (eventKey == Keybindings.keyToggleMode.getKeyCode() && keyState)
             {
                 if (isHoldingKeyboundItem(player))
                 {
@@ -89,6 +92,7 @@ public class InputEventHandler
     public void onMouseEvent(MouseEvent event)
     {
         int dWheel = event.getDwheel();
+
         if (dWheel != 0)
         {
             dWheel /= 120;
@@ -100,7 +104,8 @@ public class InputEventHandler
             if (scrollingMask != 0)
             {
                 EntityPlayer player = FMLClientHandler.instance().getClientPlayerEntity();
-                if (isHoldingKeyboundItem(player) == true)
+
+                if (isHoldingKeyboundItem(player))
                 {
                     int key = HotKeys.KEYCODE_SCROLL | scrollingMask;
 

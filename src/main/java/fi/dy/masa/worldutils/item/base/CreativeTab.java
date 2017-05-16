@@ -15,7 +15,7 @@ public class CreativeTab
         @Override
         public ItemStack getTabIconItem()
         {
-            return new ItemStack(WorldUtilsItems.chunkWand);
+            return new ItemStack(WorldUtilsItems.CHUNK_WAND);
         }
 
         @SideOnly(Side.CLIENT)
