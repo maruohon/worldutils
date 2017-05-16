@@ -1,12 +1,13 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.11.2-latest": "0.2.0",
-        "1.11.2-recommended": "0.2.0",
+        "1.11.2-latest": "0.2.1",
+        "1.11.2-recommended": "0.2.1",
         "1.10.2-latest": "0.2.1",
         "1.10.2-recommended": "0.2.1"
     },
     "1.11.2": {
+        "0.2.1": "Fix modifier keys getting stuck if opening a GUI while sneaking\n Fix a missed empty ItemStack change\n Only register the input/GUI event handlers if the wand is enabled",
         "0.2.0": "Update to Minecraft 1.11.2"
     },
     "1.10.2": {
