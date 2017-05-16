@@ -155,7 +155,7 @@ public class ChunkWandRenderer
     public void renderHudChunkWand(EntityPlayer player)
     {
         ItemStack stack = player.getHeldItemMainhand();
-        if (stack == null || stack.getItem() != WorldUtilsItems.chunkWand)
+        if (stack == null || stack.getItem() != WorldUtilsItems.CHUNK_WAND)
         {
             return;
         }

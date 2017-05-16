@@ -51,9 +51,9 @@ public class RenderEventHandler
 
     private void renderItemExtras(World world, EntityPlayer usingPlayer, EntityPlayer clientPlayer, float partialTicks)
     {
-        ItemStack stack = EntityUtils.getHeldItemOfType(usingPlayer, WorldUtilsItems.chunkWand);
+        ItemStack stack = EntityUtils.getHeldItemOfType(usingPlayer, WorldUtilsItems.CHUNK_WAND);
 
-        if (stack != null && stack.getItem() == WorldUtilsItems.chunkWand)
+        if (stack != null && stack.getItem() == WorldUtilsItems.CHUNK_WAND)
         {
             this.chunkWandRenderer.renderSelectedArea(world, usingPlayer, stack, clientPlayer, partialTicks);
         }

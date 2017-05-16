@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -16,6 +15,7 @@ import fi.dy.masa.worldutils.event.PlayerEventHandler;
 import fi.dy.masa.worldutils.event.RenderEventHandler;
 import fi.dy.masa.worldutils.event.TickHandler;
 import fi.dy.masa.worldutils.event.WorldEventHandler;
+import fi.dy.masa.worldutils.item.base.ItemWorldUtils;
 import fi.dy.masa.worldutils.reference.HotKeys;
 import fi.dy.masa.worldutils.reference.Keybindings;
 import fi.dy.masa.worldutils.setup.Configs;
@@ -42,21 +42,28 @@ public class ClientProxy implements IProxy
     public void registerEventHandlers()
     {
         MinecraftForge.EVENT_BUS.register(new Configs());
-        MinecraftForge.EVENT_BUS.register(new InputEventHandler());
         MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
         MinecraftForge.EVENT_BUS.register(new RenderEventHandler());
         MinecraftForge.EVENT_BUS.register(new TickHandler());
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
+
+        if (Configs.disableChunkWand == false)
+        {
+            MinecraftForge.EVENT_BUS.register(new InputEventHandler());
+        }
     }
 
     @Override
     public void registerKeyBindings()
     {
-        Keybindings.keyToggleMode = new KeyBinding(HotKeys.KEYBIND_NAME_TOGGLE_MODE,
-                                                   HotKeys.DEFAULT_KEYBIND_TOGGLE_MODE,
-                                                   HotKeys.KEYBIND_CATEGORY_WORLD_UTILS);
+        if (Configs.disableChunkWand == false)
+        {
+            Keybindings.keyToggleMode = new KeyBinding(HotKeys.KEYBIND_NAME_TOGGLE_MODE,
+                                                       HotKeys.DEFAULT_KEYBIND_TOGGLE_MODE,
+                                                       HotKeys.KEYBIND_CATEGORY_WORLD_UTILS);
 
-        ClientRegistry.registerKeyBinding(Keybindings.keyToggleMode);
+            ClientRegistry.registerKeyBinding(Keybindings.keyToggleMode);
+        }
     }
 
     @Override
@@ -67,17 +74,17 @@ public class ClientProxy implements IProxy
 
     private void registerAllItemModels()
     {
-        this.registerItemModel(WorldUtilsItems.chunkWand);
+        this.registerItemModel(WorldUtilsItems.CHUNK_WAND);
     }
 
-    private void registerItemModel(Item item)
+    private void registerItemModel(ItemWorldUtils item)
     {
         this.registerItemModel(item, 0);
     }
 
-    private void registerItemModel(Item item, int meta)
+    private void registerItemModel(ItemWorldUtils item, int meta)
     {
-        if (item.getRegistryName() != null)
+        if (item.isEnabled())
         {
             ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(item.getRegistryName(), "inventory"));
         }
