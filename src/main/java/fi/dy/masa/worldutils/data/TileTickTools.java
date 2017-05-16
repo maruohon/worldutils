@@ -163,7 +163,7 @@ public class TileTickTools
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
 
                     // This needs to use absolute Chunk coordinates
-                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
                     {
                         return 0;
                     }
@@ -604,6 +604,6 @@ public class TileTickTools
     private String getFormattedOutput(TileTickData data, String format)
     {
         return String.format(format, data.blockId, data.delay, data.priority, data.blockPos.getX(), data.blockPos.getY(), data.blockPos.getZ(),
-                data.chunkPos.chunkXPos, data.chunkPos.chunkZPos, data.chunkPos.chunkXPos >> 5, data.chunkPos.chunkZPos >> 5);
+                data.chunkPos.x, data.chunkPos.z, data.chunkPos.x >> 5, data.chunkPos.z >> 5);
     }
 }

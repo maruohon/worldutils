@@ -73,13 +73,13 @@ public class PositionUtils
 
     public static <T> void addDataForChunkInLists(Map<ChunkPos, Map<ChunkPos, List<T>>> dataByRegion, ChunkPos chunkPos, T data)
     {
-        ChunkPos regionPos = new ChunkPos(chunkPos.chunkXPos >> 5, chunkPos.chunkZPos >> 5);
+        ChunkPos regionPos = new ChunkPos(chunkPos.x >> 5, chunkPos.z >> 5);
         getListForDataInChunk(getMapForDataPerChunk(dataByRegion, regionPos), chunkPos).add(data);
     }
 
     public static <T> void addDataForChunkInSets(Map<ChunkPos, Map<ChunkPos, Set<T>>> dataByRegion, ChunkPos chunkPos, T data)
     {
-        ChunkPos regionPos = new ChunkPos(chunkPos.chunkXPos >> 5, chunkPos.chunkZPos >> 5);
+        ChunkPos regionPos = new ChunkPos(chunkPos.x >> 5, chunkPos.z >> 5);
         getSetForDataInChunk(getMapForDataPerChunk(dataByRegion, regionPos), chunkPos).add(data);
     }
 }

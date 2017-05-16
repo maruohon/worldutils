@@ -120,7 +120,7 @@ public class EntityTools
                 if (level.hasKey("Entities", Constants.NBT.TAG_LIST))
                 {
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
-                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
                     {
                         return 0;
                     }
@@ -296,7 +296,7 @@ public class EntityTools
             }
 
             WorldUtils.logger.info("In region {}, chunk [{}, {}] - removed {} duplicate entities",
-                    this.region.getName(), chunkPos.chunkXPos, chunkPos.chunkZPos, entityCount);
+                    this.region.getName(), chunkPos.x, chunkPos.z, entityCount);
 
             return entityCount;
         }
@@ -398,7 +398,7 @@ public class EntityTools
                 if (level.hasKey(this.tagName, Constants.NBT.TAG_LIST))
                 {
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
-                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
                     {
                         return 0;
                     }
@@ -536,7 +536,7 @@ public class EntityTools
                 if (level.hasKey(this.tagName, Constants.NBT.TAG_LIST))
                 {
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
-                    if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                    if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
                     {
                         return 0;
                     }
@@ -772,7 +772,7 @@ public class EntityTools
     {
         return String.format(format, data.getUUID().toString(), data.getId(), data.getDimension(),
                 data.getPosition().xCoord, data.getPosition().yCoord, data.getPosition().zCoord,
-                data.getChunkPosition().chunkXPos, data.getChunkPosition().chunkZPos,
-                data.getChunkPosition().chunkXPos >> 5, data.getChunkPosition().chunkZPos >> 5);
+                data.getChunkPosition().x, data.getChunkPosition().z,
+                data.getChunkPosition().x >> 5, data.getChunkPosition().z >> 5);
     }
 }

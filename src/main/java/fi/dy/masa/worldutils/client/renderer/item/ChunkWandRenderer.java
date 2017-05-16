@@ -211,10 +211,10 @@ public class ChunkWandRenderer
 
     private AxisAlignedBB createEnclosingChunkAABB(ChunkPos posStart, ChunkPos posEnd, EntityPlayer player, float partialTicks)
     {
-        int minX = Math.min(posStart.chunkXPos, posEnd.chunkXPos);
-        int minZ = Math.min(posStart.chunkZPos, posEnd.chunkZPos);
-        int maxX = Math.max(posStart.chunkXPos, posEnd.chunkXPos) + 1;
-        int maxZ = Math.max(posStart.chunkZPos, posEnd.chunkZPos) + 1;
+        int minX = Math.min(posStart.x, posEnd.x);
+        int minZ = Math.min(posStart.z, posEnd.z);
+        int maxX = Math.max(posStart.x, posEnd.x) + 1;
+        int maxZ = Math.max(posStart.z, posEnd.z) + 1;
         int yMax = this.getMaxY(player);
 
         return this.createChunkAABB(minX, 0, minZ, maxX, yMax, maxZ, 0, partialTicks, player);
@@ -222,7 +222,7 @@ public class ChunkWandRenderer
 
     private AxisAlignedBB createChunkAABB(ChunkPos pos, double expand, double partialTicks, EntityPlayer player)
     {
-        return this.createChunkAABB(pos.chunkXPos, pos.chunkZPos, expand, partialTicks, player);
+        return this.createChunkAABB(pos.x, pos.z, expand, partialTicks, player);
     }
 
     private AxisAlignedBB createChunkAABB(int chunkX, int chunkZ, double expand, double partialTicks, EntityPlayer player)

@@ -157,8 +157,8 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         else
         {
             NBTTagCompound posTag = new NBTTagCompound();
-            posTag.setInteger("chunkX", pos.chunkXPos);
-            posTag.setInteger("chunkZ", pos.chunkZPos);
+            posTag.setInteger("chunkX", pos.x);
+            posTag.setInteger("chunkZ", pos.z);
             tag.setTag(tagName, posTag);
         }
     }
@@ -170,7 +170,7 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         if (pos != null)
         {
             int amount = reverse ? 1 : -1;
-            pos = new ChunkPos(pos.chunkXPos + direction.getFrontOffsetX() * amount, pos.chunkZPos + direction.getFrontOffsetZ() * amount);
+            pos = new ChunkPos(pos.x + direction.getFrontOffsetX() * amount, pos.z + direction.getFrontOffsetZ() * amount);
             this.setPosition(stack, pos, corner);
         }
     }
@@ -190,10 +190,10 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
 
         if (start != null && end != null)
         {
-            int minX = Math.min(start.chunkXPos, end.chunkXPos);
-            int minZ = Math.min(start.chunkZPos, end.chunkZPos);
-            int maxX = Math.max(start.chunkXPos, end.chunkXPos);
-            int maxZ = Math.max(start.chunkZPos, end.chunkZPos);
+            int minX = Math.min(start.x, end.x);
+            int minZ = Math.min(start.z, end.z);
+            int maxX = Math.max(start.x, end.x);
+            int maxZ = Math.max(start.z, end.z);
 
             for (int z = minZ; z <= maxZ; z++)
             {
@@ -242,7 +242,7 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
 
         for (ChunkPos pos : chunks)
         {
-           list.appendTag(new NBTTagLong(ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos)));
+           list.appendTag(new NBTTagLong(ChunkPos.asLong(pos.x, pos.z)));
         }
 
         tag.setTag("Chunks", list);

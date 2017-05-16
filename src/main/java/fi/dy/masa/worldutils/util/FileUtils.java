@@ -69,7 +69,7 @@ public class FileUtils
 
             if (regionPos != null)
             {
-                return fromRegionCoords(regionFile.getParentFile().getParentFile(), regionPos.chunkXPos, regionPos.chunkZPos);
+                return fromRegionCoords(regionFile.getParentFile().getParentFile(), regionPos.x, regionPos.z);
             }
 
             return null;
@@ -77,7 +77,7 @@ public class FileUtils
 
         public static Region fromRegionCoords(File worldDir, ChunkPos regionPos)
         {
-            return fromRegionCoords(worldDir, regionPos.chunkXPos, regionPos.chunkZPos);
+            return fromRegionCoords(worldDir, regionPos.x, regionPos.z);
         }
 
         public static Region fromRegionCoords(File worldDir, int regionX, int regionZ)
@@ -188,14 +188,14 @@ public class FileUtils
     public static int handleChunkInRegion(Region region, ChunkPos chunkPos, IChunkDataHandler chunkDataHandler, boolean simulate)
     {
         int count = 0;
-        int chunkX = chunkPos.chunkXPos & 0x1F;
-        int chunkZ = chunkPos.chunkZPos & 0x1F;
+        int chunkX = chunkPos.x & 0x1F;
+        int chunkZ = chunkPos.z & 0x1F;
         RegionFile regionFile = region.getRegionFile();
 
         if (regionFile.isChunkSaved(chunkX, chunkZ) == false)
         {
             WorldUtils.logger.warn("handleChunkInRegion(): Chunk ({}, {}) was not found in region '{}'",
-                    chunkPos.chunkXPos, chunkPos.chunkZPos, region.getName());
+                    chunkPos.x, chunkPos.z, region.getName());
             return 0;
         }
 
@@ -204,7 +204,7 @@ public class FileUtils
         if (data == null)
         {
             WorldUtils.logger.warn("handleChunkInRegion(): Failed to read chunk data for chunk ({}, {}) from region '{}'",
-                    chunkPos.chunkXPos, chunkPos.chunkZPos, region.getName());
+                    chunkPos.x, chunkPos.z, region.getName());
 
             return 0;
         }

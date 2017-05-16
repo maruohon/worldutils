@@ -83,8 +83,8 @@ public class MessageChunkChanges implements IMessage
 
             for (ChunkPos pos : this.chunks)
             {
-                buf.writeInt(pos.chunkXPos);
-                buf.writeInt(pos.chunkZPos);
+                buf.writeInt(pos.x);
+                buf.writeInt(pos.z);
             }
         }
     }

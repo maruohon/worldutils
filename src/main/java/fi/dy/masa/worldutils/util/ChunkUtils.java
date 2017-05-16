@@ -266,8 +266,8 @@ public class ChunkUtils
 
     private void unloadChunk(WorldServer world, ChunkPos pos)
     {
-        int chunkX = pos.chunkXPos;
-        int chunkZ = pos.chunkZPos;
+        int chunkX = pos.x;
+        int chunkZ = pos.z;
         Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
 
         chunk.onChunkUnload();
@@ -280,7 +280,7 @@ public class ChunkUtils
         }
         catch (Throwable t)
         {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {})", chunk.xPosition, chunk.zPosition, t);
+            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {})", chunk.x, chunk.z, t);
         }
 
         List<Entity> unloadEntities = new ArrayList<Entity>();
@@ -317,14 +317,14 @@ public class ChunkUtils
         }
         catch (Exception e)
         {
-            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {})", chunk.xPosition, chunk.zPosition, e);
+            WorldUtils.logger.warn("Exception while trying to unload chunk ({}, {})", chunk.x, chunk.z, e);
         }
 
         // For some reason getPendingBlockUpdates() checks for "x >= minX && x < maxX" and not x <= maxX...
         StructureBoundingBox bb = new StructureBoundingBox(chunkX << 4, 0, chunkZ << 4, (chunkX << 4) + 17, 255, (chunkZ << 4) + 17);
         world.getPendingBlockUpdates(bb, true); // Remove pending block updates from the unloaded chunk area
 
-        world.getChunkProvider().id2ChunkMap.remove(ChunkPos.asLong(chunk.xPosition, chunk.zPosition));
+        world.getChunkProvider().id2ChunkMap.remove(ChunkPos.asLong(chunk.x, chunk.z));
     }
 
     private Chunk loadChunk(WorldServer world, ChunkPos pos, String worldName)
@@ -335,7 +335,7 @@ public class ChunkUtils
         {
             try
             {
-                Object[] data = loader.loadChunk__Async(world, pos.chunkXPos, pos.chunkZPos);
+                Object[] data = loader.loadChunk__Async(world, pos.x, pos.z);
 
                 if (data != null)
                 {
@@ -346,7 +346,7 @@ public class ChunkUtils
                     loader.loadEntities(world, nbt.getCompoundTag("Level"), chunk);
 
                     chunk.setLastSaveTime(world.getTotalWorldTime());
-                    world.getChunkProvider().id2ChunkMap.put(ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos), chunk);
+                    world.getChunkProvider().id2ChunkMap.put(ChunkPos.asLong(pos.x, pos.z), chunk);
                     this.updatePlayerChunkMap(world, pos, chunk);
 
                     List<Entity> unloadEntities = new ArrayList<Entity>();
@@ -377,8 +377,8 @@ public class ChunkUtils
                         @Override
                         public boolean apply(EntityPlayerMP playerIn)
                         {
-                            double x = chunk.xPosition << 4;
-                            double z = chunk.zPosition << 4;
+                            double x = chunk.x << 4;
+                            double z = chunk.z << 4;
                             return playerIn.posX >= x && playerIn.posX < x + 16 && playerIn.posZ >= z && playerIn.posZ < z + 16;
                         }
                         }))
@@ -391,7 +391,7 @@ public class ChunkUtils
             }
             catch (IOException e)
             {
-                WorldUtils.logger.warn("Exception while trying to load chunk ({}, {}) - IOException", pos.chunkXPos, pos.chunkZPos);
+                WorldUtils.logger.warn("Exception while trying to load chunk ({}, {}) - IOException", pos.x, pos.z);
             }
         }
 
@@ -401,7 +401,7 @@ public class ChunkUtils
     private void updatePlayerChunkMap(WorldServer world, ChunkPos pos, Chunk chunk)
     {
         PlayerChunkMap map = world.getPlayerChunkMap();
-        PlayerChunkMapEntry entry = map.getEntry(pos.chunkXPos, pos.chunkZPos);
+        PlayerChunkMapEntry entry = map.getEntry(pos.x, pos.z);
 
         if (entry != null)
         {
@@ -411,7 +411,7 @@ public class ChunkUtils
             }
             catch (Exception e)
             {
-                WorldUtils.logger.warn("Failed to update PlayerChunkMapEntry for chunk ({}, {})", pos.chunkXPos, pos.chunkZPos, e);
+                WorldUtils.logger.warn("Failed to update PlayerChunkMapEntry for chunk ({}, {})", pos.x, pos.z, e);
             }
         }
     }
@@ -422,11 +422,11 @@ public class ChunkUtils
             @Override
             public boolean apply(EntityPlayerMP playerIn)
             {
-                return world.getPlayerChunkMap().isPlayerWatchingChunk(playerIn, chunk.xPosition, chunk.zPosition);
+                return world.getPlayerChunkMap().isPlayerWatchingChunk(playerIn, chunk.x, chunk.z);
             }
             }))
         {
-            player.connection.sendPacket(new SPacketUnloadChunk(chunk.xPosition, chunk.zPosition));
+            player.connection.sendPacket(new SPacketUnloadChunk(chunk.x, chunk.z));
             Packet<?> packet = new SPacketChunkData(chunk, 65535);
             player.connection.sendPacket(packet);
             world.getEntityTracker().sendLeashedEntitiesInChunk(player, chunk);
@@ -472,7 +472,7 @@ public class ChunkUtils
             mainMap.put(user, map);
         }
 
-        Long posLong = ChunkPos.asLong(pos.chunkXPos, pos.chunkZPos);
+        Long posLong = ChunkPos.asLong(pos.x, pos.z);
         map.put(posLong, worldName);
 
         // A chunk change also removes an earlier biome import for that chunk
@@ -693,7 +693,7 @@ public class ChunkUtils
 
             try
             {
-                DataInputStream stream = RegionFileCache.getChunkInputStream(loader.chunkSaveLocation, pos.chunkXPos, pos.chunkZPos);
+                DataInputStream stream = RegionFileCache.getChunkInputStream(loader.chunkSaveLocation, pos.x, pos.z);
 
                 if (stream != null)
                 {
@@ -709,7 +709,7 @@ public class ChunkUtils
 
                             if (biomes.length == 256)
                             {
-                                Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.chunkXPos, pos.chunkZPos);
+                                Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.x, pos.z);
                                 chunkCurrent.setBiomeArray(biomes);
                                 chunkCurrent.setChunkModified();
                                 this.sendChunkToWatchers(world, chunkCurrent);
@@ -721,7 +721,7 @@ public class ChunkUtils
             }
             catch (IOException e)
             {
-                WorldUtils.logger.warn("Failed to read chunk data for chunk ({}, {})", pos.chunkXPos, pos.chunkZPos);
+                WorldUtils.logger.warn("Failed to read chunk data for chunk ({}, {})", pos.x, pos.z);
             }
         }
     }
@@ -734,7 +734,7 @@ public class ChunkUtils
         }
 
         WorldServer world = (WorldServer) worldIn;
-        Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.chunkXPos, pos.chunkZPos);
+        Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.x, pos.z);
         byte[] biomes = new byte[256];
 
         Arrays.fill(biomes, (byte) Biome.getIdForBiome(biome));
@@ -759,7 +759,7 @@ public class ChunkUtils
 
             if (chunk != null)
             {
-                this.sendChunkToWatchers(world, world.getChunkFromChunkCoords(pos.chunkXPos, pos.chunkZPos));
+                this.sendChunkToWatchers(world, world.getChunkFromChunkCoords(pos.x, pos.z));
                 this.addChangedChunkLocation(world, pos, ChangeType.CHUNK_CHANGE, worldName, user);
             }
         }

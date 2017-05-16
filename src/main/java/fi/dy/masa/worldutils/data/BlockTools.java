@@ -256,11 +256,11 @@ public class BlockTools
                 ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
 
                 // This needs to use absolute Chunk coordinates
-                if (this.provider != null && this.provider.chunkExists(chunkPos.chunkXPos, chunkPos.chunkZPos))
+                if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
                 {
                     if (this.loadedChunks == LoadedType.ALL || this.loadedChunks == LoadedType.LOADED)
                     {
-                        count = this.processLoadedChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
+                        count = this.processLoadedChunk(chunkPos.x, chunkPos.z);
                         this.replaceCountLoaded += count;
                         this.chunkCountLoaded++;
                     }

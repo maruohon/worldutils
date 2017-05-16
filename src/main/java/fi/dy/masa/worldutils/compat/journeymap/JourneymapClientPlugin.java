@@ -122,7 +122,7 @@ public class JourneymapClientPlugin implements IClientPlugin
     {
         String displayId = "chunk_" + pos.toString();
 
-        MapPolygon polygon = PolygonHelper.createChunkPolygon(pos.chunkXPos, 256, pos.chunkZPos);
+        MapPolygon polygon = PolygonHelper.createChunkPolygon(pos.x, 256, pos.z);
         PolygonOverlay overlay = new PolygonOverlay(Reference.MOD_ID, displayId, dimension, shape, polygon, null);
 
         /*String groupName = "Modified Chunks";
