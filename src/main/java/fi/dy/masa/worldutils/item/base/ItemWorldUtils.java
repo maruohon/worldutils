@@ -3,14 +3,16 @@ package fi.dy.masa.worldutils.item.base;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -58,12 +60,12 @@ public class ItemWorldUtils extends Item
     /**
      * Custom addInformation() method, which allows selecting a subset of the tooltip strings.
      */
-    public void addInformationSelective(ItemStack stack, EntityPlayer player, List<String> list, boolean advancedTooltips, boolean verbose)
+    public void addInformationSelective(ItemStack stack, @Nullable World world, List<String> list, ITooltipFlag advanced, boolean verbose)
     {
     }
 
     @Override
-    public void addInformation(ItemStack stack, EntityPlayer player, List<String> list, boolean advancedTooltips)
+    public void addInformation(ItemStack stack, @Nullable World world, List<String> list, ITooltipFlag advanced)
     {
         ArrayList<String> tmpList = new ArrayList<String>();
         boolean verbose = WorldUtils.proxy.isShiftKeyDown();
@@ -84,18 +86,20 @@ public class ItemWorldUtils extends Item
         }
 
         tmpList.clear();
-        this.addInformationSelective(stack, player, tmpList, advancedTooltips, true);
+        this.addInformationSelective(stack, world, tmpList, advanced, true);
 
         // If we want the compact version of the tooltip, and the compact list has more than 2 lines, only show the first line
         // plus the "Hold Shift for more" tooltip.
         if (verbose == false && tmpList.size() > 2)
         {
             tmpList.clear();
-            this.addInformationSelective(stack, player, tmpList, advancedTooltips, false);
+            this.addInformationSelective(stack, world, tmpList, advanced, false);
+
             if (tmpList.size() > 0)
             {
                 list.add(tmpList.get(0));
             }
+
             list.add(I18n.format(Reference.MOD_ID + ".tooltip.item.holdshift"));
         }
         else

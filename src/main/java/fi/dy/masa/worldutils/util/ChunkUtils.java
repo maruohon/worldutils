@@ -270,7 +270,7 @@ public class ChunkUtils
         int chunkZ = pos.z;
         Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
 
-        chunk.onChunkUnload();
+        chunk.onUnload();
 
         try
         {
@@ -368,8 +368,8 @@ public class ChunkUtils
                         }
                     }
 
-                    chunk.onChunkLoad();
-                    chunk.setChunkModified();
+                    chunk.onLoad();
+                    chunk.markDirty();
                     // don't call chunk.populateChunk() because it would probably mess with structures in this kind of usage
 
                     // Add any player entities into the new chunk that are inside the chunk's area
@@ -711,7 +711,7 @@ public class ChunkUtils
                             {
                                 Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.x, pos.z);
                                 chunkCurrent.setBiomeArray(biomes);
-                                chunkCurrent.setChunkModified();
+                                chunkCurrent.markDirty();
                                 this.sendChunkToWatchers(world, chunkCurrent);
                                 this.addChangedChunkLocation(world, pos, ChangeType.BIOME_IMPORT, worldName, user);
                             }
@@ -739,7 +739,7 @@ public class ChunkUtils
 
         Arrays.fill(biomes, (byte) Biome.getIdForBiome(biome));
         chunkCurrent.setBiomeArray(biomes);
-        chunkCurrent.setChunkModified();
+        chunkCurrent.markDirty();
         this.sendChunkToWatchers(world, chunkCurrent);
         this.addChangedChunkLocation(world, pos, ChangeType.BIOME_SET, "", user);
     }
