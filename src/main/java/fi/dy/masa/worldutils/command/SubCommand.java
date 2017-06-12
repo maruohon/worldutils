@@ -34,7 +34,7 @@ public abstract class SubCommand implements ISubCommand
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args)
     {
-        if (args.length == 1 || (args.length == 2 && args[0].equals("help")))
+        if ((this.getSubSubCommands().size() > 1 && args.length == 1) || (args.length == 2 && args[0].equals("help")))
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, this.getSubSubCommands());
         }
