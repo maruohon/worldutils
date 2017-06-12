@@ -25,7 +25,8 @@ public class VanillaBlocks
         VANILLA_1_8,
         VANILLA_1_9,
         VANILLA_1_10,
-        VANILLA_1_11;
+        VANILLA_1_11,
+        VANILLA_1_12;
 
         @Nullable
         public static VanillaVersion fromVersion(String version)
@@ -366,6 +367,47 @@ public class VanillaBlocks
         blockStateList.addAll(Blocks.BLACK_SHULKER_BOX.getBlockState().getValidStates());
     }
 
+    public static void addNewVanillaBlockStatesIn_1_12(List<IBlockState> blockStateList)
+    {
+        // White Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192427_dB.getBlockState().getValidStates());
+        // Orange Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192428_dC.getBlockState().getValidStates());
+        // Magenta Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192429_dD.getBlockState().getValidStates());
+        // Light Blue Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192430_dE.getBlockState().getValidStates());
+        // Yellow Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192431_dF.getBlockState().getValidStates());
+        // Lime Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192432_dG.getBlockState().getValidStates());
+        // Pink Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192433_dH.getBlockState().getValidStates());
+        // Gray Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192434_dI.getBlockState().getValidStates());
+        // Silver Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192435_dJ.getBlockState().getValidStates());
+        // Cyan Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192436_dK.getBlockState().getValidStates());
+        // Purple Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192437_dL.getBlockState().getValidStates());
+        // Blue Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192438_dM.getBlockState().getValidStates());
+        // Brown Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192439_dN.getBlockState().getValidStates());
+        // Green Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192440_dO.getBlockState().getValidStates());
+        // Red Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192441_dP.getBlockState().getValidStates());
+        // Black Glazed Terracotta
+        blockStateList.addAll(Blocks.field_192442_dQ.getBlockState().getValidStates());
+
+        // Concrete
+        blockStateList.addAll(Blocks.field_192443_dR.getBlockState().getValidStates());
+        // Concrete Powder
+        blockStateList.addAll(Blocks.field_192444_dS.getBlockState().getValidStates());
+    }
+
     /**
      * Returns a list of all valid vanilla blockstates that existed in the requested game version.
      * The list includes only states that serialize into different metadata values, so it doesn't include
@@ -383,6 +425,9 @@ public class VanillaBlocks
         // NOTE: No break statements!!
         switch (version)
         {
+            case VANILLA_1_12:
+                addNewVanillaBlockStatesIn_1_12(list);
+
             case VANILLA_1_11:
                 addNewVanillaBlockStatesIn_1_11(list);
 
