@@ -18,7 +18,7 @@ import fi.dy.masa.worldutils.setup.WorldUtilsItems;
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
     guiFactory = "fi.dy.masa.worldutils.setup.WorldUtilsGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/worldutils/master/update.json",
-    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "1.11.2")
+    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "1.12")
 public class WorldUtils
 {
     @Instance(Reference.MOD_ID)
@@ -32,7 +32,6 @@ public class WorldUtils
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-        instance = this;
         logger = event.getModLog();
         Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
         configDirPath = new File(event.getModConfigurationDirectory(), Reference.MOD_ID).getAbsolutePath();
