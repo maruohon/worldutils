@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.worldutils.WorldUtils;
@@ -62,7 +63,7 @@ public class SubCommandBatchRun extends SubCommand
     {
         if (args.length == 1)
         {
-            this.runBatchCommands(args[0]);
+            this.runBatchCommands(server, sender, args[0]);
         }
         else
         {
@@ -70,13 +71,20 @@ public class SubCommandBatchRun extends SubCommand
         }
     }
 
-    private void runBatchCommands(String fileName)
+    private void runBatchCommands(MinecraftServer server, ICommandSender sender, String fileName)
     {
         File batchFile = this.getBatchCommandFile(fileName);
 
         if (batchFile != null)
         {
-            WorldUtilsCommandSender.instance().runCommands(null, this.getCommands(batchFile));
+            ICommandManager manager = server.getCommandManager();
+            List<String> commands = this.getCommands(batchFile);
+
+            for (String command : commands)
+            {
+                WorldUtils.logger.info("Running a command: '{}'", command);
+                manager.executeCommand(sender, command);
+            }
         }
     }
 
@@ -92,7 +100,7 @@ public class SubCommandBatchRun extends SubCommand
             while ((line = br.readLine()) != null)
             {
                 // Exclude lines starting with '#' (comments)
-                if (line.length() > 0 && line.charAt(0) != '#' && StringUtils.isBlank(line) == false)
+                if (StringUtils.isBlank(line) == false && line.charAt(0) != '#')
                 {
                     lines.add(line);
                 }
