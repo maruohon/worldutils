@@ -12,6 +12,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.common.registry.GameData;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
 import fi.dy.masa.worldutils.data.BlockTools.LoadedType;
@@ -71,6 +74,8 @@ public class SubCommandBlockReplace extends SubCommand
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add <block[prop1=val1,prop2=val2]> ... Ex: minecraft:stone[variant=granite]"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-all-from-mod <modId> [modId] ..."));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-with-spaces <block> (same as add, but for names that include spaces)"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-all-removed-blocks"));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist add-all-removed-blocks-from-mod <modId>"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove stringonthelist1 stringonthelist2 ..."));
@@ -106,7 +111,16 @@ public class SubCommandBlockReplace extends SubCommand
         {
             if (args.length == 1)
             {
-                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "add-with-spaces", "add-all-from-mod", "clear", "list", "remove", "remove-with-spaces");
+                return CommandBase.getListOfStringsMatchingLastWord(args,
+                        "add",
+                        "add-all-from-mod",
+                        "add-all-removed-blocks",
+                        "add-all-removed-blocks-from-mod",
+                        "add-with-spaces",
+                        "clear",
+                        "list",
+                        "remove",
+                        "remove-with-spaces");
             }
             else if (args.length >= 2)
             {
@@ -272,6 +286,32 @@ public class SubCommandBlockReplace extends SubCommand
             {
                 blockNames.addAll(BlockUtils.getAllBlockNamesInMod(args[i]));
                 this.sendMessage(sender, "worldutils.commands.blockreplace.blocknamelist.mod.add", args[i]);
+            }
+        }
+        else if (cmd.equals("add-all-removed-blocks") && args.length == 0)
+        {
+            @SuppressWarnings("deprecation")
+            FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
+
+            for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
+            {
+                if (reg.isDummied(rl))
+                {
+                    this.addBlockNameToListIfValid(rl.toString(), sender);
+                }
+            }
+        }
+        else if (cmd.equals("add-all-removed-blocks-from-mod") && args.length > 0)
+        {
+            @SuppressWarnings("deprecation")
+            FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
+
+            for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
+            {
+                if (rl.getResourceDomain().equals(args[0]) && reg.isDummied(rl))
+                {
+                    this.addBlockNameToListIfValid(rl.toString(), sender);
+                }
             }
         }
         else if (cmd.equals("remove") && args.length > 0)
