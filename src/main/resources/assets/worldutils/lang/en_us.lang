@@ -55,6 +55,7 @@ worldutils.commands.info.outputtofile=Output written to file '%s'
 worldutils.commands.info.taskstopped=Stopped and removed the running task
 
 worldutils.commands.generic.list.add=Added '%s' to the list
+worldutils.commands.generic.list.add.failure.invalid=Invalid block name specifier '%s'
 worldutils.commands.generic.list.clear=List cleared
 worldutils.commands.generic.list.print=The list has also been printed to the console
 worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the list

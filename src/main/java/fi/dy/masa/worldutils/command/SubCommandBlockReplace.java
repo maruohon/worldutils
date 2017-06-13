@@ -74,6 +74,7 @@ public class SubCommandBlockReplace extends SubCommand
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist clear"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist list"));
         sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove stringonthelist1 stringonthelist2 ..."));
+        sender.sendMessage(new TextComponentString(this.getUsageStringCommon() + " blocknamelist remove-with-spaces string parts of the name"));
     }
 
     private void printHelpBlockStateList(ICommandSender sender)
@@ -105,7 +106,7 @@ public class SubCommandBlockReplace extends SubCommand
         {
             if (args.length == 1)
             {
-                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "add-with-spaces", "add-all-from-mod", "clear", "list", "remove");
+                return CommandBase.getListOfStringsMatchingLastWord(args, "add", "add-with-spaces", "add-all-from-mod", "clear", "list", "remove", "remove-with-spaces");
             }
             else if (args.length >= 2)
             {
@@ -186,12 +187,12 @@ public class SubCommandBlockReplace extends SubCommand
 
             if (cmd.equals("print") && args.length == 0)
             {
-                this.blockDataPrint(replacement, sender);
+                this.printBlockData(replacement, sender);
             }
             else if (cmd.equals("set") && args.length >= 1)
             {
                 replacement = String.join(" ", args);
-                this.blockDataPrint(replacement, sender);
+                this.printBlockData(replacement, sender);
             }
             else
             {
@@ -229,7 +230,7 @@ public class SubCommandBlockReplace extends SubCommand
         }
     }
 
-    private void executeBlockNameList(String[] args, ICommandSender sender)
+    private void executeBlockNameList(String[] args, ICommandSender sender) throws CommandException
     {
         String cmd = args[0];
         args = CommandWorldUtils.dropFirstStrings(args, 1);
@@ -258,15 +259,12 @@ public class SubCommandBlockReplace extends SubCommand
         {
             for (int i = 0; i < args.length; i++)
             {
-                blockNames.add(args[i]);
-                this.sendMessage(sender, "worldutils.commands.generic.list.add", args[i]);
+                this.addBlockNameToListIfValid(args[i], sender);
             }
         }
         else if (cmd.equals("add-with-spaces") && args.length > 0)
         {
-            String str = String.join(" ", args);
-            blockNames.add(str);
-            this.sendMessage(sender, "worldutils.commands.generic.list.add", str);
+            this.addBlockNameToListIfValid(String.join(" ", args), sender);
         }
         else if (cmd.equals("add-all-from-mod") && args.length > 0)
         {
@@ -288,6 +286,19 @@ public class SubCommandBlockReplace extends SubCommand
                 {
                     this.sendMessage(sender, "worldutils.commands.generic.list.remove.failure", args[i]);
                 }
+            }
+        }
+        else if (cmd.equals("remove-with-spaces") && args.length > 0)
+        {
+            String str = String.join(" ", args);
+
+            if (blockNames.remove(str))
+            {
+                this.sendMessage(sender, "worldutils.commands.generic.list.remove.success", str);
+            }
+            else
+            {
+                this.sendMessage(sender, "worldutils.commands.generic.list.remove.failure", str);
             }
         }
         else
@@ -340,7 +351,22 @@ public class SubCommandBlockReplace extends SubCommand
         }
     }
 
-    private void blockDataPrint(String blockStr, ICommandSender sender) throws CommandException
+    private void addBlockNameToListIfValid(String name, ICommandSender sender) throws CommandException
+    {
+        BlockData type = BlockData.parseBlockTypeFromString(name);
+
+        if (type != null && type.isValid())
+        {
+            blockNames.add(name);
+            this.sendMessage(sender, "worldutils.commands.generic.list.add", name + " => " + type.toString());
+        }
+        else
+        {
+            throwCommand("worldutils.commands.generic.list.add.failure.invalid", name);
+        }
+    }
+
+    private void printBlockData(String blockStr, ICommandSender sender) throws CommandException
     {
         BlockData type = BlockData.parseBlockTypeFromString(blockStr);
 
