@@ -1,16 +1,23 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.11.2-latest": "0.2.1",
-        "1.11.2-recommended": "0.2.1",
-        "1.10.2-latest": "0.2.1",
-        "1.10.2-recommended": "0.2.1"
+        "1.12-latest": "0.3.0",
+        "1.12-recommended": "0.3.0",
+        "1.11.2-latest": "0.3.0",
+        "1.11.2-recommended": "0.3.0",
+        "1.10.2-latest": "0.3.0",
+        "1.10.2-recommended": "0.3.0"
+    },
+    "1.12": {
+        "0.3.0": "Update to Minecraft 1.12\nFix a rather serious bug in the block replace code\nAdd a command to run commands from files\nAdd block replace sub-commands to add removed blocks (all or from a mod) to the list"
     },
     "1.11.2": {
+        "0.2.0": "Update to Minecraft 1.11.2",
         "0.2.1": "Fix modifier keys getting stuck if opening a GUI while sneaking\n Fix a missed empty ItemStack change\n Only register the input/GUI event handlers if the wand is enabled",
-        "0.2.0": "Update to Minecraft 1.11.2"
+        "0.3.0": "Fix a rather serious bug in the block replace code\nAdd a command to run commands from files\nAdd block replace sub-commands to add removed blocks (all or from a mod) to the list"
     },
     "1.10.2": {
+        "0.3.0": "Fix a rather serious bug in the block replace code\nSome Chunk Wand HUD improvements\nFix modifier keys getting stuck\nAdd a command to run commands from files\nAdd block replace sub-commands to add removed blocks (all or from a mod) to the list",
         "0.2.1": "Fix not checking for valid dimension when getting the save directory",
         "0.2.0": "Added blockreplace commands\nAdded entity and tileentity remove and rename commands\nAdded a block registry dump command\nAdded block registry clean-up command\nAdded a task scheduler, all commands now use it instead of running in one go\nAdded a 'Set biome' mode to the Chunk Wand",
         "0.1.0-alpha.3": "Fix the tileticks command failing due to a Forge bug. Fix forgotten mod renaming related localization issues in the Chunk Wand.",
