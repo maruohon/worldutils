@@ -357,6 +357,11 @@ public class BlockTools
                     {
                         sectionTag.setByteArray("Add", addArray);
                     }
+                    else
+                    {
+                        // Make sure to remove a possible previously existing Add array, or it would shuffle the final block IDs
+                        sectionTag.removeTag("Add");
+                    }
 
                     chunkDirty = true;
                     countLast = count;
