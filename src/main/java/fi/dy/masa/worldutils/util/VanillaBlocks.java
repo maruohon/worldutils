@@ -369,43 +369,25 @@ public class VanillaBlocks
 
     public static void addNewVanillaBlockStatesIn_1_12(List<IBlockState> blockStateList)
     {
-        // White Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192427_dB.getBlockState().getValidStates());
-        // Orange Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192428_dC.getBlockState().getValidStates());
-        // Magenta Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192429_dD.getBlockState().getValidStates());
-        // Light Blue Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192430_dE.getBlockState().getValidStates());
-        // Yellow Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192431_dF.getBlockState().getValidStates());
-        // Lime Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192432_dG.getBlockState().getValidStates());
-        // Pink Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192433_dH.getBlockState().getValidStates());
-        // Gray Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192434_dI.getBlockState().getValidStates());
-        // Silver Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192435_dJ.getBlockState().getValidStates());
-        // Cyan Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192436_dK.getBlockState().getValidStates());
-        // Purple Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192437_dL.getBlockState().getValidStates());
-        // Blue Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192438_dM.getBlockState().getValidStates());
-        // Brown Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192439_dN.getBlockState().getValidStates());
-        // Green Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192440_dO.getBlockState().getValidStates());
-        // Red Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192441_dP.getBlockState().getValidStates());
-        // Black Glazed Terracotta
-        blockStateList.addAll(Blocks.field_192442_dQ.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.WHITE_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.ORANGE_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.MAGENTA_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.LIGHT_BLUE_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.YELLOW_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.LIME_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.PINK_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.GRAY_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.SILVER_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.CYAN_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.PURPLE_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.BLUE_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.BROWN_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.GREEN_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.RED_GLAZED_TERRACOTTA.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.BLACK_GLAZED_TERRACOTTA.getBlockState().getValidStates());
 
-        // Concrete
-        blockStateList.addAll(Blocks.field_192443_dR.getBlockState().getValidStates());
-        // Concrete Powder
-        blockStateList.addAll(Blocks.field_192444_dS.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.CONCRETE.getBlockState().getValidStates());
+        blockStateList.addAll(Blocks.CONCRETE_POWDER.getBlockState().getValidStates());
     }
 
     /**
