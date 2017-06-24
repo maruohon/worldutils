@@ -66,9 +66,9 @@ public class ChunkUtils
     static
     {
         methodHandle_ChunkProviderServer_saveChunkData =
-            MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, "saveChunkData", "func_73242_b", Chunk.class);
+            MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, new String[] { "func_73242_b", "saveChunkData"}, Chunk.class);
         methodHandle_ChunkProviderServer_saveChunkExtraData =
-                MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, "saveChunkExtraData", "func_73243_a", Chunk.class);
+            MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, new String[] { "func_73243_a", "saveChunkExtraData" }, Chunk.class);
 
         field_World_tileEntitiesToBeRemoved = ReflectionHelper.findField(World.class, "field_147483_b", "tileEntitiesToBeRemoved");
         field_World_unloadedEntityList = ReflectionHelper.findField(World.class, "field_72997_g", "unloadedEntityList");

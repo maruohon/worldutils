@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.util.ModNameUtils;
+import fi.dy.masa.worldutils.util.RegistryUtils;
 
 public class BlockDump extends DataDump
 {
@@ -54,9 +55,7 @@ public class BlockDump extends DataDump
         String itemId = item != Items.AIR ? String.format("%5d", Item.getIdFromItem(item)) : "-";
         String itemMeta = stack.isEmpty() ? "-" : String.format("%5d", stack.getMetadata());
         String subTypes = subTypesKnown ? String.valueOf(hasSubTypes) : "?";
-        // FIXME 1.12 registry rewrite broke this
-        //@SuppressWarnings("deprecation")
-        String exists = "? FIXME ?"; //GameData.getBlockRegistry().isDummied(rl) ? "false" : "true";
+        String exists = RegistryUtils.isDummied(ForgeRegistries.BLOCKS, rl) ? "false" : "true";
 
         this.addData(modName, registryName, blockId, subTypes, itemId, itemMeta, displayName, exists);
     }

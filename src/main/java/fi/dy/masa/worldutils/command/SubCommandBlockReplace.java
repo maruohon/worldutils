@@ -12,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
 import fi.dy.masa.worldutils.data.BlockTools.LoadedType;
@@ -19,6 +20,7 @@ import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.BlockData;
 import fi.dy.masa.worldutils.util.BlockUtils;
+import fi.dy.masa.worldutils.util.RegistryUtils;
 import fi.dy.masa.worldutils.util.VanillaBlocks;
 import fi.dy.masa.worldutils.util.VanillaBlocks.VanillaVersion;
 
@@ -287,35 +289,23 @@ public class SubCommandBlockReplace extends SubCommand
         }
         else if (cmd.equals("add-all-removed-blocks") && args.length == 0)
         {
-            // FIXME 1.12 registry rewrite broke this
-            /*
-            @SuppressWarnings("deprecation")
-            FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
-
             for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
             {
-                if (reg.isDummied(rl))
+                if (RegistryUtils.isDummied(ForgeRegistries.BLOCKS, rl))
                 {
                     this.addBlockNameToListIfValid(rl.toString(), sender);
                 }
             }
-            */
         }
         else if (cmd.equals("add-all-removed-blocks-from-mod") && args.length > 0)
         {
-            // FIXME 1.12 registry rewrite broke this
-            /*
-            @SuppressWarnings("deprecation")
-            FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
-
             for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
             {
-                if (rl.getResourceDomain().equals(args[0]) && reg.isDummied(rl))
+                if (rl.getResourceDomain().equals(args[0]) && RegistryUtils.isDummied(ForgeRegistries.BLOCKS, rl))
                 {
                     this.addBlockNameToListIfValid(rl.toString(), sender);
                 }
             }
-            */
         }
         else if (cmd.equals("remove") && args.length > 0)
         {
