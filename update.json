@@ -1,15 +1,16 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.12-latest": "0.3.0",
-        "1.12-recommended": "0.3.0",
+        "1.12-latest": "0.3.1",
+        "1.12-recommended": "0.3.1",
         "1.11.2-latest": "0.3.0",
         "1.11.2-recommended": "0.3.0",
         "1.10.2-latest": "0.3.0",
         "1.10.2-recommended": "0.3.0"
     },
     "1.12": {
-        "0.3.0": "Update to Minecraft 1.12\nFix a rather serious bug in the block replace code\nAdd a command to run commands from files\nAdd block replace sub-commands to add removed blocks (all or from a mod) to the list"
+        "0.3.0": "Update to Minecraft 1.12\nFix a rather serious bug in the block replace code\nAdd a command to run commands from files\nAdd block replace sub-commands to add removed blocks (all or from a mod) to the list",
+        "0.3.1": "Update to new Forge registry things in Forge 2348+"
     },
     "1.11.2": {
         "0.2.0": "Update to Minecraft 1.11.2",
