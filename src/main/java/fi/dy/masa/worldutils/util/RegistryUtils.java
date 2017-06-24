@@ -1,21 +1,9 @@
 package fi.dy.masa.worldutils.util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
-import net.minecraft.block.Block;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
-import net.minecraftforge.fml.common.registry.GameData;
-import net.minecraftforge.fml.common.registry.PersistentRegistryManager;
 import fi.dy.masa.worldutils.WorldUtils;
 
 public class RegistryUtils
@@ -35,13 +23,15 @@ public class RegistryUtils
 
         if (file.exists() && file.isFile())
         {
+            // FIXME 1.12 registry rewrite broke this
+            /*
             try
             {
                 NBTTagCompound nbt = CompressedStreamTools.readCompressed(new FileInputStream(file));
 
                 if (nbt != null)
                 {
-                    NBTTagCompound tag = nbt.getCompoundTag("FML").getCompoundTag("Registries").getCompoundTag(PersistentRegistryManager.BLOCKS.toString());
+                    NBTTagCompound tag = nbt.getCompoundTag("FML").getCompoundTag("Registries").getCompoundTag(GameData.BLOCKS.toString());
 
                     if (tag.hasNoTags())
                     {
@@ -86,8 +76,9 @@ public class RegistryUtils
             }
             catch (IOException e)
             {
-                
+                WorldUtils.logger.info("Exception while trying to remove dummied block entries from the registry", e);
             }
+            */
         }
         else
         {

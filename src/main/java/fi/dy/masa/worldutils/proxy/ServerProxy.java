@@ -38,11 +38,6 @@ public class ServerProxy implements IProxy
     }
 
     @Override
-    public void registerModels()
-    {
-    }
-
-    @Override
     public boolean isShiftKeyDown()
     {
         return false;

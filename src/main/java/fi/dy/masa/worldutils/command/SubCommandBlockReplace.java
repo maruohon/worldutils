@@ -12,9 +12,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.common.registry.GameData;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
 import fi.dy.masa.worldutils.data.BlockTools.LoadedType;
@@ -290,6 +287,8 @@ public class SubCommandBlockReplace extends SubCommand
         }
         else if (cmd.equals("add-all-removed-blocks") && args.length == 0)
         {
+            // FIXME 1.12 registry rewrite broke this
+            /*
             @SuppressWarnings("deprecation")
             FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
 
@@ -300,9 +299,12 @@ public class SubCommandBlockReplace extends SubCommand
                     this.addBlockNameToListIfValid(rl.toString(), sender);
                 }
             }
+            */
         }
         else if (cmd.equals("add-all-removed-blocks-from-mod") && args.length > 0)
         {
+            // FIXME 1.12 registry rewrite broke this
+            /*
             @SuppressWarnings("deprecation")
             FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
 
@@ -313,6 +315,7 @@ public class SubCommandBlockReplace extends SubCommand
                     this.addBlockNameToListIfValid(rl.toString(), sender);
                 }
             }
+            */
         }
         else if (cmd.equals("remove") && args.length > 0)
         {

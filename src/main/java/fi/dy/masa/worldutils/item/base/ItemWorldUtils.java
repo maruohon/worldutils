@@ -22,20 +22,28 @@ import fi.dy.masa.worldutils.reference.ReferenceNames;
 
 public class ItemWorldUtils extends Item
 {
-    protected String name;
+    protected final String name;
     protected boolean enabled = true;
 
-    public ItemWorldUtils()
+    public ItemWorldUtils(String name)
     {
         super();
+
+        this.name = name;
+
         this.setCreativeTab(CreativeTab.WORLD_UTILS_TAB);
+        this.setUnlocalizedName(name);
         this.addItemOverrides();
+    }
+
+    public String getItemNameWorldUtils()
+    {
+        return this.name;
     }
 
     @Override
     public Item setUnlocalizedName(String name)
     {
-        this.name = name;
         return super.setUnlocalizedName(ReferenceNames.getPrefixedName(name));
     }
 

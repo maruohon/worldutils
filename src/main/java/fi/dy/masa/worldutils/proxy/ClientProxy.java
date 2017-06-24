@@ -4,11 +4,15 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.event.InputEventHandler;
 import fi.dy.masa.worldutils.event.PlayerEventHandler;
@@ -21,6 +25,7 @@ import fi.dy.masa.worldutils.reference.Keybindings;
 import fi.dy.masa.worldutils.setup.Configs;
 import fi.dy.masa.worldutils.setup.WorldUtilsItems;
 
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy implements IProxy
 {
     @Override
@@ -66,8 +71,8 @@ public class ClientProxy implements IProxy
         }
     }
 
-    @Override
-    public void registerModels()
+    @SubscribeEvent
+    public void registerModels(ModelRegistryEvent event)
     {
         this.registerAllItemModels();
     }

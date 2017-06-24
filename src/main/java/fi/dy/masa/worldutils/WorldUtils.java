@@ -13,12 +13,13 @@ import fi.dy.masa.worldutils.network.PacketHandler;
 import fi.dy.masa.worldutils.proxy.IProxy;
 import fi.dy.masa.worldutils.reference.Reference;
 import fi.dy.masa.worldutils.setup.Configs;
-import fi.dy.masa.worldutils.setup.WorldUtilsItems;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
     guiFactory = "fi.dy.masa.worldutils.setup.WorldUtilsGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/worldutils/master/update.json",
-    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "1.12")
+    acceptableRemoteVersions = "*",
+    acceptedMinecraftVersions = "1.12",
+    dependencies = "required-after:forge@[14.21.0.2348,);")
 public class WorldUtils
 {
     @Instance(Reference.MOD_ID)
@@ -36,10 +37,8 @@ public class WorldUtils
         Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
         configDirPath = new File(event.getModConfigurationDirectory(), Reference.MOD_ID).getAbsolutePath();
 
-        WorldUtilsItems.init();
         PacketHandler.init(); // Initialize network stuff
 
-        proxy.registerModels();
         proxy.registerKeyBindings();
         proxy.registerEventHandlers();
     }

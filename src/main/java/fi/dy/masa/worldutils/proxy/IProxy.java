@@ -11,8 +11,6 @@ public interface IProxy
 
     public void registerKeyBindings();
 
-    public void registerModels();
-
     public boolean isShiftKeyDown();
 
     public boolean isControlKeyDown();

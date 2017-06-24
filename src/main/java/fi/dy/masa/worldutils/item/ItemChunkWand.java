@@ -38,7 +38,6 @@ import fi.dy.masa.worldutils.network.MessageChunkChanges;
 import fi.dy.masa.worldutils.network.PacketHandler;
 import fi.dy.masa.worldutils.reference.HotKeys;
 import fi.dy.masa.worldutils.reference.HotKeys.EnumKey;
-import fi.dy.masa.worldutils.reference.ReferenceNames;
 import fi.dy.masa.worldutils.util.ChunkUtils;
 import fi.dy.masa.worldutils.util.ChunkUtils.ChangeType;
 import fi.dy.masa.worldutils.util.EntityUtils;
@@ -55,12 +54,12 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
 
     protected Map<UUID, Long> lastLeftClick = new HashMap<UUID, Long>();
 
-    public ItemChunkWand()
+    public ItemChunkWand(String name)
     {
-        super();
+        super(name);
+
         this.setMaxStackSize(1);
         this.setMaxDamage(0);
-        this.setUnlocalizedName(ReferenceNames.NAME_ITEM_CHUNK_WAND);
     }
 
     @Override
