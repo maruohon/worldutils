@@ -14,8 +14,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.reference.Reference;
 import fi.dy.masa.worldutils.reference.ReferenceNames;
@@ -23,7 +21,6 @@ import fi.dy.masa.worldutils.reference.ReferenceNames;
 public class ItemWorldUtils extends Item
 {
     protected final String name;
-    protected boolean enabled = true;
 
     public ItemWorldUtils(String name)
     {
@@ -143,24 +140,11 @@ public class ItemWorldUtils extends Item
         addTooltips(this.getUnlocalizedName(stack) + ".tooltips", list, verbose);
     }
 
-    public boolean isEnabled()
-    {
-        return this.enabled;
-    }
-
-    public ItemWorldUtils setEnabled(boolean enabled)
-    {
-        this.enabled = enabled;
-        return this;
-    }
-
-    @SideOnly(Side.CLIENT)
     public ResourceLocation[] getItemVariants()
     {
         return new ResourceLocation[] { ForgeRegistries.ITEMS.getKey(this) };
     }
 
-    @SideOnly(Side.CLIENT)
     public ModelResourceLocation getModelLocation(ItemStack stack)
     {
         return null;

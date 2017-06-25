@@ -48,13 +48,13 @@ public class ClientProxy implements IProxy
     {
         MinecraftForge.EVENT_BUS.register(new Configs());
         MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
-        MinecraftForge.EVENT_BUS.register(new RenderEventHandler());
         MinecraftForge.EVENT_BUS.register(new TickHandler());
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
 
         if (Configs.disableChunkWand == false)
         {
             MinecraftForge.EVENT_BUS.register(new InputEventHandler());
+            MinecraftForge.EVENT_BUS.register(new RenderEventHandler());
         }
     }
 
@@ -72,24 +72,14 @@ public class ClientProxy implements IProxy
     }
 
     @SubscribeEvent
-    public void registerModels(ModelRegistryEvent event)
+    public static void registerModels(ModelRegistryEvent event)
     {
-        this.registerAllItemModels();
+        registerItemModel(WorldUtilsItems.CHUNK_WAND, 0);
     }
 
-    private void registerAllItemModels()
+    private static void registerItemModel(ItemWorldUtils item, int meta)
     {
-        this.registerItemModel(WorldUtilsItems.CHUNK_WAND);
-    }
-
-    private void registerItemModel(ItemWorldUtils item)
-    {
-        this.registerItemModel(item, 0);
-    }
-
-    private void registerItemModel(ItemWorldUtils item, int meta)
-    {
-        if (item.isEnabled())
+        if (item != null)
         {
             ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(item.getRegistryName(), "inventory"));
         }
