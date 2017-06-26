@@ -1,18 +1,25 @@
-package fi.dy.masa.worldutils.setup;
+package fi.dy.masa.worldutils.config;
 
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.fml.client.DefaultGuiFactory;
 import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.config.IConfigElement;
 import fi.dy.masa.worldutils.reference.Reference;
 
-public class WorldUtilsConfigGui extends GuiConfig
+public class WorldUtilsGuiFactory extends DefaultGuiFactory
 {
-    public WorldUtilsConfigGui(GuiScreen parent)
+    public WorldUtilsGuiFactory()
     {
-        super(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle(parent));
+        super(Reference.MOD_ID, getTitle());
+    }
+
+    @Override
+    public GuiScreen createConfigGui(GuiScreen parent)
+    {
+        return new GuiConfig(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle());
     }
 
     private static List<IConfigElement> getConfigElements()
@@ -25,7 +32,7 @@ public class WorldUtilsConfigGui extends GuiConfig
         return configElements;
     }
 
-    private static String getTitle(GuiScreen parent)
+    private static String getTitle()
     {
         return GuiConfig.getAbridgedConfigPath(Configs.configurationFile.toString());
     }

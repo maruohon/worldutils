@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.worldutils.item.ItemChunkWand;
 import fi.dy.masa.worldutils.item.ItemChunkWand.Corner;
 import fi.dy.masa.worldutils.item.ItemChunkWand.Mode;
-import fi.dy.masa.worldutils.setup.WorldUtilsItems;
+import fi.dy.masa.worldutils.registry.WorldUtilsItems;
 import fi.dy.masa.worldutils.util.NBTUtils;
 
 public class ChunkWandRenderer

@@ -1,4 +1,4 @@
-package fi.dy.masa.worldutils.setup;
+package fi.dy.masa.worldutils.config;
 
 import java.io.File;
 import java.util.regex.Matcher;

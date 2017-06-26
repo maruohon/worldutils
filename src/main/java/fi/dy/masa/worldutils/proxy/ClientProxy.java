@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.config.Configs;
 import fi.dy.masa.worldutils.event.InputEventHandler;
 import fi.dy.masa.worldutils.event.PlayerEventHandler;
 import fi.dy.masa.worldutils.event.RenderEventHandler;
@@ -22,8 +23,7 @@ import fi.dy.masa.worldutils.event.WorldEventHandler;
 import fi.dy.masa.worldutils.item.base.ItemWorldUtils;
 import fi.dy.masa.worldutils.reference.HotKeys;
 import fi.dy.masa.worldutils.reference.Keybindings;
-import fi.dy.masa.worldutils.setup.Configs;
-import fi.dy.masa.worldutils.setup.WorldUtilsItems;
+import fi.dy.masa.worldutils.registry.WorldUtilsItems;
 
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy implements IProxy

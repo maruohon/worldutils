@@ -9,17 +9,17 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import fi.dy.masa.worldutils.command.CommandWorldUtils;
+import fi.dy.masa.worldutils.config.Configs;
 import fi.dy.masa.worldutils.network.PacketHandler;
 import fi.dy.masa.worldutils.proxy.IProxy;
 import fi.dy.masa.worldutils.reference.Reference;
-import fi.dy.masa.worldutils.setup.Configs;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-    guiFactory = "fi.dy.masa.worldutils.setup.WorldUtilsGuiFactory",
+    guiFactory = "fi.dy.masa.worldutils.config.WorldUtilsGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/worldutils/master/update.json",
     acceptableRemoteVersions = "*",
     acceptedMinecraftVersions = "1.12",
-    dependencies = "required-after:forge@[14.21.0.2348,);")
+    dependencies = "required-after:forge@[14.21.0.2373,);")
 public class WorldUtils
 {
     @Instance(Reference.MOD_ID)

@@ -11,7 +11,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import fi.dy.masa.worldutils.client.renderer.item.ChunkWandRenderer;
-import fi.dy.masa.worldutils.setup.WorldUtilsItems;
+import fi.dy.masa.worldutils.registry.WorldUtilsItems;
 import fi.dy.masa.worldutils.util.EntityUtils;
 
 public class RenderEventHandler

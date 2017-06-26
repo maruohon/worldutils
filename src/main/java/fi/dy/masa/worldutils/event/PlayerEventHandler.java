@@ -18,7 +18,7 @@ import fi.dy.masa.worldutils.network.MessageChunkChanges;
 import fi.dy.masa.worldutils.network.MessageKeyPressed;
 import fi.dy.masa.worldutils.network.PacketHandler;
 import fi.dy.masa.worldutils.reference.HotKeys;
-import fi.dy.masa.worldutils.setup.WorldUtilsItems;
+import fi.dy.masa.worldutils.registry.WorldUtilsItems;
 import fi.dy.masa.worldutils.util.ChunkUtils;
 
 public class PlayerEventHandler
