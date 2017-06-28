@@ -771,7 +771,7 @@ public class EntityTools
     private String getFormattedOutput(EntityData data, String format)
     {
         return String.format(format, data.getUUID().toString(), data.getId(), data.getDimension(),
-                data.getPosition().xCoord, data.getPosition().yCoord, data.getPosition().zCoord,
+                data.getPosition().x, data.getPosition().y, data.getPosition().z,
                 data.getChunkPosition().x, data.getChunkPosition().z,
                 data.getChunkPosition().x >> 5, data.getChunkPosition().z >> 5);
     }

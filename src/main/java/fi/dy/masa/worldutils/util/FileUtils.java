@@ -296,7 +296,7 @@ public class FileUtils
     public static File getWorldSaveLocation(int dimension)
     {
         File dir = DimensionManager.getCurrentSaveRootDirectory();
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dimension);
+        World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimension);
 
         if (world != null)
         {

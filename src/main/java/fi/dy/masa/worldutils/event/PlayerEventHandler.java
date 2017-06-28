@@ -74,7 +74,7 @@ public class PlayerEventHandler
     {
         if (event.player instanceof EntityPlayerMP)
         {
-            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(event.toDim);
+            World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(event.toDim);
 
             if (world != null)
             {

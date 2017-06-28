@@ -41,7 +41,7 @@ public class SubCommandPrintSpawn extends SubCommand
             throwCommand("worldutils.commands.help.generic.usage", this.getUsageStringCommon() + " [dimension id]");
         }
 
-        WorldServer world = server.worldServerForDimension(dimension);
+        WorldServer world = server.getWorld(dimension);
 
         if (world != null)
         {
