@@ -92,10 +92,12 @@ public class RegistryUtils
 
                         if (tmp.hasKey("K", Constants.NBT.TAG_STRING))
                         {
-                            ResourceLocation rl = new ResourceLocation(tmp.getString("K"));
+                            String key = tmp.getString("K");
+                            ResourceLocation rl = new ResourceLocation(key);
 
                             if (registry.containsKey(rl) == false || isDummied(registry, rl))
                             {
+                                WorldUtils.logger.info("Removing missing or dummied block registry entry '{}'", key);
                                 list.removeTag(i);
                                 i--;
                                 count++;
