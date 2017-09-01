@@ -11,9 +11,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.reference.Reference;
 import fi.dy.masa.worldutils.reference.ReferenceNames;
@@ -142,13 +139,11 @@ public class ItemWorldUtils extends Item
         return this;
     }
 
-    @SideOnly(Side.CLIENT)
     public ResourceLocation[] getItemVariants()
     {
-        return new ResourceLocation[] { ForgeRegistries.ITEMS.getKey(this) };
+        return new ResourceLocation[] { this.getRegistryName() };
     }
 
-    @SideOnly(Side.CLIENT)
     public ModelResourceLocation getModelLocation(ItemStack stack)
     {
         return null;
