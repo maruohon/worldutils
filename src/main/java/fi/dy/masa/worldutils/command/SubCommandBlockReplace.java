@@ -13,7 +13,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameData;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
@@ -293,7 +292,7 @@ public class SubCommandBlockReplace extends SubCommand
             @SuppressWarnings("deprecation")
             FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
 
-            for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
+            for (ResourceLocation rl : Block.REGISTRY.getKeys())
             {
                 if (reg.isDummied(rl))
                 {
@@ -306,7 +305,7 @@ public class SubCommandBlockReplace extends SubCommand
             @SuppressWarnings("deprecation")
             FMLControlledNamespacedRegistry<Block> reg = GameData.getBlockRegistry();
 
-            for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
+            for (ResourceLocation rl : Block.REGISTRY.getKeys())
             {
                 if (rl.getResourceDomain().equals(args[0]) && reg.isDummied(rl))
                 {
