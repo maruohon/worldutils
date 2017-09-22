@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -26,6 +27,7 @@ public class CommandWorldUtils extends CommandBase
         this.registerSubCommand(new SubCommandBlockReplacePairs(this));
         this.registerSubCommand(new SubCommandDump(this));
         this.registerSubCommand(new SubCommandEntities(this));
+        this.registerSubCommand(new SubCommandInspectBlock(this));
         this.registerSubCommand(new SubCommandPrintSpawn(this));
         this.registerSubCommand(new SubCommandRegistry(this));
         this.registerSubCommand(new SubCommandSetBlock(this));
@@ -61,7 +63,7 @@ public class CommandWorldUtils extends CommandBase
     }
 
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         if (args.length == 1 || (args.length == 2 && args[0].equals("help")))
         {
@@ -70,7 +72,7 @@ public class CommandWorldUtils extends CommandBase
         else if (args.length > 1 && this.subCommands.containsKey(args[0]))
         {
             ISubCommand command = this.subCommands.get(args[0]);
-            return command.getTabCompletions(server, sender, dropFirstStrings(args, 1));
+            return command.getTabCompletions(server, sender, dropFirstStrings(args, 1), targetPos);
         }
 
         return Collections.emptyList();

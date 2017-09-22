@@ -53,14 +53,22 @@ public class FileUtils
     public static class Region
     {
         private final String regionName;
-        private final File regionFile;
-        private final RegionFile region;
+        private final File file;
+        private final RegionFile regionFile;
 
-        private Region(File worldDir, int regionX, int regionZ)
+        private Region(File worldDir, int regionX, int regionZ, boolean create)
         {
-            this.regionFile = new File(new File(worldDir, "region"), "r." + regionX + "." + regionZ + ".mca");
-            this.regionName = this.regionFile.getName();
-            this.region = RegionFileCache.createOrLoadRegionFile(worldDir, regionX << 5, regionZ << 5);
+            this.file = new File(new File(worldDir, "region"), "r." + regionX + "." + regionZ + ".mca");
+            this.regionName = this.file.getName();
+
+            if (create)
+            {
+                this.regionFile = RegionFileCache.createOrLoadRegionFile(worldDir, regionX << 5, regionZ << 5);
+            }
+            else
+            {
+                this.regionFile = RegionFileCache.getRegionFileIfExists(worldDir, regionX << 5, regionZ << 5);
+            }
         }
 
         public static Region fromRegionFile(File regionFile)
@@ -82,7 +90,12 @@ public class FileUtils
 
         public static Region fromRegionCoords(File worldDir, int regionX, int regionZ)
         {
-            return new Region(worldDir, regionX, regionZ);
+            return fromRegionCoords(worldDir, regionX, regionZ, true);
+        }
+
+        public static Region fromRegionCoords(File worldDir, int regionX, int regionZ, boolean create)
+        {
+            return new Region(worldDir, regionX, regionZ, create);
         }
 
         public String getName()
@@ -92,12 +105,13 @@ public class FileUtils
 
         public String getFileName()
         {
-            return this.regionFile.getAbsolutePath();
+            return this.file.getAbsolutePath();
         }
 
+        @Nullable
         public RegionFile getRegionFile()
         {
-            return this.region;
+            return this.regionFile;
         }
 
         public static ChunkPos getRegionPos(File regionFile)

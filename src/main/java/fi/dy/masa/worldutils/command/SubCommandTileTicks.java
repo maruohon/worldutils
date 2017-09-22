@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.worldutils.data.TileTickTools;
 import fi.dy.masa.worldutils.data.TileTickTools.Operation;
 import fi.dy.masa.worldutils.util.BlockUtils;
@@ -57,7 +59,7 @@ public class SubCommandTileTicks extends SubCommand
     }
 
     @Override
-    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         String cmd = args[0];
         args = dropFirstStrings(args, 1);

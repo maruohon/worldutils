@@ -3,10 +3,13 @@ package fi.dy.masa.worldutils.command;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.worldutils.util.BlockData;
 
 public abstract class SubCommand implements ISubCommand
@@ -33,17 +36,17 @@ public abstract class SubCommand implements ISubCommand
     }
 
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         if ((this.getSubSubCommands().size() > 1 && args.length == 1) || (args.length == 2 && args[0].equals("help")))
         {
             return CommandBase.getListOfStringsMatchingLastWord(args, this.getSubSubCommands());
         }
 
-        return this.getTabCompletionsSub(server, sender, args);
+        return this.getTabCompletionsSub(server, sender, args, targetPos);
     }
 
-    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         return Collections.emptyList();
     }
@@ -136,5 +139,21 @@ public abstract class SubCommand implements ISubCommand
         {
             throwCommand("worldutils.commands.blockreplace.block.print.invalid", blockStr);
         }
+    }
+
+    protected int getDimension(String usage, String[] args, ICommandSender sender) throws CommandException
+    {
+        int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
+
+        if (args.length == 1)
+        {
+            dimension = CommandBase.parseInt(args[0]);
+        }
+        else if (args.length > 1)
+        {
+            throwUsage(usage);
+        }
+
+        return dimension;
     }
 }

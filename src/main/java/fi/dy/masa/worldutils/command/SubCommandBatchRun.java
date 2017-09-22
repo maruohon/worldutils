@@ -17,6 +17,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.worldutils.WorldUtils;
 
 public class SubCommandBatchRun extends SubCommand
@@ -48,7 +49,7 @@ public class SubCommandBatchRun extends SubCommand
     }
 
     @Override
-    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         if (args.length != 1)
         {

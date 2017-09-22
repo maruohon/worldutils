@@ -3,12 +3,13 @@ package fi.dy.masa.worldutils.command;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.BlockTools;
@@ -73,7 +74,7 @@ public class SubCommandBlockReplacePairs extends SubCommand
     }
 
     @Override
-    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args)
+    protected List<String> getTabCompletionsSub(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         if (args.length < 1)
         {
@@ -223,13 +224,14 @@ public class SubCommandBlockReplacePairs extends SubCommand
         }
         else if ((cmd.equals("execute-all-chunks") || cmd.equals("execute-loaded-chunks") || cmd.equals("execute-unloaded-chunks")) && args.length <= 1)
         {
-            this.sendMessage(sender, "worldutils.commands.blockreplace.execute.start");
-            int dimension = this.getDimension(cmd, CommandWorldUtils.dropFirstStrings(args, 1), sender);
+            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+            int dimension = this.getDimension(usage, CommandWorldUtils.dropFirstStrings(args, 1), sender);
             LoadedType loaded = LoadedType.UNLOADED;
 
             if (cmd.equals("execute-all-chunks")) { loaded = LoadedType.ALL; }
             else if (cmd.equals("execute-loaded-chunks")) { loaded = LoadedType.LOADED; }
 
+            this.sendMessage(sender, "worldutils.commands.blockreplace.execute.start");
             BlockTools.replaceBlocksInPairs(dimension, blockPairs, loaded, sender);
         }
         else if (cmd.equals("stoptask"))
@@ -247,21 +249,5 @@ public class SubCommandBlockReplacePairs extends SubCommand
         {
             this.printFullHelp(sender, args);
         }
-    }
-
-    private int getDimension(String cmd, String[] args, ICommandSender sender) throws CommandException
-    {
-        int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
-
-        if (args.length == 1)
-        {
-            dimension = CommandBase.parseInt(args[0]);
-        }
-        else if (args.length > 1)
-        {
-            throwUsage(this.getUsageStringCommon() + " " + cmd + " [dimension id]");
-        }
-
-        return dimension;
     }
 }

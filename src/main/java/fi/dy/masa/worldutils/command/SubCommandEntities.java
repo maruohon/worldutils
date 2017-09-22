@@ -4,12 +4,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.EntityTools;
@@ -81,7 +82,7 @@ public class SubCommandEntities extends SubCommand
     }
 
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         if (args.length < 1)
         {
@@ -137,7 +138,7 @@ public class SubCommandEntities extends SubCommand
             }
         }
 
-        return super.getTabCompletions(server, sender, argsOrig);
+        return super.getTabCompletions(server, sender, argsOrig, targetPos);
     }
 
     @Override
@@ -185,14 +186,18 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("read-all"))
         {
+            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+            int dimension = this.getDimension(usage, args, sender);
+
             this.sendMessage(sender, "worldutils.commands.entities.readall.start");
-            int dimension = this.getDimension(cmd, args, sender);
             EntityTools.instance().readEntities(dimension, sender);
         }
         else if (cmd.equals("remove-duplicate-uuids"))
         {
+            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+            int dimension = this.getDimension(usage, args, sender);
+
             this.sendMessage(sender, "worldutils.commands.entities.removeallduplicates.start");
-            int dimension = this.getDimension(cmd, args, sender);
             EntityTools.instance().removeAllDuplicateEntities(dimension, sender);
         }
         else if (cmd.equals("remove"))
@@ -241,9 +246,11 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("execute-for-entities") || cmd.equals("execute-for-tileentities"))
         {
-            this.sendMessage(sender, "worldutils.commands.entities.remove.start");
-            int dimension = this.getDimension(cmd, args, sender);
+            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+            int dimension = this.getDimension(usage, args, sender);
             EntityRenamer.Type type = cmd.equals("execute-for-tileentities") ? EntityRenamer.Type.TILE_ENTITIES : EntityRenamer.Type.ENTITIES;
+
+            this.sendMessage(sender, "worldutils.commands.entities.remove.start");
             EntityTools.instance().removeEntities(dimension, removeList, type, sender);
         }
         else if (cmd.equals("list"))
@@ -337,9 +344,11 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("execute-for-entities") || cmd.equals("execute-for-tileentities"))
         {
-            this.sendMessage(sender, "worldutils.commands.entities.rename.start");
-            int dimension = this.getDimension(cmd, args, sender);
+            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+            int dimension = this.getDimension(usage, args, sender);
             EntityRenamer.Type type = cmd.equals("execute-for-tileentities") ? EntityRenamer.Type.TILE_ENTITIES : EntityRenamer.Type.ENTITIES;
+
+            this.sendMessage(sender, "worldutils.commands.entities.rename.start");
             EntityTools.instance().renameEntities(dimension, renamePairs, type, sender);
         }
         else if (cmd.equals("list"))
@@ -401,21 +410,5 @@ public class SubCommandEntities extends SubCommand
 
             this.sendMessage(sender, "worldutils.commands.generic.list.remove.failure", str);
         }
-    }
-
-    private int getDimension(String cmd, String[] args, ICommandSender sender) throws CommandException
-    {
-        int dimension = sender instanceof EntityPlayer ? ((EntityPlayer) sender).getEntityWorld().provider.getDimension() : 0;
-
-        if (args.length == 1)
-        {
-            dimension = CommandBase.parseInt(args[0]);
-        }
-        else if (args.length > 1)
-        {
-            throwUsage(this.getUsageStringCommon() + " " + cmd + " [dimension id]");
-        }
-
-        return dimension;
     }
 }
