@@ -149,10 +149,48 @@ public class BlockSetter
                     sectionTag.setByteArray("Add", addNibble.getData());
                 }
 
+                removeTileEntityAndTileTick(level, pos);
+
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static void removeTileEntityAndTileTick(NBTTagCompound level, BlockPos pos)
+    {
+        NBTTagList list = level.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
+
+        if (list != null)
+        {
+            removeTileEntry(list, pos);
+        }
+
+        list = level.getTagList("TileTicks", Constants.NBT.TAG_COMPOUND);
+
+        if (list != null)
+        {
+            removeTileEntry(list, pos);
+        }
+    }
+
+    private static void removeTileEntry(NBTTagList list, BlockPos pos)
+    {
+        final int size = list.tagCount();
+        final int x = pos.getX();
+        final int y = pos.getY();
+        final int z = pos.getZ();
+
+        for (int i = 0; i < size; i++)
+        {
+            NBTTagCompound tag = list.getCompoundTagAt(i);
+
+            if (tag.getInteger("x") == x && tag.getInteger("y") == y && tag.getInteger("z") == z)
+            {
+                list.removeTag(i);
+                break;
+            }
+        }
     }
 }
