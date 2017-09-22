@@ -224,7 +224,7 @@ public class SubCommandBlockReplace extends SubCommand
             if (cmd.equals("execute-all-chunks")) { loaded = LoadedType.ALL; }
             else if (cmd.equals("execute-loaded-chunks")) { loaded = LoadedType.LOADED; }
 
-            BlockTools.instance().replaceBlocks(dimension, replacement, blockNames, blockStates, keepListedBlocks, loaded, sender);
+            BlockTools.replaceBlocks(dimension, replacement, blockNames, blockStates, keepListedBlocks, loaded, sender);
         }
         else if (cmd.equals("stoptask"))
         {
@@ -396,20 +396,6 @@ public class SubCommandBlockReplace extends SubCommand
         else
         {
             throwCommand("worldutils.commands.generic.list.add.failure.invalid", name);
-        }
-    }
-
-    private void printBlockData(String blockStr, ICommandSender sender) throws CommandException
-    {
-        BlockData type = BlockData.parseBlockTypeFromString(blockStr);
-
-        if (type != null && type.isValid())
-        {
-            this.sendMessage(sender, "worldutils.commands.blockreplace.block.print.valid", type.toString());
-        }
-        else
-        {
-            throwCommand("worldutils.commands.blockreplace.block.print.invalid", blockStr);
         }
     }
 

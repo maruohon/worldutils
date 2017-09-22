@@ -7,6 +7,7 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
+import fi.dy.masa.worldutils.util.BlockData;
 
 public abstract class SubCommand implements ISubCommand
 {
@@ -121,5 +122,19 @@ public abstract class SubCommand implements ISubCommand
     public static void throwCommand(String message, Object... params) throws CommandException
     {
         CommandWorldUtils.throwCommand(message, params);
+    }
+
+    protected void printBlockData(String blockStr, ICommandSender sender) throws CommandException
+    {
+        BlockData type = BlockData.parseBlockTypeFromString(blockStr);
+
+        if (type != null && type.isValid())
+        {
+            this.sendMessage(sender, "worldutils.commands.blockreplace.block.print.valid", type.toString());
+        }
+        else
+        {
+            throwCommand("worldutils.commands.blockreplace.block.print.invalid", blockStr);
+        }
     }
 }

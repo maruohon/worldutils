@@ -230,7 +230,7 @@ public class SubCommandBlockReplacePairs extends SubCommand
             if (cmd.equals("execute-all-chunks")) { loaded = LoadedType.ALL; }
             else if (cmd.equals("execute-loaded-chunks")) { loaded = LoadedType.LOADED; }
 
-            BlockTools.instance().replaceBlocksInPairs(dimension, blockPairs, loaded, sender);
+            BlockTools.replaceBlocksInPairs(dimension, blockPairs, loaded, sender);
         }
         else if (cmd.equals("stoptask"))
         {
