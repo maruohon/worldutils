@@ -159,7 +159,7 @@ public class BlockTools
     private static NBTTagCompound getChunkNBT(Region region, int chunkX, int chunkZ)
     {
         NBTTagCompound chunkNBT;
-        DataInputStream dataIn = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+        DataInputStream dataIn = region.getRegionFile().getChunkDataInputStream(chunkX & 0x1F, chunkZ & 0x1F);
 
         if (dataIn == null)
         {
@@ -188,7 +188,7 @@ public class BlockTools
     {
         if (chunkNBT != null && chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
         {
-            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX & 0x1F, chunkZ & 0x1F);
 
             if (dataOut == null)
             {
