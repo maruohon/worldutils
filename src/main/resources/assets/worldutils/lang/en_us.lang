@@ -44,6 +44,9 @@ worldutils.commands.error.filenotfound=File '%s' was not found
 worldutils.commands.error.invaliddimension=Dimension %d could not be loaded or does not exist!
 worldutils.commands.error.invalidgameversion=Invalid game version '%s'!
 worldutils.commands.error.notaskfound=No running task found
+worldutils.commands.error.setblock.block_loaded=The target chunk is currently loaded, please use the vanilla /setblock command instead
+worldutils.commands.error.setblock.fail=Failed to set the block in DIM %d at %d,%d,%d to %s
+worldutils.commands.error.setblock.invalid_position=Invalid block position (outside world?)
 worldutils.commands.error.taskalreadyrunning=There is a task already running
 worldutils.commands.error.unknowncommandargument=Unknown command argument: '%s'
 worldutils.commands.error.unknowncommandvariant=Unknown command variant: '%s'
@@ -92,6 +95,8 @@ worldutils.commands.printspawn.print=The world spawn is at x: %d, y: %d, z: %d
 worldutils.commands.registrycleanup.error.filenotfound=The file '%s' was not found inside the config/worldutils/ directory
 worldutils.commands.registrycleanup.error.tagsnotfound=Some of the expected compound tags were not found in the level.dat file
 worldutils.commands.registrycleanup.info.complete=Removed %d missing or dummied block entries from the registry in '%s'
+
+worldutils.commands.setblock.success=Successfully set block in DIM %d at %d,%d,%d to %s
 
 worldutils.commands.tileticks.list.list.empty=Nothing added to the list to be removed
 worldutils.commands.tileticks.list.list.print=Tile ticks will be removed for anything matching '%s'

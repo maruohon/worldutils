@@ -28,6 +28,7 @@ public class CommandWorldUtils extends CommandBase
         this.registerSubCommand(new SubCommandEntities(this));
         this.registerSubCommand(new SubCommandPrintSpawn(this));
         this.registerSubCommand(new SubCommandRegistry(this));
+        this.registerSubCommand(new SubCommandSetBlock(this));
         this.registerSubCommand(new SubCommandTileTicks(this));
     }
 
