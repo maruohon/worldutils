@@ -1,17 +1,28 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.12-latest": "0.3.2",
-        "1.12-recommended": "0.3.2",
-        "1.11.2-latest": "0.3.0",
-        "1.11.2-recommended": "0.3.0",
-        "1.10.2-latest": "0.3.0",
-        "1.10.2-recommended": "0.3.0"
+        "1.12.2-latest":        "0.4.0",
+        "1.12.2-recommended":   "0.4.0",
+        "1.12.1-latest":        "0.4.0",
+        "1.12.1-recommended":   "0.4.0",
+        "1.12-latest":          "0.4.0",
+        "1.12-recommended":     "0.4.0",
+        "1.11.2-latest":        "0.3.0",
+        "1.11.2-recommended":   "0.3.0",
+        "1.10.2-latest":        "0.3.0",
+        "1.10.2-recommended":   "0.3.0"
+    },
+    "1.12.2": {
+        "0.4.0": "Added a setblock command that works in unloaded chunks\nBuilt against a recent Forge version (fixes the registry crash from 0.3.2)"
+    },
+    "1.12.1": {
+        "0.4.0": "Added a setblock command that works in unloaded chunks\nBuilt against a recent Forge version (fixes the registry crash from 0.3.2)"
     },
     "1.12": {
         "0.3.0": "Update to Minecraft 1.12\nFix a rather serious bug in the block replace code\nAdd a command to run commands from files\nAdd block replace sub-commands to add removed blocks (all or from a mod) to the list",
         "0.3.1": "Update to new Forge registry things in Forge 2348+",
-        "0.3.2": "Fix Chunk Wand model registration and clean up the item registration a bit"
+        "0.3.2": "Fix Chunk Wand model registration and clean up the item registration a bit",
+        "0.4.0": "Added a setblock command that works in unloaded chunks\nBuilt against a recent Forge version (fixes the registry crash from 0.3.2)"
     },
     "1.11.2": {
         "0.2.0": "Update to Minecraft 1.11.2",
