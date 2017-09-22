@@ -1,26 +1,29 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/world-utils",
     "promos": {
-        "1.12.2-latest":        "0.4.1",
-        "1.12.2-recommended":   "0.4.1",
-        "1.12.1-latest":        "0.4.1",
-        "1.12.1-recommended":   "0.4.1",
-        "1.12-latest":          "0.4.1",
-        "1.12-recommended":     "0.4.1",
+        "1.12.2-latest":        "0.4.2",
+        "1.12.2-recommended":   "0.4.2",
+        "1.12.1-latest":        "0.4.2",
+        "1.12.1-recommended":   "0.4.2",
+        "1.12-latest":          "0.4.2",
+        "1.12-recommended":     "0.4.2",
         "1.11.2-latest":        "0.3.0",
         "1.11.2-recommended":   "0.3.0",
         "1.10.2-latest":        "0.3.0",
         "1.10.2-recommended":   "0.3.0"
     },
     "1.12.2": {
+        "0.4.2": "Added a inspectblock command, which can read the block and TileEntity NBT data currently in the chunk data on disk\nFixed the setblock command using a wrong chunk location",
         "0.4.1": "Fix the setblock command didn't remove old TileEntity data",
         "0.4.0": "Added a setblock command that works in unloaded chunks\nBuilt against a recent Forge version (fixes the registry crash from 0.3.2)"
     },
     "1.12.1": {
+        "0.4.2": "Added a inspectblock command, which can read the block and TileEntity NBT data currently in the chunk data on disk\nFixed the setblock command using a wrong chunk location",
         "0.4.1": "Fix the setblock command didn't remove old TileEntity data",
         "0.4.0": "Added a setblock command that works in unloaded chunks\nBuilt against a recent Forge version (fixes the registry crash from 0.3.2)"
     },
     "1.12": {
+        "0.4.2": "Added a inspectblock command, which can read the block and TileEntity NBT data currently in the chunk data on disk\nFixed the setblock command using a wrong chunk location",
         "0.4.1": "Fix the setblock command didn't remove old TileEntity data",
         "0.4.0": "Added a setblock command that works in unloaded chunks\nBuilt against a recent Forge version (fixes the registry crash from 0.3.2)",
         "0.3.2": "Fix Chunk Wand model registration and clean up the item registration a bit",
