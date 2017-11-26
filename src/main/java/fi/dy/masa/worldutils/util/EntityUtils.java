@@ -7,7 +7,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -86,9 +85,9 @@ public class EntityUtils
     {
         double reach = 5.0d;
 
-        if (player instanceof EntityPlayerMP)
+        if (player instanceof EntityPlayer)
         {
-            reach = ((EntityPlayerMP) player).interactionManager.getBlockReachDistance();
+            reach = ((EntityPlayer) player).getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue();
         }
 
         return getRayTraceFromPlayer(world, player, useLiquids, reach);
@@ -105,7 +104,7 @@ public class EntityUtils
         double f7 = f2 * f4;
         Vec3d vec3d1 = vec3d.addVector(f6 * reach, f5 * reach, f7 * reach);
 
-        return rayTraceBlocks(world, vec3d, vec3d1, useLiquids, !useLiquids, false, 1000);
+        return rayTraceBlocks(world, vec3d, vec3d1, useLiquids, false, false, 1000);
     }
 
     /**
