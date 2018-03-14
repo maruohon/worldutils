@@ -51,7 +51,7 @@ public class BlockTools
             replacer.addBlocksFromBlockStates(Lists.newArrayList(Blocks.AIR.getDefaultState()));
         }
 
-        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender, 50), 1);
     }
 
     public static void replaceBlocksInPairs(int dimension, List<Pair<String, String>> blockPairs,
@@ -59,7 +59,7 @@ public class BlockTools
     {
         BlockReplacerPairs replacer = new BlockReplacerPairs(loaded);
         replacer.addBlockPairs(blockPairs);
-        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender), 1);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, replacer, sender, 50), 1);
     }
 
     public static boolean setBlock(int dimension, BlockPos blockPos, BlockData blockData) throws CommandException

@@ -3,6 +3,7 @@ package fi.dy.masa.worldutils;
 import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -13,7 +14,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import fi.dy.masa.worldutils.command.CommandWorldUtils;
 import fi.dy.masa.worldutils.config.Configs;
 import fi.dy.masa.worldutils.network.PacketHandler;
-import fi.dy.masa.worldutils.proxy.IProxy;
+import fi.dy.masa.worldutils.proxy.CommonProxy;
 import fi.dy.masa.worldutils.reference.Reference;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION, certificateFingerprint = Reference.FINGERPRINT,
@@ -28,10 +29,12 @@ public class WorldUtils
     public static WorldUtils instance;
 
     @SidedProxy(clientSide = Reference.PROXY_CLASS_CLIENT, serverSide = Reference.PROXY_CLASS_SERVER)
-    public static IProxy proxy;
+    public static CommonProxy proxy;
 
     public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
     public static String configDirPath;
+
+    private static boolean modLoadedNeid;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -43,6 +46,7 @@ public class WorldUtils
 
         proxy.registerKeyBindings();
         proxy.registerEventHandlers();
+        modLoadedNeid = Loader.isModLoaded("neid");
     }
 
     @EventHandler
@@ -68,5 +72,10 @@ public class WorldUtils
             logger.warn("*****   that it may contain malware or other unwanted things!                           *****");
             logger.warn("*********************************************************************************************");
         }
+    }
+
+    public static boolean isModLoadedNEID()
+    {
+        return modLoadedNeid;
     }
 }

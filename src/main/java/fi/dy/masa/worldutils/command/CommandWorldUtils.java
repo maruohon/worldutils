@@ -1,5 +1,6 @@
 package fi.dy.masa.worldutils.command;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +15,11 @@ import net.minecraft.command.NumberInvalidException;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.event.ClickEvent;
+import fi.dy.masa.worldutils.WorldUtils;
 
 public class CommandWorldUtils extends CommandBase
 {
@@ -25,6 +30,7 @@ public class CommandWorldUtils extends CommandBase
         this.registerSubCommand(new SubCommandBatchRun(this));
         this.registerSubCommand(new SubCommandBlockReplace(this));
         this.registerSubCommand(new SubCommandBlockReplacePairs(this));
+        this.registerSubCommand(new SubCommandBlockStats(this));
         this.registerSubCommand(new SubCommandDump(this));
         this.registerSubCommand(new SubCommandEntities(this));
         this.registerSubCommand(new SubCommandInspectBlock(this));
@@ -143,6 +149,19 @@ public class CommandWorldUtils extends CommandBase
         String[] arr = new String[input.length - toDrop];
         System.arraycopy(input, toDrop, arr, 0, input.length - toDrop);
         return arr;
+    }
+
+    public static void sendClickableLinkMessage(ICommandSender sender, String messageKey, File file)
+    {
+        ITextComponent name = new TextComponentString(file.getName());
+
+        if (WorldUtils.proxy.isSinglePlayer())
+        {
+            name.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+            name.getStyle().setUnderlined(Boolean.valueOf(true));
+        }
+
+        sender.sendMessage(new TextComponentTranslation(messageKey, name));
     }
 
     public static void sendMessage(ICommandSender sender, String message, Object... params)

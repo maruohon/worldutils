@@ -610,28 +610,28 @@ public class EntityTools
     public void readEntities(int dimension, ICommandSender sender) throws CommandException
     {
         this.entityDataReader.init(dimension);
-        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.entityDataReader, sender), 1);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.entityDataReader, sender, 50), 1);
     }
 
     public void removeAllDuplicateEntities(int dimension, ICommandSender sender) throws CommandException
     {
         EntityDataReader reader = new EntityDataReader(dimension, true);
         reader.init(dimension);
-        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender), 1);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender, 50), 1);
     }
 
     public void removeEntities(int dimension, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender) throws CommandException
     {
         EntityRemover remover = new EntityRemover(toRemove, type);
         remover.init(dimension);
-        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender, 50), 1);
     }
 
     public void renameEntities(int dimension, List<Pair<String, String>> renamePairs, EntityRenamer.Type type, ICommandSender sender) throws CommandException
     {
         EntityRenamer renamer = new EntityRenamer(renamePairs, type);
         renamer.init(dimension);
-        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, renamer, sender), 1);
+        TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, renamer, sender, 50), 1);
     }
 
     private static List<EntityData> getDuplicateEntitiesIncludingFirst(List<EntityData> dataIn, boolean sortFirst)

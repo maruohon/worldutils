@@ -3,7 +3,6 @@ package fi.dy.masa.worldutils.command;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -19,18 +18,10 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.worldutils.WorldUtils;
+import fi.dy.masa.worldutils.util.FileUtils;
 
 public class SubCommandBatchRun extends SubCommand
 {
-    private static final FilenameFilter FILTER_FILES = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File pathName, String name)
-        {
-            return new File(pathName, name).isFile();
-        }
-    };
-
     public SubCommandBatchRun(CommandWorldUtils baseCommand)
     {
         super(baseCommand);
@@ -132,7 +123,7 @@ public class SubCommandBatchRun extends SubCommand
 
         if (dir.isDirectory())
         {
-            String[] names = dir.list(FILTER_FILES);
+            String[] names = dir.list(FileUtils.FILTER_FILES);
             return Arrays.asList(names);
         }
 

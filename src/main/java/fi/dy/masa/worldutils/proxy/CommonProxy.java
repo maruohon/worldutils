@@ -8,10 +8,8 @@ import fi.dy.masa.worldutils.event.PlayerEventHandler;
 import fi.dy.masa.worldutils.event.TickHandler;
 import fi.dy.masa.worldutils.event.WorldEventHandler;
 
-public class ServerProxy implements IProxy
+public class CommonProxy
 {
-
-    @Override
     public EntityPlayer getPlayerFromMessageContext(MessageContext ctx)
     {
         switch (ctx.side)
@@ -24,7 +22,6 @@ public class ServerProxy implements IProxy
         }
     }
 
-    @Override
     public void registerEventHandlers()
     {
         MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
@@ -32,24 +29,25 @@ public class ServerProxy implements IProxy
         MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
     }
 
-    @Override
     public void registerKeyBindings()
     {
     }
 
-    @Override
+    public boolean isSinglePlayer()
+    {
+        return false;
+    }
+
     public boolean isShiftKeyDown()
     {
         return false;
     }
 
-    @Override
     public boolean isControlKeyDown()
     {
         return false;
     }
 
-    @Override
     public boolean isAltKeyDown()
     {
         return false;

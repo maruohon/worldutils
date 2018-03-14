@@ -534,29 +534,29 @@ public class TileTickTools
             {
                 this.tileTickReader.init(dimension);
                 this.tileTickReader.setOperation(operation);
-                TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.tileTickReader, sender), 1);
+                TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.tileTickReader, sender, 50), 1);
             }
         }
         else if (operation == Operation.REMOVE_ALL)
         {
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, new TileTickRemoverAll(), sender), 1);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, new TileTickRemoverAll(), sender, 50), 1);
         }
         else if (operation == Operation.REMOVE_BY_MOD)
         {
             Set<String> toRemove = TileTickTools.this.getRemoveSet(operation);
             TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_BY_MOD, toRemove);
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender, 50), 1);
         }
         else if (operation == Operation.REMOVE_BY_NAME)
         {
             Set<String> toRemove = TileTickTools.this.getRemoveSet(operation);
             TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_BY_NAME, toRemove);
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender, 50), 1);
         }
         else if (operation == Operation.REMOVE_INVALID)
         {
             TileTickRemoverByModOrName remover = new TileTickRemoverByModOrName(Operation.REMOVE_INVALID, Collections.<String>emptySet());
-            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender), 1);
+            TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender, 50), 1);
         }
     }
 

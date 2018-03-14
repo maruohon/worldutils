@@ -1,5 +1,6 @@
 package fi.dy.masa.worldutils.proxy;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.settings.KeyBinding;
@@ -16,17 +17,14 @@ import net.minecraftforge.fml.relauncher.Side;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.config.Configs;
 import fi.dy.masa.worldutils.event.InputEventHandler;
-import fi.dy.masa.worldutils.event.PlayerEventHandler;
 import fi.dy.masa.worldutils.event.RenderEventHandler;
-import fi.dy.masa.worldutils.event.TickHandler;
-import fi.dy.masa.worldutils.event.WorldEventHandler;
 import fi.dy.masa.worldutils.item.base.ItemWorldUtils;
 import fi.dy.masa.worldutils.reference.HotKeys;
 import fi.dy.masa.worldutils.reference.Keybindings;
 import fi.dy.masa.worldutils.registry.WorldUtilsItems;
 
 @Mod.EventBusSubscriber(Side.CLIENT)
-public class ClientProxy implements IProxy
+public class ClientProxy extends CommonProxy
 {
     @Override
     public EntityPlayer getPlayerFromMessageContext(MessageContext ctx)
@@ -46,10 +44,9 @@ public class ClientProxy implements IProxy
     @Override
     public void registerEventHandlers()
     {
+        super.registerEventHandlers();
+
         MinecraftForge.EVENT_BUS.register(new Configs());
-        MinecraftForge.EVENT_BUS.register(new PlayerEventHandler());
-        MinecraftForge.EVENT_BUS.register(new TickHandler());
-        MinecraftForge.EVENT_BUS.register(new WorldEventHandler());
 
         if (Configs.disableChunkWand == false)
         {
@@ -83,6 +80,12 @@ public class ClientProxy implements IProxy
         {
             ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(item.getRegistryName(), "inventory"));
         }
+    }
+
+    @Override
+    public boolean isSinglePlayer()
+    {
+        return Minecraft.getMinecraft().isSingleplayer();
     }
 
     @Override

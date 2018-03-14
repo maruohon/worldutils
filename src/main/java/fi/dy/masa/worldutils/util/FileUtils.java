@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -47,6 +49,24 @@ public class FileUtils
                 e.printStackTrace();
                 return false;
             }
+        }
+    };
+
+    public static final FilenameFilter FILTER_FILES = new FilenameFilter()
+    {
+        @Override
+        public boolean accept(File pathName, String name)
+        {
+            return (new File(pathName, name)).isFile();
+        }
+    };
+
+    public static final FilenameFilter FILTER_DIRECTORIES = new FilenameFilter()
+    {
+        @Override
+        public boolean accept(File pathName, String name)
+        {
+            return (new File(pathName, name)).isDirectory();
         }
     };
 
@@ -338,5 +358,41 @@ public class FileUtils
         }
 
         return null;
+    }
+
+    public static List<String> getPossibleFileNameCompletions(String pathIn)
+    {
+        String dirSep = File.separator;
+        int ind = pathIn.lastIndexOf(dirSep);
+        String path = ind != -1 ? pathIn.substring(0, ind + 1) : ".";
+        String nameStart = ind != -1 ? (pathIn.length() > ind + 1 ? pathIn.substring(ind + 1, pathIn.length()) : "") : pathIn;
+
+        File dir = new File(path);
+        //System.out.printf("dirSep: %s, ind: %d, path: %s, ns: %s\n", dirSep, ind, path, nameStart);
+
+        if (dir.exists() && dir.isDirectory())
+        {
+            String[] names = dir.list(FILTER_DIRECTORIES);
+            ArrayList<String> completions = new ArrayList<>();
+
+            for (String name : names)
+            {
+                if (nameStart.isEmpty() || name.startsWith(nameStart))
+                {
+                    if (path.endsWith(dirSep))
+                    {
+                        completions.add(path + name + dirSep);
+                    }
+                    else
+                    {
+                        completions.add(path + dirSep + name + dirSep);
+                    }
+                }
+            }
+
+            return completions;
+        }
+
+        return Collections.emptyList();
     }
 }

@@ -21,7 +21,7 @@ public class BlockDump extends DataDump
         super(8);
     }
 
-    protected List<String> getLines()
+    public List<String> getLines()
     {
         List<String> lines = new ArrayList<String>();
 
