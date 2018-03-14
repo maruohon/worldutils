@@ -8,5 +8,5 @@ public class Reference
     public static final String FINGERPRINT = "@FINGERPRINT@";
 
     public static final String PROXY_CLASS_CLIENT = "fi.dy.masa.worldutils.proxy.ClientProxy";
-    public static final String PROXY_CLASS_SERVER = "fi.dy.masa.worldutils.proxy.ServerProxy";
+    public static final String PROXY_CLASS_SERVER = "fi.dy.masa.worldutils.proxy.CommonProxy";
 }
