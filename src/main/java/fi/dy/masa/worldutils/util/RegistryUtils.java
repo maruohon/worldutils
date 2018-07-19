@@ -75,7 +75,7 @@ public class RegistryUtils
                 {
                     NBTTagCompound tag = nbt.getCompoundTag("FML").getCompoundTag("Registries").getCompoundTag(GameData.BLOCKS.toString());
 
-                    if (tag.hasNoTags())
+                    if (tag.isEmpty())
                     {
                         sender.sendMessage(new TextComponentTranslation("worldutils.commands.registrycleanup.error.tagsnotfound"));
                         return;

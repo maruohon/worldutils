@@ -385,7 +385,7 @@ public class TileTickTools
                             Pair<ResourceLocation, String> pair = getBlockIdentifiers(tag, "i");
                             ResourceLocation rl = pair.getLeft();
 
-                            if (rl != null && this.toRemove.contains(rl.getResourceDomain()))
+                            if (rl != null && this.toRemove.contains(rl.getNamespace()))
                             {
                                 if (simulate == false)
                                 {

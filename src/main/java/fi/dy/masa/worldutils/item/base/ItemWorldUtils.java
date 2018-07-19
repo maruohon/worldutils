@@ -29,7 +29,7 @@ public class ItemWorldUtils extends Item
         this.name = name;
 
         this.setCreativeTab(CreativeTab.WORLD_UTILS_TAB);
-        this.setUnlocalizedName(name);
+        this.setTranslationKey(name);
         this.addItemOverrides();
     }
 
@@ -39,9 +39,9 @@ public class ItemWorldUtils extends Item
     }
 
     @Override
-    public Item setUnlocalizedName(String name)
+    public Item setTranslationKey(String name)
     {
-        return super.setUnlocalizedName(ReferenceNames.getPrefixedName(name));
+        return super.setTranslationKey(ReferenceNames.getPrefixedName(name));
     }
 
     @Override
@@ -137,7 +137,7 @@ public class ItemWorldUtils extends Item
 
     public void addTooltips(ItemStack stack, List<String> list, boolean verbose)
     {
-        addTooltips(this.getUnlocalizedName(stack) + ".tooltips", list, verbose);
+        addTooltips(this.getTranslationKey(stack) + ".tooltips", list, verbose);
     }
 
     public ResourceLocation[] getItemVariants()

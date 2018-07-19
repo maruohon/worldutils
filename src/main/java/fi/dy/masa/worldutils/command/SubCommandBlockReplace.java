@@ -303,7 +303,7 @@ public class SubCommandBlockReplace extends SubCommand
         {
             for (ResourceLocation rl : ForgeRegistries.BLOCKS.getKeys())
             {
-                if (rl.getResourceDomain().equals(args[0]) && RegistryUtils.isDummied(ForgeRegistries.BLOCKS, rl))
+                if (rl.getNamespace().equals(args[0]) && RegistryUtils.isDummied(ForgeRegistries.BLOCKS, rl))
                 {
                     this.addBlockNameToListIfValid(rl.toString(), sender);
                 }

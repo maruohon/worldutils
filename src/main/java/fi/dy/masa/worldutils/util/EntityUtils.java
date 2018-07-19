@@ -102,7 +102,7 @@ public class EntityUtils
         double f5 = MathHelper.sin(player.rotationPitch * -0.017453292F);
         double f6 = f3 * f4;
         double f7 = f2 * f4;
-        Vec3d vec3d1 = vec3d.addVector(f6 * reach, f5 * reach, f7 * reach);
+        Vec3d vec3d1 = vec3d.add(f6 * reach, f5 * reach, f7 * reach);
 
         return rayTraceBlocks(world, vec3d, vec3d1, useLiquids, false, false, 1000);
     }

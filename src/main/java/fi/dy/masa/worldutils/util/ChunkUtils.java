@@ -268,7 +268,7 @@ public class ChunkUtils
     {
         int chunkX = pos.x;
         int chunkZ = pos.z;
-        Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+        Chunk chunk = world.getChunk(chunkX, chunkZ);
 
         chunk.onUnload();
 
@@ -324,7 +324,7 @@ public class ChunkUtils
         StructureBoundingBox bb = new StructureBoundingBox(chunkX << 4, 0, chunkZ << 4, (chunkX << 4) + 17, 255, (chunkZ << 4) + 17);
         world.getPendingBlockUpdates(bb, true); // Remove pending block updates from the unloaded chunk area
 
-        world.getChunkProvider().id2ChunkMap.remove(ChunkPos.asLong(chunk.x, chunk.z));
+        world.getChunkProvider().loadedChunks.remove(ChunkPos.asLong(chunk.x, chunk.z));
     }
 
     private Chunk loadChunk(WorldServer world, ChunkPos pos, String worldName)
@@ -346,7 +346,7 @@ public class ChunkUtils
                     loader.loadEntities(world, nbt.getCompoundTag("Level"), chunk);
 
                     chunk.setLastSaveTime(world.getTotalWorldTime());
-                    world.getChunkProvider().id2ChunkMap.put(ChunkPos.asLong(pos.x, pos.z), chunk);
+                    world.getChunkProvider().loadedChunks.put(ChunkPos.asLong(pos.x, pos.z), chunk);
                     this.updatePlayerChunkMap(world, pos, chunk);
 
                     List<Entity> unloadEntities = new ArrayList<Entity>();
@@ -709,7 +709,7 @@ public class ChunkUtils
 
                             if (biomes.length == 256)
                             {
-                                Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.x, pos.z);
+                                Chunk chunkCurrent = world.getChunk(pos.x, pos.z);
                                 chunkCurrent.setBiomeArray(biomes);
                                 chunkCurrent.markDirty();
                                 this.sendChunkToWatchers(world, chunkCurrent);
@@ -734,7 +734,7 @@ public class ChunkUtils
         }
 
         WorldServer world = (WorldServer) worldIn;
-        Chunk chunkCurrent = world.getChunkFromChunkCoords(pos.x, pos.z);
+        Chunk chunkCurrent = world.getChunk(pos.x, pos.z);
         byte[] biomes = new byte[256];
 
         Arrays.fill(biomes, (byte) Biome.getIdForBiome(biome));
@@ -759,7 +759,7 @@ public class ChunkUtils
 
             if (chunk != null)
             {
-                this.sendChunkToWatchers(world, world.getChunkFromChunkCoords(pos.x, pos.z));
+                this.sendChunkToWatchers(world, world.getChunk(pos.x, pos.z));
                 this.addChangedChunkLocation(world, pos, ChangeType.CHUNK_CHANGE, worldName, user);
             }
         }

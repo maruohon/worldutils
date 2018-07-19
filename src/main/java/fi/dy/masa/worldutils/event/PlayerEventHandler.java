@@ -87,7 +87,7 @@ public class PlayerEventHandler
     {
         NBTTagCompound nbt = ChunkUtils.instance().writeToNBT(world, player.getName());
 
-        if (nbt.hasNoTags() == false)
+        if (nbt.isEmpty() == false)
         {
             PacketHandler.INSTANCE.sendTo(new MessageChunkChanges(nbt), player);
         }

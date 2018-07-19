@@ -169,7 +169,7 @@ public class ItemChunkWand extends ItemWorldUtils implements IKeyBound
         if (pos != null)
         {
             int amount = reverse ? 1 : -1;
-            pos = new ChunkPos(pos.x + direction.getFrontOffsetX() * amount, pos.z + direction.getFrontOffsetZ() * amount);
+            pos = new ChunkPos(pos.x + direction.getXOffset() * amount, pos.z + direction.getZOffset() * amount);
             this.setPosition(stack, pos, corner);
         }
     }

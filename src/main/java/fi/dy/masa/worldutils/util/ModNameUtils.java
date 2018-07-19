@@ -12,7 +12,7 @@ public class ModNameUtils
 
     public static String getModName(ResourceLocation rl)
     {
-        String domain = rl.getResourceDomain();
+        String domain = rl.getNamespace();
         String modName = MOD_NAMES.get(domain);
 
         if (modName == null)

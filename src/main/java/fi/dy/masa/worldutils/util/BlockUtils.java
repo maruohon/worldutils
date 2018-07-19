@@ -26,7 +26,7 @@ public class BlockUtils
 
         for (ResourceLocation rl : Block.REGISTRY.getKeys())
         {
-            if (rl.getResourceDomain().equals(modId))
+            if (rl.getNamespace().equals(modId))
             {
                 Block block = Block.REGISTRY.getObject(rl);
                 list.addAll(block.getBlockState().getValidStates());
@@ -42,7 +42,7 @@ public class BlockUtils
 
         for (ResourceLocation rl : Block.REGISTRY.getKeys())
         {
-            if (rl.getResourceDomain().equals(modId))
+            if (rl.getNamespace().equals(modId))
             {
                 list.add(rl.toString());
             }

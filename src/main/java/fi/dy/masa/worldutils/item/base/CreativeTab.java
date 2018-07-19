@@ -13,14 +13,14 @@ public class CreativeTab
     {
         @SideOnly(Side.CLIENT)
         @Override
-        public ItemStack getTabIconItem()
+        public ItemStack createIcon()
         {
             return new ItemStack(WorldUtilsItems.CHUNK_WAND);
         }
 
         @SideOnly(Side.CLIENT)
         @Override
-        public String getTranslatedTabLabel()
+        public String getTranslationKey()
         {
             return Reference.MOD_NAME;
         }
