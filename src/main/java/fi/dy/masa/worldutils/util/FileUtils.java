@@ -33,6 +33,8 @@ import fi.dy.masa.worldutils.data.IWorldDataHandler;
 
 public class FileUtils
 {
+    public static final String DIR_EXTERNAL_WORLDS = "worlds";
+
     public static final FilenameFilter ANVIL_REGION_FILE_FILTER = new FilenameFilter()
     {
         @Override
@@ -398,7 +400,7 @@ public class FileUtils
         String nameStart = ind != -1 ? (pathIn.length() > ind + 1 ? pathIn.substring(ind + 1, pathIn.length()) : "") : pathIn;
 
         File dir = new File(path);
-        //System.out.printf("dirSep: %s, ind: %d, path: %s, ns: %s\n", dirSep, ind, path, nameStart);
+        System.out.printf("dirSep: %s, ind: %d, path: %s, ns: %s\n", dirSep, ind, path, nameStart);
 
         if (dir.exists() && dir.isDirectory())
         {
@@ -417,6 +419,50 @@ public class FileUtils
                     {
                         completions.add(path + dirSep + name + dirSep);
                     }
+                }
+            }
+
+            return completions;
+        }
+
+        return Collections.emptyList();
+    }
+
+    public static File getExternalWorldsBaseDirectory()
+    {
+        return new File(new File(WorldUtils.configDirPath), FileUtils.DIR_EXTERNAL_WORLDS);
+    }
+
+    /**
+     * Returns the File for the region directory of the external world by the given name,
+     * if such a world exists inside the 'config/worldutils/worlds/' directory,
+     * and if that world directory also contains a region/ directory.
+     * @param worldName
+     * @return
+     */
+    @Nullable
+    public static File getExternalWorldRegionDirectory(String worldName)
+    {
+        File dirWorld = new File(FileUtils.getExternalWorldsBaseDirectory(), worldName);
+        File dirRegion = new File(dirWorld, "region");
+
+        return (dirRegion.exists() && dirRegion.isDirectory()) ? dirRegion : null;
+    }
+
+    public static List<String> getPossibleExternalWorldDirectories(String arg)
+    {
+        File dir = getExternalWorldsBaseDirectory();
+
+        if (dir.exists() && dir.isDirectory())
+        {
+            String[] names = dir.list(FILTER_DIRECTORIES);
+            ArrayList<String> completions = new ArrayList<>();
+
+            for (String name : names)
+            {
+                if (arg.isEmpty() || name.startsWith(arg))
+                {
+                    completions.add(name);
                 }
             }
 

@@ -135,33 +135,32 @@ public class TaskRegionDirectoryProcessor implements ITask
             }
         }
 
-        // Status message every 5 seconds
-        if ((this.tickCount % 100) == 0)
-        {
-            WorldUtils.logger.info("{}: Handled {} chunks in {} region files...",
-                    this.getClass().getName(), this.chunkCount, this.regionCount);
-        }
+        this.printStatusMessage();
 
         return false;
     }
 
-    private boolean checkTickTime()
+    protected boolean checkTickTime()
     {
         long timeCurrent = System.currentTimeMillis();
 
         if ((timeCurrent - TickHandler.instance().getTickStartTime()) >= this.maxTickTime)
         {
-            // Status message every 10 seconds
-            if ((this.tickCount % 200) == 0)
-            {
-                WorldUtils.logger.info("{}: Handled {} chunks in {} region files...",
-                        this.getClass().getName(), this.chunkCount, this.regionCount);
-            }
-
+            this.printStatusMessage();
             return true;
         }
 
         return false;
+    }
+
+    protected void printStatusMessage()
+    {
+        // Status message every 10 seconds
+        if ((this.tickCount % 200) == 0)
+        {
+            WorldUtils.logger.info("{}: Handled {} chunks in {} region files...",
+                    this.getClass().getSimpleName(), this.chunkCount, this.regionCount);
+        }
     }
 
     /**
@@ -169,11 +168,12 @@ public class TaskRegionDirectoryProcessor implements ITask
      * and resets the chunkIndex to 0.
      * @return true if there are no more region files and processing should terminate
      */
-    private boolean advanceRegion()
+    protected boolean advanceRegion()
     {
         this.regionIndex++;
         this.state = State.REGION;
 
+        // Still more region files to process, update the internal state for the next region
         if (this.regionIndex < this.regionFiles.length)
         {
             this.currentRegionFile = this.regionFiles[this.regionIndex];
@@ -182,6 +182,7 @@ public class TaskRegionDirectoryProcessor implements ITask
             this.chunkIndex = 0;
             return false;
         }
+        // All done
         else
         {
             return true;
@@ -192,8 +193,9 @@ public class TaskRegionDirectoryProcessor implements ITask
     public void stop()
     {
         this.worldHandler.finish(this.commandSender, false);
+
         WorldUtils.logger.info("{} exiting, handled {} chunks in {} region files",
-                this.getClass().getName(), this.chunkCount, this.regionCount);
+                this.getClass().getSimpleName(), this.chunkCount, this.regionCount);
     }
 
     public enum State

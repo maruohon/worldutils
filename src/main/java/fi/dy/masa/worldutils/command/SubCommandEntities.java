@@ -49,8 +49,8 @@ public class SubCommandEntities extends SubCommand
         this.sendMessage(sender, this.getUsageStringCommon() + " list-all");
         this.sendMessage(sender, this.getUsageStringCommon() + " list-duplicates-all");
         this.sendMessage(sender, this.getUsageStringCommon() + " list-duplicates-only");
-        this.sendMessage(sender, this.getUsageStringCommon() + " read-all [dimension id]");
-        this.sendMessage(sender, this.getUsageStringCommon() + " remove-duplicate-uuids [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " read-all [dimension id | external <world>]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove-duplicate-uuids [dimension id | external <world>]");
         this.printHelpRemove(sender);
         this.printHelpRename(sender);
     }
@@ -63,8 +63,8 @@ public class SubCommandEntities extends SubCommand
         this.sendMessage(sender, this.getUsageStringCommon() + " remove remove-with-spaces <name with spaces>");
         this.sendMessage(sender, this.getUsageStringCommon() + " remove list");
         this.sendMessage(sender, this.getUsageStringCommon() + " remove clear");
-        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-entities [dimension id]");
-        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-tileentities [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-entities [dimension id | external <path>]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " remove execute-for-tileentities [dimension id | external <world>]");
     }
 
     private void printHelpRename(ICommandSender sender)
@@ -77,8 +77,8 @@ public class SubCommandEntities extends SubCommand
         this.sendMessage(sender, this.getUsageStringCommon() + " rename prepare-to <name with spaces>");
         this.sendMessage(sender, this.getUsageStringCommon() + " rename list");
         this.sendMessage(sender, this.getUsageStringCommon() + " rename clear");
-        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-entities [dimension id]");
-        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-tileentities [dimension id]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-entities [dimension id | external <path>]");
+        this.sendMessage(sender, this.getUsageStringCommon() + " rename execute-for-tileentities [dimension id | external <world>]");
     }
 
     @Override
@@ -100,6 +100,18 @@ public class SubCommandEntities extends SubCommand
                 return CommandBase.getListOfStringsMatchingLastWord(args,
                         "add", "add-with-spaces", "clear", "execute-for-entities", "execute-for-tileentities", "list", "remove", "remove-with-spaces");
             }
+            else if (args.length >= 2 && args.length <= 3 &&
+                    (args[1].equals("execute-for-entities") || args[1].equals("execute-for-tileentities")))
+            {
+                if (args.length == 2)
+                {
+                    return CommandBase.getListOfStringsMatchingLastWord(args, "external");
+                }
+                else
+                {
+                    return CommandBase.getListOfStringsMatchingLastWord(args, FileUtils.getPossibleExternalWorldDirectories(args[2]));
+                }
+            }
             else
             {
                 cmd = args[0];
@@ -119,6 +131,18 @@ public class SubCommandEntities extends SubCommand
                         "add", "add-prepared", "clear", "execute-for-entities", "execute-for-tileentities",
                         "list", "prepare-from", "prepare-to", "remove", "remove-with-spaces");
             }
+            else if (args.length >= 2 && args.length <= 3 &&
+                    (args[1].equals("execute-for-entities") || args[1].equals("execute-for-tileentities")))
+            {
+                if(args.length == 2)
+                {
+                    return CommandBase.getListOfStringsMatchingLastWord(args, "external");
+                }
+                else
+                {
+                    return CommandBase.getListOfStringsMatchingLastWord(args, FileUtils.getPossibleExternalWorldDirectories(args[2]));
+                }
+            }
             else
             {
                 cmd = args[0];
@@ -135,6 +159,17 @@ public class SubCommandEntities extends SubCommand
 
                     return CommandBase.getListOfStringsMatchingLastWord(args, names);
                 }
+            }
+        }
+        else if (args.length >= 1 && args.length <= 2 && (cmd.equals("read-all") || cmd.equals("remove-duplicate-uuids")))
+        {
+            if (args.length == 1)
+            {
+                return CommandBase.getListOfStringsMatchingLastWord(args, "external");
+            }
+            else
+            {
+                return CommandBase.getListOfStringsMatchingLastWord(args, FileUtils.getPossibleExternalWorldDirectories(args[1]));
             }
         }
 
@@ -186,19 +221,52 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("read-all"))
         {
-            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
-            int dimension = this.getDimension(usage, args, sender);
+            if (args.length == 2 && args[0].equals("external"))
+            {
+                File dir = FileUtils.getExternalWorldRegionDirectory(args[1]);
 
-            this.sendMessage(sender, "worldutils.commands.entities.readall.start");
-            EntityTools.instance().readEntities(dimension, sender);
+                if (dir != null)
+                {
+                    this.sendMessage(sender, "worldutils.commands.entities.readall.start");
+                    EntityTools.instance().readEntities(dir, sender);
+                }
+                else
+                {
+                    throwCommand("worldutils.commands.error.external_world_doesnt_exist", args[1]);
+                }
+            }
+            else
+            {
+                String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id | external <world>]";
+                int dimension = this.getDimension(usage, args, sender);
+                this.sendMessage(sender, "worldutils.commands.entities.readall.start");
+                EntityTools.instance().readEntities(dimension, sender);
+            }
         }
         else if (cmd.equals("remove-duplicate-uuids"))
         {
-            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
-            int dimension = this.getDimension(usage, args, sender);
+            if (args.length == 2 && args[0].equals("external"))
+            {
+                File dir = FileUtils.getExternalWorldRegionDirectory(args[1]);
 
-            this.sendMessage(sender, "worldutils.commands.entities.removeallduplicates.start");
-            EntityTools.instance().removeAllDuplicateEntities(dimension, sender);
+                if (dir != null)
+                {
+                    this.sendMessage(sender, "worldutils.commands.entities.removeallduplicates.start");
+                    EntityTools.instance().removeAllDuplicateEntities(dir, sender);
+                }
+                else
+                {
+                    throwCommand("worldutils.commands.error.external_world_doesnt_exist", args[1]);
+                }
+            }
+            else
+            {
+                String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id | external <world>]";
+                int dimension = this.getDimension(usage, args, sender);
+
+                this.sendMessage(sender, "worldutils.commands.entities.removeallduplicates.start");
+                EntityTools.instance().removeAllDuplicateEntities(dimension, sender);
+            }
         }
         else if (cmd.equals("remove"))
         {
@@ -246,12 +314,30 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("execute-for-entities") || cmd.equals("execute-for-tileentities"))
         {
-            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
-            int dimension = this.getDimension(usage, args, sender);
             EntityRenamer.Type type = cmd.equals("execute-for-tileentities") ? EntityRenamer.Type.TILE_ENTITIES : EntityRenamer.Type.ENTITIES;
 
-            this.sendMessage(sender, "worldutils.commands.entities.remove.start");
-            EntityTools.instance().removeEntities(dimension, removeList, type, sender);
+            if (args.length == 2 && args[0].equals("external"))
+            {
+                File dir = FileUtils.getExternalWorldRegionDirectory(args[1]);
+
+                if (dir != null)
+                {
+                    this.sendMessage(sender, "worldutils.commands.entities.remove.start");
+                    EntityTools.instance().removeEntities(dir, removeList, type, sender);
+                }
+                else
+                {
+                    throwCommand("worldutils.commands.error.external_world_doesnt_exist", args[1]);
+                }
+            }
+            else
+            {
+                String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+                int dimension = this.getDimension(usage, args, sender);
+
+                this.sendMessage(sender, "worldutils.commands.entities.remove.start");
+                EntityTools.instance().removeEntities(dimension, removeList, type, sender);
+            }
         }
         else if (cmd.equals("list"))
         {
@@ -344,12 +430,30 @@ public class SubCommandEntities extends SubCommand
         }
         else if (cmd.equals("execute-for-entities") || cmd.equals("execute-for-tileentities"))
         {
-            String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
-            int dimension = this.getDimension(usage, args, sender);
             EntityRenamer.Type type = cmd.equals("execute-for-tileentities") ? EntityRenamer.Type.TILE_ENTITIES : EntityRenamer.Type.ENTITIES;
 
-            this.sendMessage(sender, "worldutils.commands.entities.rename.start");
-            EntityTools.instance().renameEntities(dimension, renamePairs, type, sender);
+            if (args.length == 2 && args[0].equals("external"))
+            {
+                File dir = FileUtils.getExternalWorldRegionDirectory(args[1]);
+
+                if (dir != null)
+                {
+                    this.sendMessage(sender, "worldutils.commands.entities.remove.start");
+                    EntityTools.instance().renameEntities(dir, renamePairs, type, sender);
+                }
+                else
+                {
+                    throwCommand("worldutils.commands.error.external_world_doesnt_exist", args[1]);
+                }
+            }
+            else
+            {
+                String usage = this.getUsageStringCommon() + " " + cmd + " [dimension id]";
+                int dimension = this.getDimension(usage, args, sender);
+
+                this.sendMessage(sender, "worldutils.commands.entities.rename.start");
+                EntityTools.instance().renameEntities(dimension, renamePairs, type, sender);
+            }
         }
         else if (cmd.equals("list"))
         {

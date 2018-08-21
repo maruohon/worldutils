@@ -27,6 +27,7 @@ import net.minecraftforge.common.util.Constants;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.event.TickHandler;
 import fi.dy.masa.worldutils.event.tasks.ITask;
+import fi.dy.masa.worldutils.event.tasks.TaskRegionDirectoryProcessor;
 import fi.dy.masa.worldutils.event.tasks.TaskScheduler;
 import fi.dy.masa.worldutils.event.tasks.TaskWorldProcessor;
 import fi.dy.masa.worldutils.util.FileUtils;
@@ -40,23 +41,34 @@ public class EntityTools
 
     private class EntityDataReader implements IWorldDataHandler
     {
-        private ChunkProviderServer provider;
+        @Nullable
+        private final File regionDir;
+        private final boolean removeDuplicates;
         private final int dimension;
         private int regionCount;
         private int chunkCount;
         private int entityCount;
-        private final boolean removeDuplicates;
+        private ChunkProviderServer provider;
         private List<EntityData> entities = new ArrayList<EntityData>();
 
         public EntityDataReader()
         {
+            this.regionDir = null;
             this.dimension = 0;
             this.removeDuplicates = false;
         }
 
         public EntityDataReader(int dimension, boolean removeDuplicates)
         {
+            this.regionDir = null;
             this.dimension = dimension;
+            this.removeDuplicates = removeDuplicates;
+        }
+
+        public EntityDataReader(File regionDir, boolean removeDuplicates)
+        {
+            this.regionDir = regionDir;
+            this.dimension = 0;
             this.removeDuplicates = removeDuplicates;
         }
 
@@ -631,11 +643,24 @@ public class EntityTools
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, this.entityDataReader, sender, 50), 1);
     }
 
+    public void readEntities(File regionDir, ICommandSender sender) throws CommandException
+    {
+        this.entityDataReader.init(0);
+        TaskScheduler.getInstance().scheduleTask(new TaskRegionDirectoryProcessor(regionDir, this.entityDataReader, sender, 50), 1);
+    }
+
     public void removeAllDuplicateEntities(int dimension, ICommandSender sender) throws CommandException
     {
         EntityDataReader reader = new EntityDataReader(dimension, true);
         reader.init(dimension);
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, reader, sender, 50), 1);
+    }
+
+    public void removeAllDuplicateEntities(File regionDir, ICommandSender sender) throws CommandException
+    {
+        EntityDataReader reader = new EntityDataReader(regionDir, true);
+        reader.init(0);
+        TaskScheduler.getInstance().scheduleTask(new TaskRegionDirectoryProcessor(regionDir, reader, sender, 50), 1);
     }
 
     public void removeEntities(int dimension, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender) throws CommandException
@@ -645,11 +670,25 @@ public class EntityTools
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, remover, sender, 50), 1);
     }
 
+    public void removeEntities(File regionDir, List<String> toRemove, EntityRenamer.Type type, ICommandSender sender) throws CommandException
+    {
+        EntityRemover remover = new EntityRemover(toRemove, type);
+        remover.init(0);
+        TaskScheduler.getInstance().scheduleTask(new TaskRegionDirectoryProcessor(regionDir, remover, sender, 50), 1);
+    }
+
     public void renameEntities(int dimension, List<Pair<String, String>> renamePairs, EntityRenamer.Type type, ICommandSender sender) throws CommandException
     {
         EntityRenamer renamer = new EntityRenamer(renamePairs, type);
         renamer.init(dimension);
         TaskScheduler.getInstance().scheduleTask(new TaskWorldProcessor(dimension, renamer, sender, 50), 1);
+    }
+
+    public void renameEntities(File regionDir, List<Pair<String, String>> renamePairs, EntityRenamer.Type type, ICommandSender sender) throws CommandException
+    {
+        EntityRenamer renamer = new EntityRenamer(renamePairs, type);
+        renamer.init(0);
+        TaskScheduler.getInstance().scheduleTask(new TaskRegionDirectoryProcessor(regionDir, renamer, sender, 50), 1);
     }
 
     private static List<EntityData> getDuplicateEntitiesIncludingFirst(List<EntityData> dataIn, boolean sortFirst)
