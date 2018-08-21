@@ -3,7 +3,6 @@ package fi.dy.masa.worldutils.data;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,33 +92,38 @@ public class EntityTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
+            NBTTagCompound chunkNBT = null;
             int count = 0;
-            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
-
-            if (data == null)
-            {
-                WorldUtils.logger.warn("EntityDataReader#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
 
             try
             {
-                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-                data.close();
+                DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
-                if (chunkNBT == null)
+                if (data == null)
                 {
-                    WorldUtils.logger.warn("EntityDataReader#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getFileName());
+                    WorldUtils.logger.warn("EntityDataReader#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
                     return 0;
                 }
 
+                chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("EntityDataReader#processChunk(): Failed to read Chunk NBT data for Chunk [{}, {}] in region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                return 0;
+            }
+
+            if (chunkNBT != null)
+            {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
                 if (level.hasKey("Entities", Constants.NBT.TAG_LIST))
                 {
                     ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
+
                     if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
                     {
                         return 0;
@@ -139,14 +143,10 @@ public class EntityTools
                         count++;
                     }
                 }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
 
-            this.chunkCount++;
-            this.entityCount += count;
+                this.chunkCount++;
+                this.entityCount += count;
+            }
 
             return count;
         }
@@ -296,7 +296,7 @@ public class EntityTools
             }
 
             WorldUtils.logger.info("In region {}, chunk [{}, {}] - removed {} duplicate entities",
-                    this.region.getName(), chunkPos.x, chunkPos.z, entityCount);
+                    this.region.getRegionFileName(), chunkPos.x, chunkPos.z, entityCount);
 
             return entityCount;
         }
@@ -371,34 +371,39 @@ public class EntityTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
+            NBTTagCompound chunkNBT = null;
             int count = 0;
-            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
-
-            if (data == null)
-            {
-                WorldUtils.logger.warn("EntityRemover#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
 
             try
             {
-                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-                data.close();
+                DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
-                if (chunkNBT == null)
+                if (data == null)
                 {
-                    WorldUtils.logger.warn("EntityRemover#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getFileName());
+                    WorldUtils.logger.warn("EntityRemover#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
                     return 0;
                 }
 
+                chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("EntityRemover#processChunk(): Failed to read chunk data for chunk [{}, {}] from region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+            }
+
+            if (chunkNBT != null)
+            {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
                 if (level.hasKey(this.tagName, Constants.NBT.TAG_LIST))
                 {
-                    ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
-                    if (this.provider != null && this.provider.chunkExists(chunkPos.x, chunkPos.z))
+                    int chunkAbsX = level.getInteger("xPos");
+                    int chunkAbsZ = level.getInteger("zPos");
+
+                    if (this.provider != null && this.provider.chunkExists(chunkAbsX, chunkAbsZ))
                     {
                         return 0;
                     }
@@ -423,19 +428,23 @@ public class EntityTools
 
                     if (simulate == false && count > 0)
                     {
-                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
-                        CompressedStreamTools.write(chunkNBT, dataOut);
-                        dataOut.close();
+                        try
+                        {
+                            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                            CompressedStreamTools.write(chunkNBT, dataOut);
+                            dataOut.close();
+                        }
+                        catch (Exception e)
+                        {
+                            WorldUtils.logger.warn("EntityRemover#processChunk(): Failed to write chunk data for chunk [{}, {}] in region file '{}' ({})",
+                                    chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                        }
                     }
                 }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
 
-            this.chunkCount++;
-            this.entityCount += count;
+                this.chunkCount++;
+                this.entityCount += count;
+            }
 
             return count;
         }
@@ -509,28 +518,32 @@ public class EntityTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
+            NBTTagCompound chunkNBT = null;
             int count = 0;
-            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
-
-            if (data == null)
-            {
-                WorldUtils.logger.warn("EntityRenamer#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
 
             try
             {
-                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-                data.close();
+                DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
-                if (chunkNBT == null)
+                if (data == null)
                 {
-                    WorldUtils.logger.warn("EntityRenamer#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getFileName());
+                    WorldUtils.logger.warn("EntityRenamer#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
                     return 0;
                 }
 
+                chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("EntityRenamer#processChunk(): Failed to read chunk NBT data for chunk [{}, {}] from region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                return 0;
+            }
+
+            if (chunkNBT != null)
+            {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
                 if (level.hasKey(this.tagName, Constants.NBT.TAG_LIST))
@@ -561,19 +574,24 @@ public class EntityTools
 
                     if (simulate == false && count > 0)
                     {
-                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
-                        CompressedStreamTools.write(chunkNBT, dataOut);
-                        dataOut.close();
+                        try
+                        {
+                            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                            CompressedStreamTools.write(chunkNBT, dataOut);
+                            dataOut.close();
+                        }
+                        catch (Exception e)
+                        {
+                            WorldUtils.logger.warn("EntityRenamer#processChunk(): Failed to write chunk data for chunk [{}, {}] in region file '{}' ({})",
+                                    chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                            return 0;
+                        }
                     }
                 }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
 
-            this.chunkCount++;
-            this.entityCount += count;
+                this.chunkCount++;
+                this.entityCount += count;
+            }
 
             return count;
         }

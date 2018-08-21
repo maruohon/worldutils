@@ -107,7 +107,7 @@ public class BlockTools
 
         if (chunkNBT != null && chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
         {
-            int modified = getChunkModificationTimestamp(region.getFileName(), chunkX, chunkZ);
+            int modified = getChunkModificationTimestamp(region.getAbsolutePath(), chunkX, chunkZ);
 
             if (inspectBlock(chunkNBT, blockPos, dumpToFile, sender, modified))
             {
@@ -164,7 +164,7 @@ public class BlockTools
         if (dataIn == null)
         {
             WorldUtils.logger.warn("BlockTools#getChunkNBT(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                    chunkX, chunkZ, region.getFileName());
+                    chunkX, chunkZ, region.getAbsolutePath());
             return null;
         }
 
@@ -178,7 +178,7 @@ public class BlockTools
         catch (IOException e)
         {
             WorldUtils.logger.warn("BlockTools#getChunkNBT(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                    chunkX, chunkZ, region.getFileName(), e);
+                    chunkX, chunkZ, region.getAbsolutePath(), e);
         }
 
         return null;
@@ -188,24 +188,24 @@ public class BlockTools
     {
         if (chunkNBT != null && chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
         {
-            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX & 0x1F, chunkZ & 0x1F);
-
-            if (dataOut == null)
-            {
-                WorldUtils.logger.warn("BlockTools#saveChunkNBT(): Failed to get chunk data output stream for chunk ({}, {}) in file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return;
-            }
-
             try
             {
+                DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX & 0x1F, chunkZ & 0x1F);
+
+                if (dataOut == null)
+                {
+                    WorldUtils.logger.warn("BlockTools#saveChunkNBT(): Failed to get chunk data output stream for chunk [{}, {}] in region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
+                    return;
+                }
+
                 CompressedStreamTools.write(chunkNBT, dataOut);
                 dataOut.close();
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                WorldUtils.logger.warn("BlockTools#saveChunkNBT(): Failed to write chunk data for chunk ({}, {}) in file '{}'",
-                        chunkX, chunkZ, region.getFileName(), e);
+                WorldUtils.logger.warn("BlockTools#saveChunkNBT(): Failed to write chunk data for chunk [{}, {}] in region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
             }
         }
     }

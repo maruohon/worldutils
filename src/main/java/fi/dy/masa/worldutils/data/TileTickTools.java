@@ -2,7 +2,6 @@ package fi.dy.masa.worldutils.data;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -134,28 +133,32 @@ public class TileTickTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
-            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+            NBTTagCompound chunkNBT = null;
             int count = 0;
-
-            if (data == null)
-            {
-                WorldUtils.logger.warn("TileTickReader#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
 
             try
             {
-                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-                data.close();
+                DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
-                if (chunkNBT == null)
+                if (data == null)
                 {
-                    WorldUtils.logger.warn("TileTickReader#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getFileName());
+                    WorldUtils.logger.warn("TileTickReader#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
                     return 0;
                 }
 
+                chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("TileTickReader#processChunk(): Failed to read chunk NBT data for chunk [{}, {}] from region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                return 0;
+            }
+
+            if (chunkNBT != null)
+            {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
                 if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
@@ -187,14 +190,10 @@ public class TileTickTools
 
                     //WorldUtils.logger.info("Read {} tile ticks in chunk [{}, {}] in region '{}'", count, chunkX, chunkZ, region.getName());
                 }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
 
-            this.chunkCount++;
-            this.processedCount += count;
+                this.chunkCount++;
+                this.processedCount += count;
+            }
 
             return count;
         }
@@ -253,28 +252,32 @@ public class TileTickTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
+            NBTTagCompound chunkNBT = null;
             int count = 0;
-            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
-
-            if (data == null)
-            {
-                WorldUtils.logger.warn("TileTickRemoverAll#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
 
             try
             {
-                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-                data.close();
+                DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
-                if (chunkNBT == null)
+                if (data == null)
                 {
-                    WorldUtils.logger.warn("TileTickRemoverAll#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getFileName());
+                    WorldUtils.logger.warn("TileTickRemoverAll#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
                     return 0;
                 }
 
+                chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("TileTickRemoverAll#processChunk(): Failed to read chunk NBT data for chunk [{}, {}] from region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                return 0;
+            }
+
+            if (chunkNBT != null)
+            {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
                 if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
@@ -291,19 +294,24 @@ public class TileTickTools
                     {
                         level.setTag("TileTicks", new NBTTagList());
 
-                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
-                        CompressedStreamTools.write(chunkNBT, dataOut);
-                        dataOut.close();
+                        try
+                        {
+                            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                            CompressedStreamTools.write(chunkNBT, dataOut);
+                            dataOut.close();
+                        }
+                        catch (Exception e)
+                        {
+                            WorldUtils.logger.warn("TileTickRemoverAll#processChunk(): Failed to write chunk data for chunk [{}, {}] in region file '{}' ({})",
+                                    chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                            return 0;
+                        }
                     }
                 }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
 
-            this.chunkCount++;
-            this.processedCount += count;
+                this.chunkCount++;
+                this.processedCount += count;
+            }
 
             return count;
         }
@@ -342,28 +350,32 @@ public class TileTickTools
         @Override
         public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
         {
-            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+            NBTTagCompound chunkNBT = null;
             int count = 0;
-
-            if (data == null)
-            {
-                WorldUtils.logger.warn("TileTickRemoverByModOrName#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
 
             try
             {
-                NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-                data.close();
+                DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
-                if (chunkNBT == null)
+                if (data == null)
                 {
-                    WorldUtils.logger.warn("TileTickRemoverByModOrName#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                            chunkX, chunkZ, region.getFileName());
+                    WorldUtils.logger.warn("TileTickRemoverByModOrName#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
                     return 0;
                 }
 
+                chunkNBT = CompressedStreamTools.read(data);
+                data.close();
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("TileTickRemoverByModOrName#processChunk(): Failed to read chunk NBT data for chunk [{}, {}] from region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                return 0;
+            }
+
+            if (chunkNBT != null)
+            {
                 NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
                 if (level.hasKey("TileTicks", Constants.NBT.TAG_LIST))
@@ -442,19 +454,24 @@ public class TileTickTools
 
                     if (simulate == false && count > 0)
                     {
-                        DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
-                        CompressedStreamTools.write(chunkNBT, dataOut);
-                        dataOut.close();
+                        try
+                        {
+                            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+                            CompressedStreamTools.write(chunkNBT, dataOut);
+                            dataOut.close();
+                        }
+                        catch (Exception e)
+                        {
+                            WorldUtils.logger.warn("TileTickRemoverByModOrName#processChunk(): Failed to write chunk data for chunk [{}, {}] in region file '{}' ({})",
+                                    chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                            return 0;
+                        }
                     }
                 }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
 
-            this.chunkCount++;
-            this.processedCount += count;
+                this.chunkCount++;
+                this.processedCount += count;
+            }
 
             return count;
         }

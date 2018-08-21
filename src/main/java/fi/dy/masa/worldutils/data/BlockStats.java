@@ -1,7 +1,6 @@
 package fi.dy.masa.worldutils.data;
 
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.List;
 import javax.annotation.Nullable;
 import com.google.common.collect.Multimap;
@@ -14,7 +13,6 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.gen.ChunkProviderServer;
@@ -69,26 +67,27 @@ public class BlockStats implements IWorldDataHandler
     @Override
     public int processChunk(Region region, int chunkX, int chunkZ, boolean simulate)
     {
-        NBTTagCompound chunkNBT;
-        DataInputStream dataIn = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+        NBTTagCompound chunkNBT = null;
         int count = 0;
-
-        if (dataIn == null)
-        {
-            WorldUtils.logger.warn("BlockStats#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                    chunkX, chunkZ, region.getFileName());
-            return 0;
-        }
 
         try
         {
-            chunkNBT = CompressedStreamTools.read(dataIn);
-            dataIn.close();
+            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+
+            if (data == null)
+            {
+                WorldUtils.logger.warn("BlockStats#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from file '{}'",
+                        chunkX, chunkZ, region.getAbsolutePath());
+                return 0;
+            }
+
+            chunkNBT = CompressedStreamTools.read(data);
+            data.close();
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            WorldUtils.logger.warn("BlockStats#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                    chunkX, chunkZ, region.getFileName(), e);
+            WorldUtils.logger.warn("BlockStats#processChunk(): Failed to read chunk NBT data for chunk [{}, {}] from file '{}'",
+                    chunkX, chunkZ, region.getAbsolutePath(), e);
 
             return 0;
         }
@@ -96,10 +95,11 @@ public class BlockStats implements IWorldDataHandler
         if (chunkNBT != null && chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
         {
             NBTTagCompound level = chunkNBT.getCompoundTag("Level");
-            ChunkPos chunkPos = new ChunkPos(level.getInteger("xPos"), level.getInteger("zPos"));
+            int chunkAbsX = level.getInteger("xPos");
+            int chunkAbsZ = level.getInteger("zPos");
 
             // This needs to use absolute Chunk coordinates
-            if (this.provider == null || this.provider.chunkExists(chunkPos.x, chunkPos.z) == false)
+            if (this.provider == null || this.provider.chunkExists(chunkAbsX, chunkAbsZ) == false)
             {
                 count = this.processUnloadedChunk(region, chunkNBT, chunkX, chunkZ);
                 this.totalCount += count;

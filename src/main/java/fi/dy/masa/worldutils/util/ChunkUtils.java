@@ -719,9 +719,10 @@ public class ChunkUtils
                     }
                 }
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                WorldUtils.logger.warn("Failed to read chunk data for chunk ({}, {})", pos.x, pos.z);
+                WorldUtils.logger.warn("ChunkUtils#loadBiomesFromAlternateWorld(): Failed to read chunk data for chunk ({}, {}) ({})",
+                        pos.x, pos.z, e.getMessage());
             }
         }
     }

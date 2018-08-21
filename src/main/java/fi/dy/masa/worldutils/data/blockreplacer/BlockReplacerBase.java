@@ -2,7 +2,6 @@ package fi.dy.masa.worldutils.data.blockreplacer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
@@ -72,27 +71,27 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
             return 0;
         }
 
-        NBTTagCompound chunkNBT;
-        DataInputStream dataIn = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
+        NBTTagCompound chunkNBT = null;
         int count = 0;
-
-        if (dataIn == null)
-        {
-            WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to get chunk data input stream for chunk ({}, {}) from file '{}'",
-                    chunkX, chunkZ, region.getFileName());
-            return 0;
-        }
 
         try
         {
-            chunkNBT = CompressedStreamTools.read(dataIn);
-            dataIn.close();
-        }
-        catch (IOException e)
-        {
-            WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to read chunk NBT data for chunk ({}, {}) from file '{}'",
-                    chunkX, chunkZ, region.getFileName(), e);
+            DataInputStream data = region.getRegionFile().getChunkDataInputStream(chunkX, chunkZ);
 
+            if (data == null)
+            {
+                WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to get chunk data input stream for chunk [{}, {}] from file '{}'",
+                        chunkX, chunkZ, region.getAbsolutePath());
+                return 0;
+            }
+
+            chunkNBT = CompressedStreamTools.read(data);
+            data.close();
+        }
+        catch (Exception e)
+        {
+            WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to read chunk NBT data for chunk [{}, {}] from file '{}'",
+                    chunkX, chunkZ, region.getAbsolutePath(), e);
             return 0;
         }
 
@@ -223,24 +222,24 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
             // data, without actually re-calculating all the lighting here and updating the light arrays...
             //level.removeTag("LightPopulated");
 
-            DataOutputStream dataOut = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
-
-            if (dataOut == null)
-            {
-                WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to get chunk data output stream for chunk ({}, {}) in file '{}'",
-                        chunkX, chunkZ, region.getFileName());
-                return 0;
-            }
-
             try
             {
-                CompressedStreamTools.write(chunkNBT, dataOut);
-                dataOut.close();
+                DataOutputStream data = region.getRegionFile().getChunkDataOutputStream(chunkX, chunkZ);
+
+                if (data == null)
+                {
+                    WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to get chunk data output stream for chunk [{}, {}] in region file '{}'",
+                            chunkX, chunkZ, region.getAbsolutePath());
+                    return count;
+                }
+
+                CompressedStreamTools.write(chunkNBT, data);
+                data.close();
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to write chunk data for chunk ({}, {}) in file '{}'",
-                        chunkX, chunkZ, region.getFileName(), e);
+                WorldUtils.logger.warn("BlockReplacerBase#processChunk(): Failed to write chunk data for chunk [{}, {}] in region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
             }
         }
 

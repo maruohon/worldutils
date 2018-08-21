@@ -73,13 +73,15 @@ public class FileUtils
     public static class Region
     {
         private final String regionName;
+        private final String regionFileName;
         private final File file;
         private final RegionFile regionFile;
 
         private Region(File worldDir, int regionX, int regionZ, boolean create)
         {
-            this.file = new File(new File(worldDir, "region"), "r." + regionX + "." + regionZ + ".mca");
-            this.regionName = this.file.getName();
+            this.regionName = "r." + regionX + "." + regionZ;
+            this.regionFileName = this.regionName + ".mca";
+            this.file = new File(new File(worldDir, "region"), this.regionFileName);
 
             if (create)
             {
@@ -118,12 +120,17 @@ public class FileUtils
             return new Region(worldDir, regionX, regionZ, create);
         }
 
-        public String getName()
+        public File getFile()
         {
-            return this.regionName;
+            return this.file;
         }
 
-        public String getFileName()
+        public String getRegionFileName()
+        {
+            return this.regionFileName;
+        }
+
+        public String getAbsolutePath()
         {
             return this.file.getAbsolutePath();
         }
@@ -228,38 +235,61 @@ public class FileUtils
 
         if (regionFile.isChunkSaved(chunkX, chunkZ) == false)
         {
-            WorldUtils.logger.warn("handleChunkInRegion(): Chunk ({}, {}) was not found in region '{}'",
-                    chunkPos.x, chunkPos.z, region.getName());
+            WorldUtils.logger.warn("handleChunkInRegion(): Chunk [{}, {}] (local [{}, {}]) was not found in region '{}'",
+                    chunkPos.x, chunkPos.z, chunkX, chunkZ, region.getAbsolutePath());
             return 0;
         }
 
-        DataInputStream data = regionFile.getChunkDataInputStream(chunkX, chunkZ);
-
-        if (data == null)
-        {
-            WorldUtils.logger.warn("handleChunkInRegion(): Failed to read chunk data for chunk ({}, {}) from region '{}'",
-                    chunkPos.x, chunkPos.z, region.getName());
-
-            return 0;
-        }
+        NBTTagCompound chunkNBT = null;
 
         try
         {
-            NBTTagCompound chunkNBT = CompressedStreamTools.read(data);
-            data.close();
+            DataInputStream data = regionFile.getChunkDataInputStream(chunkX, chunkZ);
 
-            count = chunkDataHandler.processChunkData(chunkPos, chunkNBT, simulate);
+            if (data == null)
+            {
+                WorldUtils.logger.warn("FileUtils#handleChunkInRegion(): Failed to get the chunk input stream for chunk [{}, {}] from region file '{}'",
+                        chunkX, chunkZ, region.getAbsolutePath());
+
+                return 0;
+            }
+
+            chunkNBT = CompressedStreamTools.read(data);
+            data.close();
+        }
+        catch (Exception e)
+        {
+            WorldUtils.logger.warn("FileUtils#handleChunkInRegion(): Failed to read chunk NBT data for chunk [{}, {}] in region file '{}' ({})",
+                    chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+            return 0;
+        }
+
+        if (chunkNBT != null)
+        {
+            try
+            {
+                count = chunkDataHandler.processChunkData(chunkPos, chunkNBT, simulate);
+            }
+            catch (Exception e)
+            {
+                WorldUtils.logger.warn("FileUtils#handleChunkInRegion(): Failed to handle chunk data for chunk [{}, {}] in region file '{}' ({})",
+                        chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+            }
 
             if (count > 0 && simulate == false)
             {
-                DataOutputStream dataOut = regionFile.getChunkDataOutputStream(chunkX, chunkZ);
-                CompressedStreamTools.write(chunkNBT, dataOut);
-                dataOut.close();
+                try
+                {
+                    DataOutputStream dataOut = regionFile.getChunkDataOutputStream(chunkX, chunkZ);
+                    CompressedStreamTools.write(chunkNBT, dataOut);
+                    dataOut.close();
+                }
+                catch (Exception e)
+                {
+                    WorldUtils.logger.warn("FileUtils#handleChunkInRegion(): Failed to write out chunk data for chunk [{}, {}] in region file '{}' ({})",
+                            chunkX, chunkZ, region.getAbsolutePath(), e.getMessage());
+                }
             }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
         }
 
         return count;
