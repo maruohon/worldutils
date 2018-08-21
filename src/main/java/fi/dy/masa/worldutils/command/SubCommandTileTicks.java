@@ -125,7 +125,7 @@ public class SubCommandTileTicks extends SubCommand
 
                 if (file != null)
                 {
-                    this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
+                    SubCommand.sendClickableLinkMessage(sender, "worldutils.commands.info.outputtofile", file);
                 }
             }
             else
@@ -158,7 +158,7 @@ public class SubCommandTileTicks extends SubCommand
 
             if (file != null)
             {
-                this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
+                SubCommand.sendClickableLinkMessage(sender, "worldutils.commands.info.outputtofile", file);
             }
         }
         else if (cmd.equals("remove-all"))

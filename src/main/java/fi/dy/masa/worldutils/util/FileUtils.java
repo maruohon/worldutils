@@ -297,6 +297,7 @@ public class FileUtils
         return count;
     }
 
+    @Nullable
     public static File dumpDataToFile(String fileNameBase, List<String> lines)
     {
         File outFile = null;

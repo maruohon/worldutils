@@ -198,7 +198,7 @@ public class SubCommandEntities extends SubCommand
 
             if (file != null)
             {
-                this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
+                SubCommand.sendClickableLinkMessage(sender, "worldutils.commands.info.outputtofile", file);
             }
         }
         else if (cmd.equals("list-duplicates-all") || cmd.equals("list-duplicates-only"))
@@ -216,7 +216,7 @@ public class SubCommandEntities extends SubCommand
 
             if (file != null)
             {
-                this.sendMessage(sender, "worldutils.commands.info.outputtofile", file.getName());
+                SubCommand.sendClickableLinkMessage(sender, "worldutils.commands.info.outputtofile", file);
             }
         }
         else if (cmd.equals("read-all"))

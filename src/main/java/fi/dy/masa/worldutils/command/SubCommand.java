@@ -1,5 +1,6 @@
 package fi.dy.masa.worldutils.command;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +11,11 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.event.ClickEvent;
+import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.util.BlockData;
 
 public abstract class SubCommand implements ISubCommand
@@ -125,6 +131,19 @@ public abstract class SubCommand implements ISubCommand
     public static void throwCommand(String message, Object... params) throws CommandException
     {
         CommandWorldUtils.throwCommand(message, params);
+    }
+
+    public static void sendClickableLinkMessage(ICommandSender sender, String messageKey, File file)
+    {
+        ITextComponent name = new TextComponentString(file.getName());
+
+        if (WorldUtils.proxy.isSinglePlayer())
+        {
+            name.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+            name.getStyle().setUnderlined(Boolean.valueOf(true));
+        }
+
+        sender.sendMessage(new TextComponentTranslation(messageKey, name));
     }
 
     protected void printBlockData(String blockStr, ICommandSender sender) throws CommandException
