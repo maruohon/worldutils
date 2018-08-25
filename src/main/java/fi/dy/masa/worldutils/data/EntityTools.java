@@ -187,7 +187,17 @@ public class EntityTools
             if (this.removeDuplicates)
             {
                 List<EntityData> dupes = getDuplicateEntitiesExcludingFirst(this.getEntities(), true);
-                EntityDuplicateRemover remover = new EntityDuplicateRemover(this.dimension, dupes);
+                EntityDuplicateRemover remover;
+
+                if (this.regionDir != null)
+                {
+                    remover = new EntityDuplicateRemover(this.regionDir, dupes);
+                }
+                else
+                {
+                    remover = new EntityDuplicateRemover(this.dimension, dupes);
+                }
+
                 TaskScheduler.getInstance().scheduleTask(remover, 1);
             }
         }
@@ -195,14 +205,16 @@ public class EntityTools
 
     public class EntityDuplicateRemover implements IChunkDataHandler, ITask
     {
+        @Nullable
+        private final File regionDir;
         private final File worldDir;
-        private final int dimension;
         private final Map<ChunkPos, Map<ChunkPos, List<EntityData>>> entitiesByRegion;
         private Iterator<Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>>> regionIter;
         private Iterator<Map.Entry<ChunkPos, List<EntityData>>> chunkIter;
         private Map.Entry<ChunkPos, Map<ChunkPos, List<EntityData>>> regionEntry;
         private List<EntityData> toRemoveCurrentChunk;
         private Region region;
+        private int dimension;
         private int entityCount;
         private int regionCount;
         private int chunkCount;
@@ -211,7 +223,16 @@ public class EntityTools
         public EntityDuplicateRemover(int dimension, List<EntityData> dupes)
         {
             this.dimension = dimension;
+            this.regionDir = null;
             this.worldDir = FileUtils.getWorldSaveLocation(dimension);
+            this.entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
+            this.regionIter = this.entitiesByRegion.entrySet().iterator();
+        }
+
+        public EntityDuplicateRemover(File regionDir, List<EntityData> dupes)
+        {
+            this.regionDir = regionDir;
+            this.worldDir = this.regionDir.getParentFile();
             this.entitiesByRegion = this.sortEntitiesByRegionAndChunk(dupes);
             this.regionIter = this.entitiesByRegion.entrySet().iterator();
         }
@@ -265,8 +286,10 @@ public class EntityTools
         @Override
         public void stop()
         {
-            WorldUtils.logger.info("DIM {}: Removed a total of {} duplicate entities from {} chunks in {} regions",
-                    this.dimension, this.entityCount, this.chunkCount, this.regionCount);
+            String pre = this.regionDir != null ? "external = " + this.regionDir.getAbsolutePath() : ("DIM " + this.dimension);
+
+            WorldUtils.logger.info("{}: Removed a total of {} duplicate entities from {} chunks in {} regions",
+                    pre, this.entityCount, this.chunkCount, this.regionCount);
         }
 
         @Override
