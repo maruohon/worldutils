@@ -31,13 +31,17 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
     protected int chunkCountLoaded;
     protected int replaceCountUnloaded;
     protected int replaceCountLoaded;
-    protected final boolean[] blocksToReplaceLookup = new boolean[1 << 16];
-    protected final IBlockState[] replacementBlockStates = new IBlockState[1 << 16];
-    protected final int[] replacementBlockStateIds = new int[1 << 16];
+    protected final boolean[] blocksToReplaceLookup;
+    protected final IBlockState[] replacementBlockStates;
+    protected final int[] replacementBlockStateIds;
     protected boolean validState;
 
     protected BlockReplacerBase(LoadedType loaded)
     {
+        int size = WorldUtils.isModLoadedNEID() ? (1 << 20) : (1 << 16);
+        this.blocksToReplaceLookup = new boolean[size];
+        this.replacementBlockStates = new IBlockState[size];
+        this.replacementBlockStateIds = new int[size];
         this.loadedChunks = loaded;
     }
 
@@ -129,6 +133,8 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
         boolean[] replacedPositions = new boolean[65536];
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
         NBTTagList sectionsList = level.getTagList("Sections", Constants.NBT.TAG_COMPOUND);
+        final boolean neid = WorldUtils.isModLoadedNEID();
+        final int metaShift = neid ? 16 : 12;
 
         for (int sec = 0; sec < sectionsList.tagCount(); sec++)
         {
@@ -141,21 +147,50 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
 
             if (sectionTag.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY))
             {
-                NibbleArray addNibble = new NibbleArray(sectionTag.getByteArray("Add"));
+                NibbleArray addNibble1 = new NibbleArray(sectionTag.getByteArray("Add"));
 
-                for (int i = 0; i < 4096; i++)
+                if (neid && sectionTag.hasKey("Add2", Constants.NBT.TAG_BYTE_ARRAY))
                 {
-                    int id = (((metaNibble.getFromIndex(i) & 0xF) << 12) | ((addNibble.getFromIndex(i) & 0xF) << 8) | blockArray[i] & 0xFF) & 0xFFFF;
+                    // Added by the NotEnoughIDs mod
+                    NibbleArray addNibble2 = new NibbleArray(sectionTag.getByteArray("Add"));
 
-                    if (this.blocksToReplaceLookup[id])
+                    for (int i = 0; i < 4096; ++i)
                     {
-                        blockStateIds[i] = this.replacementBlockStateIds[id];
-                        replacedPositions[sectionStart + i] = true;
-                        count++;
+                        int id = ((metaNibble.getFromIndex(i) & 0xF) << metaShift) |
+                                 ((((addNibble2.getFromIndex(i) & 0xF) << 12) |
+                                   ((addNibble1.getFromIndex(i) & 0xF) <<  8) |
+                                    (blockArray[i] & 0xFF)) & 0xFFFF);
+
+                        if (this.blocksToReplaceLookup[id])
+                        {
+                            blockStateIds[i] = this.replacementBlockStateIds[id];
+                            replacedPositions[sectionStart + i] = true;
+                            count++;
+                        }
+                        else
+                        {
+                            blockStateIds[i] = id;
+                        }
                     }
-                    else
+                }
+                else
+                {
+                    for (int i = 0; i < 4096; ++i)
                     {
-                        blockStateIds[i] = id;
+                        int id = ((metaNibble.getFromIndex(i) & 0xF) << metaShift) |
+                                 ((((addNibble1.getFromIndex(i) & 0xF) << 8) |
+                                    (blockArray[i] & 0xFF)) & 0xFFFF);
+
+                        if (this.blocksToReplaceLookup[id])
+                        {
+                            blockStateIds[i] = this.replacementBlockStateIds[id];
+                            replacedPositions[sectionStart + i] = true;
+                            count++;
+                        }
+                        else
+                        {
+                            blockStateIds[i] = id;
+                        }
                     }
                 }
             }
@@ -165,7 +200,7 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
             {
                 for (int i = 0; i < 4096; i++)
                 {
-                    int id = (((metaNibble.getFromIndex(i) & 0xF) << 12) | blockArray[i] & 0xFF) & 0xFFFF;
+                    int id = (((metaNibble.getFromIndex(i) & 0xF) << metaShift) | blockArray[i] & 0xFF) & 0xFFFF;
 
                     if (this.blocksToReplaceLookup[id])
                     {
@@ -183,30 +218,48 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
             // Write the block data back to the chunk NBT
             if (count != countLast) // sectionDirty
             {
-                boolean needsAdd = false;
+                boolean needsAdd1 = false;
+                boolean needsAdd2 = false;
                 byte[] metaArray = new byte[2048];
-                byte[] addArray = new byte[2048];
+                byte[] addArray1 = new byte[2048];
+                byte[] addArray2 = new byte[2048];
 
                 for (int i = 0, bi = 0; i < 2048; i++, bi += 2)
                 {
                     blockArray[bi    ] = (byte) (blockStateIds[bi    ] & 0xFF);
                     blockArray[bi + 1] = (byte) (blockStateIds[bi + 1] & 0xFF);
-                    metaArray[i]       = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
-                    addArray[i]        = (byte) (((blockStateIds[bi] >>  8) & 0x0F) | ((blockStateIds[bi + 1] >> 4) & 0xF0));
-                    needsAdd |= addArray[i] != 0;
+                    metaArray[i]       = (byte) (((blockStateIds[bi] >> metaShift) & 0x0F) | ((blockStateIds[bi + 1] >> (metaShift - 4)) & 0xF0));
+                    addArray1[i]       = (byte) (((blockStateIds[bi] >>         8) & 0x0F) | ((blockStateIds[bi + 1] >> 4) & 0xF0));
+                    needsAdd1 |= addArray1[i] != 0;
+
+                    if (neid)
+                    {
+                        addArray2[i]   = (byte) (((blockStateIds[bi] >> 12) & 0x0F) | ((blockStateIds[bi + 1] >> 8) & 0xF0));
+                        needsAdd2 |= addArray2[i] != 0;
+                    }
                 }
 
                 sectionTag.setByteArray("Blocks", blockArray);
                 sectionTag.setByteArray("Data", metaArray);
 
-                if (needsAdd)
+                if (needsAdd1)
                 {
-                    sectionTag.setByteArray("Add", addArray);
+                    sectionTag.setByteArray("Add", addArray1);
                 }
                 else
                 {
                     // Make sure to remove a possible previously existing Add array, or it would shuffle the final block IDs
                     sectionTag.removeTag("Add");
+                }
+
+                if (needsAdd2)
+                {
+                    sectionTag.setByteArray("Add2", addArray2);
+                }
+                else
+                {
+                    // Make sure to remove a possible previously existing Add2 array, or it would shuffle the final block IDs
+                    sectionTag.removeTag("Add2");
                 }
 
                 chunkDirty = true;

@@ -137,7 +137,7 @@ public class BlockStats implements IWorldDataHandler
                     {
                         int id = (((addNibble2.getFromIndex(i) & 0xF) << 12) |
                                   ((addNibble1.getFromIndex(i) & 0xF) <<  8) |
-                                    blockArray[i] & 0xFF) & 0xFFFF;
+                                    (blockArray[i] & 0xFF)) & 0xFFFF;
                         int meta = (metaNibble.getFromIndex(i) & 0xF) << metaShift;
                         this.counts[meta | id]++;
                     }
@@ -147,7 +147,7 @@ public class BlockStats implements IWorldDataHandler
                     for (int i = 0; i < 4096; i++)
                     {
                         int id = (((addNibble1.getFromIndex(i) & 0xF) << 8) |
-                                    blockArray[i] & 0xFF) & 0xFFFF;
+                                    (blockArray[i] & 0xFF)) & 0xFFFF;
                         int meta = (metaNibble.getFromIndex(i) & 0xF) << metaShift;
                         this.counts[meta | id]++;
                     }
