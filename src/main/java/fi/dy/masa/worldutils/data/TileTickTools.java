@@ -237,7 +237,7 @@ public class TileTickTools
         }
 
         @Override
-        public void setChunkProvider(ChunkProviderServer provider)
+        public void setChunkProvider(@Nullable ChunkProviderServer provider)
         {
             this.provider = provider;
         }

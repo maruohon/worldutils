@@ -2,6 +2,7 @@ package fi.dy.masa.worldutils.data.blockreplacer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
@@ -51,7 +52,7 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
     }
 
     @Override
-    public void setChunkProvider(ChunkProviderServer provider)
+    public void setChunkProvider(@Nullable ChunkProviderServer provider)
     {
         this.provider = provider;
     }
