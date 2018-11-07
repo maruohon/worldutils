@@ -39,6 +39,7 @@ worldutils.tooltip.item.mode=Mode
 ###################################
  # Commands:
 ###################################
+worldutils.commands.error.blockremapper.failed_to_read_worlds=Failed to read old world or new level.dat from '%s' and '%s'
 worldutils.commands.error.chunk_section_doesnt_exist=The target location's chunk section does not exist yet (the target chunk currently has %d chunk section(s), meaning blocks up to y = %d)
 worldutils.commands.error.dimensionnotloaded=Dimension %d is currently not loaded!
 worldutils.commands.error.external_world_doesnt_exist=The given external world directory doesn't exist: '%s'
@@ -69,6 +70,8 @@ worldutils.commands.generic.list.remove.failure=Error: '%s' was not found on the
 worldutils.commands.generic.list.remove.success=Removed '%s' from the list
 worldutils.commands.generic.output.to.console=Output written to the console
 worldutils.commands.generic.output.to.file=Output written to file '%s'
+
+worldutils.commands.blockremapper.start=Starting the remapping task...
 
 worldutils.commands.blockreplace.block.print.valid=Block is set to %s
 worldutils.commands.blockreplace.block.print.invalid=Block is set to an INVALID value '%s'

@@ -3,6 +3,7 @@ package fi.dy.masa.worldutils.event.tasks;
 import java.io.File;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.world.chunk.storage.RegionFileCache;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.command.SubCommand;
 import fi.dy.masa.worldutils.data.IWorldDataHandler;
@@ -193,6 +194,7 @@ public class TaskRegionDirectoryProcessor implements ITask
     public void stop()
     {
         this.worldHandler.finish(this.commandSender, false);
+        RegionFileCache.clearRegionFileReferences();
 
         WorldUtils.logger.info("{} exiting, handled {} chunks in {} region files",
                 this.getClass().getSimpleName(), this.chunkCount, this.regionCount);

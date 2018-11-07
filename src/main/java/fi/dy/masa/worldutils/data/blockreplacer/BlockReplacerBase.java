@@ -34,6 +34,7 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
     protected final boolean[] blocksToReplaceLookup;
     protected final IBlockState[] replacementBlockStates;
     protected final int[] replacementBlockStateIds;
+    protected boolean clearTileData = true;
     protected boolean validState;
 
     protected BlockReplacerBase(LoadedType loaded)
@@ -270,7 +271,11 @@ public abstract class BlockReplacerBase implements IWorldDataHandler
         // Replaced something, remove the corresponding TileEntities and TileTicks
         if (chunkDirty)
         {
-            this.removeTileEntitiesAndTileTicks(level, replacedPositions);
+            if (this.clearTileData)
+            {
+                this.removeTileEntitiesAndTileTicks(level, replacedPositions);
+            }
+
             // Re-check the lighting if blocks were replaced. This still doesn't actually force a proper
             // re-light calculation though... There doesn't seem to be any way to do that via the chunk NBT
             // data, without actually re-calculating all the lighting here and updating the light arrays...
