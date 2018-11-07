@@ -98,13 +98,16 @@ public class BlockData
 
     public boolean isValid()
     {
+        final boolean neid = WorldUtils.isModLoadedNEID();
+        final int maxId = (neid ? (1 << 16) : (1 << 12)) - 1;
+
         switch (this.type)
         {
             case ID:
-                return this.id >= 0 && this.id < 4096;
+                return this.id >= 0 && this.id <= maxId;
 
             case ID_META:
-                return this.id >= 0 && this.id < 4096 && this.meta >= 0 && this.meta < 16;
+                return this.id >= 0 && this.id <= maxId && this.meta >= 0 && this.meta < 16;
 
             case NAME:
                 return Block.REGISTRY.containsKey(new ResourceLocation(this.name));
@@ -164,9 +167,12 @@ public class BlockData
                         }
                     }
 
+                    final boolean neid = WorldUtils.isModLoadedNEID();
+                    final int metaShift = neid ? 16 : 12;
+                    final int mask = neid ? 0xFFFF : 0xFFF;
                     int stateId = Block.getStateId(state);
-                    this.id = stateId & 0xFFF;
-                    this.meta = (stateId >> 12) & 0xF;
+                    this.id = stateId & mask;
+                    this.meta = (stateId >> metaShift) & 0xF;
 
                     break;
 
@@ -181,7 +187,10 @@ public class BlockData
     {
         if (this.isValid())
         {
-            this.blockStateId = (this.meta << 12) | this.id;
+            final boolean neid = WorldUtils.isModLoadedNEID();
+            final int metaShift = neid ? 16 : 12;
+
+            this.blockStateId = (this.meta << metaShift) | this.id;
 
             if (this.ignoreMeta())
             {
@@ -189,7 +198,7 @@ public class BlockData
 
                 for (int i = 0; i < 16; i++)
                 {
-                    ids[i] = (i << 12) | this.id;
+                    ids[i] = (i << metaShift) | this.id;
                 }
 
                 this.blockStateIds = ids;
