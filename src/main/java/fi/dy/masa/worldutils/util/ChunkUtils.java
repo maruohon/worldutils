@@ -42,9 +42,9 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import fi.dy.masa.worldutils.WorldUtils;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class ChunkUtils
 {
@@ -58,9 +58,9 @@ public class ChunkUtils
     private static Field field_World_unloadedEntityList;
     private static Field field_PlayerChunkMapEntry_chunk;
     private final Map<File, AnvilChunkLoader> chunkLoaders = new HashMap<File, AnvilChunkLoader>();
-    private final TIntObjectHashMap<Map<String, Map<Long, String>>> changedChunks  = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
-    private final TIntObjectHashMap<Map<String, Map<Long, String>>> importedBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
-    private final TIntObjectHashMap<Map<String, Map<Long, String>>> setBiomes = new TIntObjectHashMap<Map<String, Map<Long, String>>>();
+    private final Int2ObjectOpenHashMap<Map<String, Map<Long, String>>> changedChunks  = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectOpenHashMap<Map<String, Map<Long, String>>> importedBiomes = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectOpenHashMap<Map<String, Map<Long, String>>> setBiomes = new Int2ObjectOpenHashMap<>();
     private boolean dirty;
 
     static
@@ -70,9 +70,9 @@ public class ChunkUtils
         methodHandle_ChunkProviderServer_saveChunkExtraData =
             MethodHandleUtils.getMethodHandleVirtual(ChunkProviderServer.class, new String[] { "func_73243_a", "saveChunkExtraData" }, Chunk.class);
 
-        field_World_tileEntitiesToBeRemoved = ReflectionHelper.findField(World.class, "field_147483_b", "tileEntitiesToBeRemoved");
-        field_World_unloadedEntityList = ReflectionHelper.findField(World.class, "field_72997_g", "unloadedEntityList");
-        field_PlayerChunkMapEntry_chunk = ReflectionHelper.findField(PlayerChunkMapEntry.class, "field_187286_f", "chunk");
+        field_World_tileEntitiesToBeRemoved = ObfuscationReflectionHelper.findField(World.class, "field_147483_b"); // tileEntitiesToBeRemoved
+        field_World_unloadedEntityList      = ObfuscationReflectionHelper.findField(World.class, "field_72997_g"); // unloadedEntityList
+        field_PlayerChunkMapEntry_chunk     = ObfuscationReflectionHelper.findField(PlayerChunkMapEntry.class, "field_187286_f"); // chunk
     }
 
     public static class ChunkChanges
@@ -433,7 +433,7 @@ public class ChunkUtils
         }
     }
 
-    private Map<String, Map<Long, String>> getChangeMap(TIntObjectHashMap<Map<String, Map<Long, String>>> mainMap, World world)
+    private Map<String, Map<Long, String>> getChangeMap(Int2ObjectOpenHashMap<Map<String, Map<Long, String>>> mainMap, World world)
     {
         int dim = world.provider.getDimension();
         Map<String, Map<Long, String>> map = mainMap.get(dim);

@@ -19,14 +19,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import fi.dy.masa.worldutils.WorldUtils;
 import fi.dy.masa.worldutils.data.DataDump;
 
 public class BlockInfo
 {
-    private static final Field field_REGISTRY = ReflectionHelper.findField(TileEntity.class, "field_190562_f", "REGISTRY");
+    private static final Field field_REGISTRY = ObfuscationReflectionHelper.findField(TileEntity.class, "field_190562_f"); // REGISTRY
 
     private static List<String> getBasicBlockInfo(int blockId, int meta, boolean hasTileNBT)
     {
