@@ -530,6 +530,21 @@ public class DataDump
         return lines;
     }
 
+    public static String getDateString()
+    {
+        return getDateString(null);
+    }
+
+    public static String getDateString(@Nullable String format)
+    {
+        if (format == null)
+        {
+            format = "yyyy-MM-dd_HH.mm.ss";
+        }
+
+        return (new SimpleDateFormat(format)).format(new Date(System.currentTimeMillis()));
+    }
+
     @Nullable
     public static File dumpDataToFile(String fileNameBase, List<String> lines)
     {
@@ -556,7 +571,7 @@ public class DataDump
 
         }
 
-        String fileNameBaseWithDate = fileNameBase + "_" + new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(new Date(System.currentTimeMillis()));
+        String fileNameBaseWithDate = fileNameBase + "_" + getDateString();
         String fileName = fileNameBaseWithDate + fileNameExtension;
         outFile = new File(cfgDir, fileName);
         int postFix = 1;
