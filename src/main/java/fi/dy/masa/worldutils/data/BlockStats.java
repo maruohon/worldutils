@@ -94,12 +94,14 @@ public class BlockStats implements IWorldDataHandler
 
         if (chunkNBT != null && chunkNBT.hasKey("Level", Constants.NBT.TAG_COMPOUND))
         {
+            /*
             NBTTagCompound level = chunkNBT.getCompoundTag("Level");
             int chunkAbsX = level.getInteger("xPos");
             int chunkAbsZ = level.getInteger("zPos");
 
             // This needs to use absolute Chunk coordinates
             if (this.provider == null || this.provider.chunkExists(chunkAbsX, chunkAbsZ) == false)
+            */
             {
                 count = this.processUnloadedChunk(region, chunkNBT, chunkX, chunkZ);
                 this.totalCount += count;
